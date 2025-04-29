@@ -1,0 +1,70 @@
+name = "feedback-system"
+main = ".svelte-kit/cloudflare/_worker.js"
+compatibility_date = "2025-01-15"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+# Route configuration (uncomment and modify when ready for production)
+# routes = [
+#   { pattern = "yourdomain.com/*", zone_name = "yourdomain.com" }
+# ]
+
+# Environment variables visible to client and server code
+[vars]
+ENVIRONMENT = "development"
+APP_URL = "http://localhost:8788"
+# Replace with your Auth0 domain (without https://)
+AUTH0_DOMAIN = "dev-f7wd881wsk8er6ir.auth0.com"
+
+# D1 Database Configuration
+# Main feedback database
+[[d1_databases]]
+binding = "FEEDBACK_DB"
+database_name = "feedback-db"
+database_id = "92f0a044-aeb1-47b2-848a-1cc567877269"
+# Optional: Add a location hint for database creation
+# database_location_hint = "enam" # East North America
+
+# Optional: Separate database for tenant management (if using multi-database approach)
+[[d1_databases]]
+binding = "TENANT_DB"
+database_name = "tenant-mgmt-db"
+database_id = "a16927fc-e16f-4ae4-8480-c613439c46e1"
+
+# Analytics Engine Configuration
+[[analytics_engine_datasets]]
+binding = "ANALYTICS" # This is how you'll reference it in your code
+
+# KV Namespace for caching (optional but recommended)
+[[kv_namespaces]]
+binding = "CACHE"
+id = "2843031524a84ca2b6d879c17ca94a5e"
+
+# Development environment specific settings
+[env.dev]
+# Development-specific variables
+vars = { ENVIRONMENT = "development", APP_URL = "http://localhost:8788" }
+
+# Production environment specific settings
+[env.production]
+# Production-specific variables
+vars = { ENVIRONMENT = "production", APP_URL = "https://yourdomain.com" }
+
+# Staging environment specific settings
+[env.staging]
+# Staging-specific variables
+vars = { ENVIRONMENT = "staging", APP_URL = "https://staging.yourdomain.com" }
+
+# Site configuration for SvelteKit apps
+[site]
+bucket = ".svelte-kit/cloudflare"
+
+# Build configuration
+[build]
+command = "yarn run build"
+
+# Secrets: Set these using 'wrangler secret put <NAME>'
+# Required secrets:
+# - AUTH0_CLIENT_ID
+# - AUTH0_CLIENT_SECRET
+# - AUTH_SECRET
