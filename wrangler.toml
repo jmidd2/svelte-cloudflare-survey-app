@@ -59,10 +59,6 @@ vars = { ENVIRONMENT = "staging", APP_URL = "https://staging.yourdomain.com" }
 [site]
 bucket = ".svelte-kit/cloudflare"
 
-# Build configuration
-[build]
-command = "yarn run build"
-
 # Secrets: Set these using 'wrangler secret put <NAME>'
 # Required secrets:
 # - AUTH0_CLIENT_ID
