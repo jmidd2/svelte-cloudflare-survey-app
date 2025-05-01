@@ -20,6 +20,7 @@
 		"cf-typegen": "wrangler types && mv worker-configuration.d.ts src/"
 	},
 	"devDependencies": {
+		"@biomejs/biome": "^1.9.4",
 		"@cloudflare/workers-types": "^4.20250429.0",
 		"@playwright/test": "^1.49.1",
 		"@sveltejs/adapter-auto": "^6.0.0",
