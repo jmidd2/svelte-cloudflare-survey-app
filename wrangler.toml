@@ -13,8 +13,8 @@ workers_dev = true
 [vars]
 ENVIRONMENT = "development"
 APP_URL = "http://localhost:8788"
-# Replace with your Auth0 domain (without https://)
-AUTH0_DOMAIN = "dev-f7wd881wsk8er6ir.auth0.com"
+# Replace with your Auth0 domain
+AUTH_AUTH0_ISSUER = "https://dev-f7wd881wsk8er6ir.us.auth0.com"
 
 # D1 Database Configuration
 # Main feedback database
