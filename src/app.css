@@ -1,3 +1,82 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
+
+@theme {
+  /*--color-spark-orange-light: #e67e4d;*/
+  /*--color-spark-orange-dark: #b84a17;*/
+
+  /* Navy blue color from the bottom bar */
+  /*--color-spark-navy-light: #657a97;*/
+  /*--color-spark-navy-dark: #3d4d62;*/
+
+  /* Slate colors from the sidebar */
+  /*--color-spark-slate: #2d3748;*/
+  /*--color-spark-slate-light: #4a5568;*/
+  /*--color-spark-slate-dark: #1a202c;*/
+
+  /* Background colors */
+  /*--color-spark-bg-dark: #1a202c;*/
+  /*--color-spark-bg-medium: #2d3748;*/
+  /* Primary orange color with shades (using OKLCH for better perceptual uniformity) */
+  --color-spark-primary-50: oklch(97% 0.03 42);
+  --color-spark-primary-100: oklch(94% 0.06 42);
+  --color-spark-primary-200: oklch(89% 0.09 42);
+  --color-spark-primary-300: oklch(83% 0.12 42);
+  --color-spark-primary-400: oklch(76% 0.16 42);
+  --color-spark-primary-500: oklch(70% 0.2 42); /* Base color similar to #d85a1f */
+  --color-spark-primary-600: oklch(62% 0.17 42);
+  --color-spark-primary-700: oklch(54% 0.16 42);
+  --color-spark-primary-800: oklch(45% 0.13 42);
+  --color-spark-primary-900: oklch(38% 0.1 42);
+  --color-spark-primary-950: oklch(30% 0.07 42);
+  --color-spark-primary: var(--color-spark-primary-600);
+  /*--color-spark-orange: #d85a1f;*/
+
+  /* Blue color (formerly navy) with shades */
+  --color-spark-secondary-50: oklch(0.976 0.003 264.542);
+  --color-spark-secondary-100: oklch(0.951 0.005 247.878);
+  --color-spark-secondary-200: oklch(0.886 0.014 258.348);
+  --color-spark-secondary-300: oklch(0.787 0.027 253.604);
+  --color-spark-secondary-400: oklch(0.668 0.042 250.816);
+  --color-spark-secondary-500: oklch(0.569 0.051 253.607);
+  --color-spark-secondary-600: oklch(0.484 0.048 256.336);
+  --color-spark-secondary: var(--color-spark-secondary-600);
+  --color-spark-secondary-700: oklch(0.421 0.041 259.319);
+  --color-spark-secondary-800: oklch(0.38 0.035 258.346);
+  --color-spark-secondary-900: oklch(0.349 0.026 257.525);
+  --color-spark-secondary-950: oklch(0.268 0.02 264.153);
+
+  /* Slate colors from the sidebar */
+  /*--color-spark-slate: #2d3748;*/
+  /*--color-spark-slate-50: oklch(98% 0.003 250);*/
+  /*--color-spark-slate-100: oklch(95% 0.007 250);*/
+  /*--color-spark-slate-200: oklch(90% 0.01 250);*/
+  /*--color-spark-slate-300: oklch(85% 0.02 252);*/
+  /*--color-spark-slate-400: oklch(70% 0.035 255);*/
+  /*--color-spark-slate-500: oklch(55% 0.04 257);*/
+  /*--color-spark-slate-600: oklch(45% 0.037 257);*/
+  /*--color-spark-slate-700: oklch(37% 0.039 257);*/
+  /*--color-spark-slate-800: oklch(28% 0.037 260);*/
+  /*--color-spark-slate-900: oklch(21% 0.04 265);*/
+  /*--color-spark-slate-950: oklch(13% 0.04 265);*/
+
+  /* Background colors */
+  --color-spark-bg-dark: oklch(20% 0.04 265);
+  --color-spark-bg-medium: oklch(28% 0.037 260);
+}
+
+/* Dark mode variants */
+@layer base {
+  .dark {
+    --color-spark-bg-dark: var(--color-spark-secondary-950);
+    /*--color-spark-bg-dark: oklch(15% 0.03 265);*/
+    --color-spark-bg-medium: var(--color-spark-secondary-900);
+    /*--color-spark-bg-medium: oklch(22% 0.03 260);*/
+  }
+}
+
+body {
+  background-color: var(--color-spark-bg-dark);
+  color: var(--color-white);
+}
