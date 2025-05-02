@@ -1,38 +1,24 @@
 <script lang="ts">
 import { page } from '$app/state';
 import type { Session } from '@auth/core/types';
+import { signOut } from '@auth/sveltekit/client';
+import { SignIn } from '@auth/sveltekit/components';
+import type { Snippet } from 'svelte';
 import { slide } from 'svelte/transition';
 
 interface HeaderProps {
   session: Session | null;
+  children?: Snippet;
+  navLinks: Snippet;
 }
 
-const { session }: HeaderProps = $props();
+const { session, children, navLinks }: HeaderProps = $props();
 
 let showMenu = $state(false);
-
-$inspect(session);
 
 const user = $derived(session?.user);
 
 const userImage = $derived(user?.image ?? 'https://cataas.com/cat?type=xsmall');
-
-const links = [
-  {
-    name: 'Home',
-    href: '/',
-  },
-  {
-    name: 'Dashboard',
-    href: '/admin',
-  },
-  {
-    name: 'Survey',
-    href: '/survey/1',
-  },
-];
-
-$inspect(page);
 </script>
 
 <header class="bg-spark-primary p-4">
@@ -74,61 +60,77 @@ $inspect(page);
                              alt="Your Company">
                     </div>
                     <div class="hidden sm:ml-6 sm:block">
-                        <div class="flex space-x-4">
+                        <div class="flex space-x-4 text-sm">
 
                             <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -->
-<!--                            <a href="/" class="rounded-md bg-spark-primary-800 px-3 py-2 text-sm font-medium text-white"-->
-<!--                               aria-current="page">Home</a>-->
-<!--                            <a href="/admin"-->
-<!--                               class="rounded-md px-3 py-2 text-sm font-medium  hover:bg-spark-primary-700 hover:text-white">Dashboard</a>-->
-<!--                            <a href="/survey/1"-->
-<!--                               class="rounded-md px-3 py-2 text-sm font-medium  hover:bg-spark-primary-700 hover:text-white">Survey</a>-->
-                            {#each links as link}
-                                <a href={link.href} class:active="{page.url.pathname.includes(link.href)}" class="rounded-md px-3 py-2 text-sm font-medium  hover:bg-spark-primary-700 hover:text-white">{link.name}</a>
-                                {/each}
+                            <!--                            <a href="/" class="rounded-md bg-spark-primary-800 px-3 py-2 text-sm font-medium text-white"-->
+                            <!--                               aria-current="page">Home</a>-->
+                            <!--                            <a href="/admin"-->
+                            <!--                               class="rounded-md px-3 py-2 text-sm font-medium  hover:bg-spark-primary-700 hover:text-white">Dashboard</a>-->
+                            <!--                            <a href="/survey/1"-->
+                            <!--                               class="rounded-md px-3 py-2 text-sm font-medium  hover:bg-spark-primary-700 hover:text-white">Survey</a>-->
+                            {@render navLinks()}
                         </div>
                     </div>
                 </div>
                 <div class="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-                    <!-- Profile dropdown -->
-                    <div class="relative ml-3">
-                        <div>
-                            <button type="button" onclick={() => showMenu = !showMenu}
-                                    class="relative flex rounded-full bg-spark-primary text-sm focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-hidden"
-                                    id="user-menu-button" aria-expanded="false" aria-haspopup="true">
-                                <span class="absolute -inset-1.5"></span>
-                                <span class="sr-only">Open user menu</span>
-                                <img class="size-8 rounded-full"
-                                     src={userImage}
-                                     alt="">
-                            </button>
-                        </div>
-
-                        <!--
-                          Dropdown menu, show/hide based on menu state.
-
-                          Entering: "transition ease-out duration-100"
-                            From: "transform opacity-0 scale-95"
-                            To: "transform opacity-100 scale-100"
-                          Leaving: "transition ease-in duration-75"
-                            From: "transform opacity-100 scale-100"
-                            To: "transform opacity-0 scale-95"
-                        -->
-                        {#if showMenu}
-                            <div class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 focus:outline-hidden"
-                                 role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button"
-                                 transition:slide
-                                 tabindex="-1">
-                                <!-- Active: "bg-gray-100 outline-hidden", Not Active: "" -->
-                                <a href="#" class="block px-4 py-2 text-sm text-gray-700" role="menuitem" tabindex="-1"
-                                   id="user-menu-item-0">Your Profile</a>
-                                <a href="#" class="block px-4 py-2 text-sm text-gray-700" role="menuitem" tabindex="-1"
-                                   id="user-menu-item-1">Settings</a>
-                                <a href="#" class="block px-4 py-2 text-sm text-gray-700" role="menuitem" tabindex="-1"
-                                   id="user-menu-item-2">Sign out</a>
+                    {#if user}
+                        <!-- Profile dropdown -->
+                        <div class="relative ml-3">
+                            <div>
+                                <button type="button" onclick={() => showMenu = !showMenu}
+                                        class="relative flex rounded-full bg-spark-primary cursor-pointer text-sm focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-hidden"
+                                        id="user-menu-button" aria-expanded="false" aria-haspopup="true">
+                                    <span class="absolute -inset-1.5"></span>
+                                    <span class="sr-only">Open user menu</span>
+                                    <img class="size-8 rounded-full"
+                                         src={userImage}
+                                         alt="">
+                                </button>
                             </div>
-                        {/if}
-                    </div>
+
+                            <!--
+                              Dropdown menu, show/hide based on menu state.
+
+                              Entering: "transition ease-out duration-100"
+                                From: "transform opacity-0 scale-95"
+                                To: "transform opacity-100 scale-100"
+                              Leaving: "transition ease-in duration-75"
+                                From: "transform opacity-100 scale-100"
+                                To: "transform opacity-0 scale-95"
+                            -->
+                            {#if showMenu}
+                                <div class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 focus:outline-hidden"
+                                     role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button"
+                                     transition:slide
+                                     tabindex="-1">
+                                    <!-- Active: "bg-gray-100 outline-hidden", Not Active: "" -->
+                                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-slate-200"
+                                       role="menuitem"
+                                       tabindex="-1"
+                                       id="user-menu-item-0">Your Profile</a>
+                                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-slate-200"
+                                       role="menuitem"
+                                       tabindex="-1"
+                                       id="user-menu-item-1">Settings</a>
+                                    <button onclick={() => signOut()}
+                                            class="cursor-pointer w-full hover:bg-slate-200 text-left block px-4 py-2 text-sm text-gray-700"
+                                            role="menuitem" tabindex="-1"
+                                            id="user-menu-item-2">Sign out
+                                    </button>
+                                </div>
+                            {/if}
+                        </div>
+                    {:else}
+                        <div>
+                            <SignIn provider="auth0" signInPage="login">
+                                <div slot="submitButton"
+                                     class="cursor-pointer rounded-md px-3 py-2 text-sm font-medium  hover:bg-spark-primary-700 hover:text-white">
+                                    Sign in
+                                </div>
+                            </SignIn>
+                        </div>
+                    {/if}
                 </div>
             </div>
         </div>

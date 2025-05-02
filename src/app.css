@@ -80,3 +80,21 @@ body {
   background-color: var(--color-spark-bg-dark);
   color: var(--color-white);
 }
+
+.active {
+  border-radius: var(--radius-md);
+  background-color: var(--color-spark-primary-800);
+  padding-inline: calc(var(--spacing) * 3);
+  padding-block: calc(var(--spacing) * 2);
+  font-size: var(--text-sm) /* 0.875rem = 14px */;
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  --tw-font-weight: var(--font-weight-medium) /* 500 */;
+  font-weight: var(--font-weight-medium) /* 500 */;
+  color: var(--color-white);
+  /*@apply rounded-md bg-spark-primary-800 px-3 py-2 text-sm font-medium text-white;*/
+}
+
+@property --tw-font-weight {
+  syntax: "*";
+  inherits: false;
+}
