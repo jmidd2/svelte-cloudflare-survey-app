@@ -33,12 +33,13 @@ const links: Links = [
 ];
 </script>
 
-<div class="flex min-h-screen flex-col">
+<div class="flex h-screen overflow-x-hidden overflow-y-scroll flex-col">
     <Header session={data.session}>
-        {#snippet navLinks()}
+        {#snippet navLinks(closeMenu)}
             {#each links as link}
                 <a href={link.href} class:active={link.compare(page.url.pathname)}
-                   class="rounded-md px-3 py-2 text-sm font-medium  hover:bg-spark-primary-700 hover:text-white">{link.name}</a>
+                    onclick={closeMenu}
+                   class="rounded-md px-3 py-2 text-sm font-medium block sm:inline hover:bg-spark-primary-700 hover:text-white focus:ring-2 focus:ring-white focus:outline-hidden focus:ring-inset">{link.name}</a>
             {/each}
         {/snippet}
     </Header>

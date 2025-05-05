@@ -1,9 +1,8 @@
 <script lang="ts">
-import { page } from '$app/state';
 import type { Session } from '@auth/core/types';
 import { signOut } from '@auth/sveltekit/client';
 import { SignIn } from '@auth/sveltekit/components';
-import type { Snippet } from 'svelte';
+import { type Snippet } from 'svelte';
 import { slide } from 'svelte/transition';
 
 interface HeaderProps {
@@ -14,13 +13,26 @@ interface HeaderProps {
 
 const { session, children, navLinks }: HeaderProps = $props();
 
-let showMenu = $state(false);
+let showProfileMenu = $state(false);
+let showMobileNavMenu = $state(false);
 
 const user = $derived(session?.user);
 
 const userImage = $derived(user?.image ?? 'https://cataas.com/cat?type=xsmall');
-</script>
 
+let windowInnerWidth: number = $state(0);
+
+const WINDOW_SM_BREAKPOINT = 640;
+
+const isSmallScreen = $derived(windowInnerWidth <= WINDOW_SM_BREAKPOINT);
+$inspect(isSmallScreen);
+
+function closeMenus() {
+  showMobileNavMenu = false;
+  showProfileMenu = false;
+}
+</script>
+<svelte:window bind:innerWidth={windowInnerWidth}></svelte:window>
 <header class="bg-spark-primary p-4">
     <nav class="">
         <div class="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
@@ -28,9 +40,11 @@ const userImage = $derived(user?.image ?? 'https://cataas.com/cat?type=xsmall');
                 <div class="absolute inset-y-0 left-0 flex items-center sm:hidden">
                     <!-- Mobile menu button-->
                     <button type="button"
-                            class="relative inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:ring-2 focus:ring-white focus:outline-hidden focus:ring-inset"
-                            aria-controls="mobile-menu" aria-expanded="false">
-                        <span class="absolute -inset-0.5"></span>
+                            class="relative inline-flex items-center justify-center rounded-md p-2 text-white cursor-pointer hover:bg-spark-primary-700 focus:ring-2 focus:ring-white focus:outline-hidden focus:ring-inset"
+                            aria-controls="mobile-menu" aria-expanded={showMobileNavMenu}
+                            onclick={() => {showMobileNavMenu = !showMobileNavMenu}}
+                    >
+                        <!--                        <span class="absolute -inset-0.5"></span>-->
                         <span class="sr-only">Open main menu</span>
                         <!--
                           Icon when menu is closed.
@@ -78,7 +92,7 @@ const userImage = $derived(user?.image ?? 'https://cataas.com/cat?type=xsmall');
                         <!-- Profile dropdown -->
                         <div class="relative ml-3">
                             <div>
-                                <button type="button" onclick={() => showMenu = !showMenu}
+                                <button type="button" onclick={() => showProfileMenu = !showProfileMenu}
                                         class="relative flex rounded-full bg-spark-primary cursor-pointer text-sm focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-hidden"
                                         id="user-menu-button" aria-expanded="false" aria-haspopup="true">
                                     <span class="absolute -inset-1.5"></span>
@@ -99,17 +113,17 @@ const userImage = $derived(user?.image ?? 'https://cataas.com/cat?type=xsmall');
                                 From: "transform opacity-100 scale-100"
                                 To: "transform opacity-0 scale-95"
                             -->
-                            {#if showMenu}
+                            {#if showProfileMenu}
                                 <div class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 focus:outline-hidden"
                                      role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button"
                                      transition:slide
                                      tabindex="-1">
                                     <!-- Active: "bg-gray-100 outline-hidden", Not Active: "" -->
-                                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-slate-200"
+                                    <a href="/admin" class="block px-4 py-2 text-sm text-gray-700 hover:bg-slate-200"
                                        role="menuitem"
                                        tabindex="-1"
                                        id="user-menu-item-0">Your Profile</a>
-                                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-slate-200"
+                                    <a href="/survey/1" class="block px-4 py-2 text-sm text-gray-700 hover:bg-slate-200"
                                        role="menuitem"
                                        tabindex="-1"
                                        id="user-menu-item-1">Settings</a>
@@ -125,7 +139,7 @@ const userImage = $derived(user?.image ?? 'https://cataas.com/cat?type=xsmall');
                         <div>
                             <SignIn provider="auth0" signInPage="login">
                                 <div slot="submitButton"
-                                     class="cursor-pointer rounded-md px-3 py-2 text-sm font-medium  hover:bg-spark-primary-700 hover:text-white">
+                                     class="">
                                     Sign in
                                 </div>
                             </SignIn>
@@ -136,18 +150,13 @@ const userImage = $derived(user?.image ?? 'https://cataas.com/cat?type=xsmall');
         </div>
 
         <!-- Mobile menu, show/hide based on menu state. -->
-        <div class="sm:hidden" id="mobile-menu">
-            <div class="space-y-1 px-2 pt-2 pb-3">
-                <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -->
-                <a href="#" class="block rounded-md bg-gray-900 px-3 py-2 text-base font-medium text-white"
-                   aria-current="page">Dashboard</a>
-                <a href="#"
-                   class="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white">Team</a>
-                <a href="#"
-                   class="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white">Projects</a>
-                <a href="#"
-                   class="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white">Calendar</a>
+        {#if showMobileNavMenu}
+            <div class="sm:hidden" id="mobile-menu">
+                <div class="space-y-1 px-2 pt-2 pb-3">
+                    <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -->
+                    {@render navLinks(closeMenus)}
+                </div>
             </div>
-        </div>
+        {/if}
     </nav>
 </header>
