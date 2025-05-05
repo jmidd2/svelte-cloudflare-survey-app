@@ -4,6 +4,9 @@ compatibility_date = "2025-01-15"
 compatibility_flags = ["nodejs_compat"]
 workers_dev = true
 
+[assets]
+directory = "./public/"
+binding = "ASSETS"
 # Route configuration (uncomment and modify when ready for production)
 # routes = [
 #   { pattern = "yourdomain.com/*", zone_name = "yourdomain.com" }
@@ -22,6 +25,7 @@ AUTH_AUTH0_ISSUER = "https://dev-f7wd881wsk8er6ir.us.auth0.com"
 binding = "FEEDBACK_DB"
 database_name = "feedback-db"
 database_id = "92f0a044-aeb1-47b2-848a-1cc567877269"
+migrations_dir = "./migrations/feedback"
 # Optional: Add a location hint for database creation
 # database_location_hint = "enam" # East North America
 
@@ -30,6 +34,7 @@ database_id = "92f0a044-aeb1-47b2-848a-1cc567877269"
 binding = "TENANT_DB"
 database_name = "tenant-mgmt-db"
 database_id = "a16927fc-e16f-4ae4-8480-c613439c46e1"
+migrations_dir = "./migrations/tenant"
 
 # Analytics Engine Configuration
 [[analytics_engine_datasets]]
@@ -43,21 +48,18 @@ id = "2843031524a84ca2b6d879c17ca94a5e"
 # Development environment specific settings
 [env.dev]
 # Development-specific variables
-vars = { ENVIRONMENT = "development", APP_URL = "http://localhost:8788" }
+vars = { ENVIRONMENT = "development", APP_URL = "http://localhost:8788", DATABASE_URL = "" }
 
 # Production environment specific settings
 [env.production]
 # Production-specific variables
-vars = { ENVIRONMENT = "production", APP_URL = "https://yourdomain.com" }
+vars = { ENVIRONMENT = "production", APP_URL = "https://yourdomain.com", DATABASE_URL = "" }
 
 # Staging environment specific settings
 [env.staging]
 # Staging-specific variables
-vars = { ENVIRONMENT = "staging", APP_URL = "https://staging.yourdomain.com" }
+vars = { ENVIRONMENT = "staging", APP_URL = "https://staging.yourdomain.com", DATABASE_URL = "" }
 
-# Site configuration for SvelteKit apps
-[site]
-bucket = ".svelte-kit/cloudflare"
 
 # Secrets: Set these using 'wrangler secret put <NAME>'
 # Required secrets:

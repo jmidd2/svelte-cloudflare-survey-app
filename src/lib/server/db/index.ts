@@ -1,10 +1,38 @@
-import { drizzle } from 'drizzle-orm/libsql';
-import { createClient } from '@libsql/client';
-import * as schema from './schema';
-import { env } from '$env/dynamic/private';
+import type { DrizzleD1Database } from 'drizzle-orm/d1';
+import type { LibSQLDatabase } from 'drizzle-orm/libsql';
+import type * as feedbackSchema from './feedback-schema';
+import type * as tenantSchema from './tenant-schema';
 
-if (!env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
+import type { D1Database } from '@cloudflare/workers-types';
+import type { Client } from '@libsql/client';
 
-const client = createClient({ url: env.DATABASE_URL });
+export async function createDb<
+  T extends typeof feedbackSchema | typeof tenantSchema,
+>({
+  d1Database,
+  dbUrl,
+  schema,
+}: {
+  d1Database?: D1Database;
+  dbUrl?: string;
+  schema: T;
+}): Promise<
+  | (LibSQLDatabase<T> & { $client: Client })
+  | (DrizzleD1Database<T> & { $client: D1Database })
+> {
+  if (dbUrl) {
+    const { createClient } = await import('@libsql/client');
+    const { drizzle } = await import('drizzle-orm/libsql');
 
-export const db = drizzle(client, { schema });
+    const client = createClient({ url: dbUrl });
+    return drizzle(client, { schema });
+  }
+
+  if (d1Database) {
+    const { drizzle } = await import('drizzle-orm/d1');
+
+    return drizzle(d1Database, { schema });
+  }
+
+  throw new Error('Unable to create Db');
+}

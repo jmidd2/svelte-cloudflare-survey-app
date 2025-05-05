@@ -22,10 +22,26 @@ declare global {
     // interface PageState {}
     interface Locals {
       auth: import('@auth/sveltekit').Session;
+      feedbackDb:
+        | (import('drizzle-orm/libsql').LibSQLDatabase<
+            typeof import('$lib/server/db/feedback-schema')
+          > & { $client: import('drizzle-orm/libsql').Client })
+        | (import('drizzle-orm/d1').DrizzleD1Database<
+            typeof import('$lib/server/db/feedback-schema')
+          > & { $client: D1Database });
+      tenantDb:
+        | (import('drizzle-orm/libsql').LibSQLDatabase<
+            typeof import('$lib/server/db/tenant-schema')
+          > & { $client: import('drizzle-orm/libsql').Client })
+        | (import('drizzle-orm/d1').DrizzleD1Database<
+            typeof import('$lib/server/db/tenant-schema')
+          > & { $client: D1Database });
     }
+
     interface PageData {
       session: import('@auth/sveltekit').Session | null;
     }
+
     interface Platform {
       env?: {
         FEEDBACK_DB: D1Database;
