@@ -19,22 +19,12 @@ APP_URL = "http://localhost:8788"
 # Replace with your Auth0 domain
 AUTH_AUTH0_ISSUER = "https://dev-f7wd881wsk8er6ir.us.auth0.com"
 
-# D1 Database Configuration
-# Main feedback database
-[[d1_databases]]
-binding = "FEEDBACK_DB"
-database_name = "feedback-db"
-database_id = "92f0a044-aeb1-47b2-848a-1cc567877269"
-migrations_dir = "./migrations/feedback"
-# Optional: Add a location hint for database creation
-# database_location_hint = "enam" # East North America
-
 # Optional: Separate database for tenant management (if using multi-database approach)
 [[d1_databases]]
-binding = "TENANT_DB"
+binding = "DB"
 database_name = "tenant-mgmt-db"
 database_id = "a16927fc-e16f-4ae4-8480-c613439c46e1"
-migrations_dir = "./migrations/tenant"
+migrations_dir = "./db/migrations"
 
 # Analytics Engine Configuration
 [[analytics_engine_datasets]]

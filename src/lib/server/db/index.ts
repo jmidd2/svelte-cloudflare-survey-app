@@ -1,14 +1,11 @@
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 import type { LibSQLDatabase } from 'drizzle-orm/libsql';
-import type * as feedbackSchema from './feedback-schema';
-import type * as tenantSchema from './tenant-schema';
+// import type * as schema from './schema';
 
 import type { D1Database } from '@cloudflare/workers-types';
 import type { Client } from '@libsql/client';
 
-export async function createDb<
-  T extends typeof feedbackSchema | typeof tenantSchema,
->({
+export async function createDb<T extends typeof import('./schema')>({
   d1Database,
   dbUrl,
   schema,

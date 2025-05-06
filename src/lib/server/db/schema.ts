@@ -1,4 +1,10 @@
-import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+// src/lib/db/schema.ts
+import {
+  integer,
+  primaryKey,
+  sqliteTable,
+  text,
+} from 'drizzle-orm/sqlite-core';
 
 // Tenants table - stores information about each tenant
 export const tenants = sqliteTable('tenants', {
@@ -15,6 +21,7 @@ export const tenants = sqliteTable('tenants', {
   active: integer('active', { mode: 'boolean' }).notNull().default(true),
 });
 
+// Forms table - stores form definitions
 export const forms = sqliteTable('forms', {
   id: text('id').primaryKey(),
   tenantId: text('tenant_id')
@@ -22,7 +29,7 @@ export const forms = sqliteTable('forms', {
     .references(() => tenants.id, { onDelete: 'cascade' }),
   title: text('title').notNull(),
   description: text('description'),
-  createdBy: text('created_by').notNull(),
+  createdBy: text('created_by').notNull(), // Auth0 user ID
   createdAt: integer('created_at')
     .notNull()
     .default(Math.floor(Date.now() / 1000)),
@@ -33,6 +40,7 @@ export const forms = sqliteTable('forms', {
   settings: text('settings'), // JSON string for additional settings
 });
 
+// Form fields table - stores fields for each form
 export const formFields = sqliteTable('form_fields', {
   id: text('id').primaryKey(),
   formId: text('form_id')
@@ -52,6 +60,7 @@ export const formFields = sqliteTable('form_fields', {
     .default(Math.floor(Date.now() / 1000)),
 });
 
+// Form submissions table - stores user submissions
 export const submissions = sqliteTable('submissions', {
   id: text('id').primaryKey(),
   formId: text('form_id')
@@ -63,17 +72,4 @@ export const submissions = sqliteTable('submissions', {
   createdAt: integer('created_at')
     .notNull()
     .default(Math.floor(Date.now() / 1000)),
-});
-
-export const formViews = sqliteTable('form_views', {
-  id: text('id').primaryKey(),
-  formId: text('form_id')
-    .notNull()
-    .references(() => forms.id, { onDelete: 'cascade' }),
-  viewedAt: integer('viewed_at')
-    .notNull()
-    .default(Math.floor(Date.now() / 1000)),
-  ipHash: text('ip_hash'), // Anonymized IP hash
-  userAgentHash: text('user_agent_hash'), // Anonymized user agent hash
-  referrer: text('referrer'),
 });
