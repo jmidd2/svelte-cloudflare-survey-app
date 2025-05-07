@@ -11,7 +11,6 @@ export const tenants = sqliteTable('tenants', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   slug: text('slug').notNull().unique(),
-  planType: text('plan_type').notNull().default('free'),
   createdAt: integer('created_at')
     .notNull()
     .default(Math.floor(Date.now() / 1000)),
@@ -37,7 +36,7 @@ export const forms = sqliteTable('forms', {
     .notNull()
     .default(Math.floor(Date.now() / 1000)),
   active: integer('active', { mode: 'boolean' }).notNull().default(true),
-  settings: text('settings'), // JSON string for additional settings
+  settings: text('settings', { mode: 'json' }), // JSON string for additional settings
 });
 
 // Form fields table - stores fields for each form
@@ -50,7 +49,7 @@ export const formFields = sqliteTable('form_fields', {
   label: text('label').notNull(),
   placeholder: text('placeholder'),
   required: integer('required', { mode: 'boolean' }).notNull().default(false),
-  options: text('options'), // JSON string for options (select, radio, etc.)
+  options: text('options', { mode: 'json' }), // JSON string for options (select, radio, etc.)
   orderIndex: integer('order_index').notNull(),
   createdAt: integer('created_at')
     .notNull()
@@ -66,7 +65,7 @@ export const submissions = sqliteTable('submissions', {
   formId: text('form_id')
     .notNull()
     .references(() => forms.id, { onDelete: 'cascade' }),
-  data: text('data').notNull(), // JSON string with form data
+  data: text('data', { mode: 'json' }).notNull(), // JSON string with form data
   ipHash: text('ip_hash'), // Anonymized IP hash
   userAgentHash: text('user_agent_hash'), // Anonymized user agent hash
   createdAt: integer('created_at')

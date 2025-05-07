@@ -20,17 +20,15 @@ const links: Links = [
     href: '/',
     compare: (path: string) => path === '' || path === '/',
   },
-  {
-    name: 'Dashboard',
-    href: '/admin',
-    compare: (path: string) => path.includes('/admin'),
-  },
-  {
-    name: 'Survey',
-    href: '/survey/1',
-    compare: (path: string) => path.includes('/survey'),
-  },
 ];
+
+if (data.session?.user) {
+  links.push({
+    name: 'Dashboard',
+    href: `/admin/${data.session.user.tenant.id}`,
+    compare: (path: string) => path.includes('/admin'),
+  });
+}
 </script>
 
 <div class="flex h-screen overflow-x-hidden overflow-y-scroll flex-col">

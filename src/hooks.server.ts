@@ -30,8 +30,6 @@ const dbLocalsHandle: Handle = async function ({ event, resolve }) {
     schema,
   });
 
-  console.log(event.locals.db);
-
   const response = await resolve(event);
   return response;
 };
