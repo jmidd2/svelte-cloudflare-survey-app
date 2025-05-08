@@ -8,6 +8,13 @@
       "when": 1746639762015,
       "tag": "0000_blue_callisto",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1746719532079,
+      "tag": "0001_wandering_spot",
+      "breakpoints": true
     }
   ]
 }

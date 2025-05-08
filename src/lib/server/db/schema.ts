@@ -1,3 +1,4 @@
+import { type SQL, sql } from 'drizzle-orm';
 // src/lib/db/schema.ts
 import {
   integer,
@@ -10,7 +11,15 @@ import {
 export const tenants = sqliteTable('tenants', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
-  slug: text('slug').notNull().unique(),
+  slug: text('slug')
+    .generatedAlwaysAs(
+      (): SQL => sql`lower(replace(${tenants.name}, ' ', '-'))`,
+      {
+        mode: 'virtual',
+      }
+    )
+    .notNull()
+    .unique(),
   createdAt: integer('created_at')
     .notNull()
     .default(Math.floor(Date.now() / 1000)),
