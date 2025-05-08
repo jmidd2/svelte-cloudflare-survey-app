@@ -27,6 +27,23 @@ $effect(() => {
   console.log('drawing page');
 });
 
+function saveSorted() {
+  const sortedData = sorted.map((val, index) => {
+    return {
+      orderIndex: index + 1,
+      id: val.id,
+    };
+  });
+
+  fetch('/api/survey/order', {
+    method: 'POST',
+    body: JSON.stringify(sortedData),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+}
+
 $inspect(formFields);
 
 function moveItem(newOrderIndex, sortedIndex, id) {
@@ -36,6 +53,7 @@ function moveItem(newOrderIndex, sortedIndex, id) {
   if (index > -1) {
     formFields[index].orderIndex = newOrderIndex;
     console.log('new', formFields[index].orderIndex);
+    saveSorted();
   }
 }
 </script>
@@ -49,6 +67,7 @@ function moveItem(newOrderIndex, sortedIndex, id) {
 </div>
 <ul>
     {#each sorted as item, index (item.id)}
-        <SurveyFormField {moveItem} nextOrder={sorted[index + 1] ? sorted[index + 1].orderIndex : item.orderIndex + 1} previousOrder={sorted[index - 1] ? sorted[index - 1].orderIndex : 0} {item} {index} />
+        <SurveyFormField {moveItem} nextOrder={sorted[index + 1] ? sorted[index + 1].orderIndex : item.orderIndex + 1}
+                         previousOrder={sorted[index - 1] ? sorted[index - 1].orderIndex : 0} {item} {index}/>
     {/each}
 </ul>

@@ -1,11 +1,33 @@
 <script lang="ts">
-const { nextOrder, previousOrder, item, index, moveItem } = $props();
+import { enhance } from '$app/forms';
+import { invalidateAll } from '$app/navigation';
+import type { PageProps } from './$types';
+
+const {
+  nextOrder: nextOrderIndex,
+  previousOrder: previousOrderIndex,
+  item,
+  index,
+  moveItem,
+  form,
+}: PageProps = $props();
 
 let acceptDrop = $state<'none' | 'top' | 'bottom'>('none');
 const acceptDropTop = $derived(acceptDrop === 'top');
 const acceptDropBottom = $derived(acceptDrop === 'bottom');
 const acceptDropReset = $derived(acceptDrop === 'none');
-function handleDragOver(e: DragEvent) {
+let formDom: HTMLFormElement;
+
+let itemUpdate = $state<{ id: string; orderIndex: number }>({
+  id: '',
+  orderIndex: 0,
+});
+
+function handleDragOver(
+  e: DragEvent & {
+    currentTarget: EventTarget & HTMLLIElement;
+  }
+) {
   if (e.dataTransfer?.types.includes('application/form-item')) {
     e.preventDefault();
     e.stopPropagation();
@@ -19,30 +41,61 @@ function handleDragLeave() {
   acceptDrop = 'none';
 }
 
-function handleDrop(e: DragEvent) {
+function handleDrop(
+  e: DragEvent & {
+    currentTarget: EventTarget & HTMLLIElement;
+  }
+) {
   e.stopPropagation();
   if (e.dataTransfer) {
     let transfer = JSON.parse(e.dataTransfer.getData('application/form-item'));
 
-    let droppedOrder = acceptDrop === 'top' ? previousOrder : nextOrder;
+    let droppedOrderIndex =
+      acceptDrop === 'top' ? previousOrderIndex : nextOrderIndex;
 
-    let moveOrder = (droppedOrder + item.orderIndex) / 2;
+    let newOrderIndex = (droppedOrderIndex + item.orderIndex) / 2;
 
     console.log(
-      moveOrder,
-
-      droppedOrder,
-      nextOrder,
-      previousOrder,
+      newOrderIndex,
+      droppedOrderIndex,
+      nextOrderIndex,
+      previousOrderIndex,
       transfer
     );
 
-    moveItem(moveOrder, transfer.index, transfer.id);
+    moveItem(newOrderIndex, transfer.index, transfer.id);
+
+    // saveSorted();
+
+    // itemUpdate = {
+    //   id: transfer.id,
+    //   orderIndex: newOrderIndex,
+    // };
+
+    // formDom.requestSubmit();
+
+    // const data = new FormData();
+    // data.set('id', transfer.id);
+    // data.set('orderIndex', newOrderIndex.toString());
+    //
+    // fetch('/api/survey/order', {
+    //   method: 'POST',
+    //   body: data,
+    //   headers: {
+    //     'x-sveltekit-action': 'true',
+    //   },
+    // });
+
+    invalidateAll();
   }
   acceptDrop = 'none';
 }
 
-function handleDragStart(e: DragEvent) {
+function handleDragStart(
+  e: DragEvent & {
+    currentTarget: EventTarget & HTMLFormElement;
+  }
+) {
   if (e.dataTransfer) {
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData(
@@ -57,10 +110,13 @@ $effect(() => {
 });
 </script>
 
-<li draggable="true" class="border-red-400" class:border-t={acceptDropTop} class:border-b={acceptDropBottom} class:border-none={acceptDropReset}
-             ondragover={handleDragOver} ondragleave={handleDragLeave} ondrop={handleDrop}>
-    <div draggable="true"
-         ondragstart={handleDragStart}>
+<li draggable="true" class="border-red-400" class:border-t={acceptDropTop} class:border-b={acceptDropBottom}
+    class:border-none={acceptDropReset}
+    ondragover={handleDragOver} ondragleave={handleDragLeave} ondrop={handleDrop}>
+    <form bind:this={formDom} draggable="true" method="POST" use:enhance
+          ondragstart={handleDragStart}>
+        <input type="hidden" bind:value={itemUpdate.id} name="id" id="id"/>
+        <input type="hidden" bind:value={itemUpdate.orderIndex} name="orderIndex" id="orderIndex"/>
         {item.label}
         {#if item.type === 'textarea'}
             <textarea></textarea>
@@ -78,5 +134,5 @@ $effect(() => {
             <input type={item.type}
                    placeholder={item.placeholder}/>
         {/if}
-    </div>
+    </form>
 </li>

@@ -1,5 +1,5 @@
 import { getFormById, getFormFields } from '$lib/server/db';
-import type { PageServerLoad } from './$types';
+import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async function ({
   params,
@@ -23,3 +23,10 @@ export const load: PageServerLoad = async function ({
     id: params.survey_id,
   };
 };
+//
+// export const actions = {
+//   default: async ({ locals, platform, request }) => {
+//     const data = await request.formData();
+//     console.log('actions', data.get('id'));
+//   },
+// } satisfies Actions;
