@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "c6975add-16f0-45cb-9ca2-2bee47eb86df",
+  "id": "a8a8baeb-6ff0-4226-8a86-c5965f12a0df",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "form_fields": {
@@ -70,7 +70,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": 1746639762
+          "default": "'\"2025-05-12T21:14:20.629Z\"'"
         },
         "updated_at": {
           "name": "updated_at",
@@ -78,7 +78,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": 1746639762
+          "default": "'\"2025-05-12T21:14:20.629Z\"'"
         }
       },
       "indexes": {},
@@ -139,22 +139,6 @@
           "notNull": true,
           "autoincrement": false
         },
-        "created_at": {
-          "name": "created_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 1746639762
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 1746639762
-        },
         "active": {
           "name": "active",
           "type": "integer",
@@ -169,6 +153,22 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'\"2025-05-12T21:14:20.629Z\"'"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'\"2025-05-12T21:14:20.629Z\"'"
         }
       },
       "indexes": {},
@@ -235,7 +235,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": 1746639762
+          "default": "'\"2025-05-12T21:14:20.629Z\"'"
         }
       },
       "indexes": {},
@@ -280,23 +280,11 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
           "autoincrement": false,
-          "default": 1746639762
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 1746639762
+          "generated": {
+            "as": "(lower(replace(\"name\", ' ', '-')))",
+            "type": "virtual"
+          }
         },
         "active": {
           "name": "active",
@@ -305,6 +293,22 @@
           "notNull": true,
           "autoincrement": false,
           "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'\"2025-05-12T21:14:20.629Z\"'"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'\"2025-05-12T21:14:20.629Z\"'"
         }
       },
       "indexes": {

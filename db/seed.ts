@@ -168,8 +168,12 @@ async function main() {
           required: f.boolean(),
           options: f.json({ arraySize: 3 }),
           orderIndex: f.int({ maxValue: 50, minValue: 0 }),
-          createdAt: f.date({ minDate: new Date('2020-01-01') }),
-          updatedAt: f.date({ minDate: new Date('2020-01-01') }),
+          createdAt: f.default({
+            defaultValue: new Date(Date.now() - 10000000000),
+          }),
+          updatedAt: f.default({
+            defaultValue: new Date(Date.now() - 10000000000),
+          }),
         },
       },
       forms: {
@@ -177,9 +181,15 @@ async function main() {
           id: f.uuid(),
           title: f.valuesFromArray({ values: ['Course Feedback', 'Survey'] }),
           description: f.loremIpsum({ sentencesCount: 1 }),
-          createdAt: f.date({ minDate: new Date('2020-01-01') }),
-          createdBy: f.date({ minDate: new Date('2020-01-01') }),
-          updatedAt: f.date({ minDate: new Date('2020-01-01') }),
+          createdAt: f.default({
+            defaultValue: new Date(Date.now() - 10000000000),
+          }),
+          createdBy: f.default({
+            defaultValue: new Date(Date.now() - 10000000000),
+          }),
+          updatedAt: f.default({
+            defaultValue: new Date(Date.now() - 10000000000),
+          }),
           // settings: {},
           active: f.default({ defaultValue: true }),
           settings: f.json(),
@@ -195,7 +205,9 @@ async function main() {
           data: f.json({ arraySize: 3 }),
           // ipHash: {},
           // userAgentHash: {},
-          createdAt: f.date({ minDate: new Date('2020-01-01') }),
+          createdAt: f.default({
+            defaultValue: new Date(Date.now() - 10000000000),
+          }),
         },
       },
       tenants: {
@@ -203,8 +215,12 @@ async function main() {
           id: f.uuid(),
           name: f.default({ defaultValue: 'Phoenix Spark' }),
           active: f.default({ defaultValue: true }),
-          createdAt: f.date({ minDate: new Date('2020-01-01') }),
-          updatedAt: f.date({ minDate: new Date('2020-01-01') }),
+          createdAt: f.default({
+            defaultValue: new Date(Date.now() - 10000000000),
+          }),
+          updatedAt: f.default({
+            defaultValue: new Date(Date.now() - 10000000000),
+          }),
         },
         with: {
           forms: 2,
@@ -227,8 +243,12 @@ async function main() {
           required: f.boolean(),
           options: f.json({ arraySize: 3 }),
           orderIndex: f.int({ maxValue: 50, minValue: 0 }),
-          createdAt: f.date({ minDate: new Date('2020-01-01') }),
-          updatedAt: f.date({ minDate: new Date('2020-01-01') }),
+          createdAt: f.default({
+            defaultValue: new Date(Date.now() - 10000000000),
+          }),
+          updatedAt: f.default({
+            defaultValue: new Date(Date.now() - 10000000000),
+          }),
         },
       },
       forms: {
@@ -236,9 +256,15 @@ async function main() {
           id: f.uuid(),
           title: f.valuesFromArray({ values: ['Course Feedback', 'Survey'] }),
           description: f.loremIpsum({ sentencesCount: 1 }),
-          createdAt: f.date({ minDate: new Date('2020-01-01') }),
-          createdBy: f.date({ minDate: new Date('2020-01-01') }),
-          updatedAt: f.date({ minDate: new Date('2020-01-01') }),
+          createdAt: f.default({
+            defaultValue: new Date(Date.now() - 10000000000),
+          }),
+          createdBy: f.default({
+            defaultValue: new Date(Date.now() - 10000000000),
+          }),
+          updatedAt: f.default({
+            defaultValue: new Date(Date.now() - 10000000000),
+          }),
           // settings: {},
           active: f.default({ defaultValue: true }),
           settings: f.json(),
@@ -254,7 +280,9 @@ async function main() {
           data: f.json({ arraySize: 3 }),
           // ipHash: {},
           // userAgentHash: {},
-          createdAt: f.date({ minDate: new Date('2020-01-01') }),
+          createdAt: f.default({
+            defaultValue: new Date(Date.now() - 10000000000),
+          }),
         },
       },
       tenants: {
@@ -262,8 +290,12 @@ async function main() {
           id: f.uuid(),
           name: f.valuesFromArray({ values: tenantNames, isUnique: true }),
           active: f.default({ defaultValue: true }),
-          createdAt: f.date({ minDate: new Date('2020-01-01') }),
-          updatedAt: f.date({ minDate: new Date('2020-01-01') }),
+          createdAt: f.default({
+            defaultValue: new Date(Date.now() - 10000000000),
+          }),
+          updatedAt: f.default({
+            defaultValue: new Date(Date.now() - 10000000000),
+          }),
         },
         with: {
           forms: 2,

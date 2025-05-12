@@ -29,13 +29,13 @@ export async function createDb<T extends typeof import('./schema')>({
     const { drizzle } = await import('drizzle-orm/libsql');
 
     const client = createClient({ url: dbUrl });
-    return drizzle(client, { schema });
+    return drizzle(client, { schema, logger: true });
   }
 
   if (d1Database) {
     const { drizzle } = await import('drizzle-orm/d1');
 
-    return drizzle(d1Database, { schema });
+    return drizzle(d1Database, { schema, logger: true });
   }
 
   throw new Error('Unable to create Db');

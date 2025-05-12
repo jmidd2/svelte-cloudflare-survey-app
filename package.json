@@ -47,6 +47,9 @@
     "wrangler": "^4.13.2"
   },
   "dependencies": {
+    "@atlaskit/pragmatic-drag-and-drop": "^1.6.1",
+    "@atlaskit/pragmatic-drag-and-drop-flourish": "^2.0.2",
+    "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.0.3",
     "@auth/core": "^0.39.0",
     "@auth/sveltekit": "^1.9.1",
     "@libsql/client": "^0.14.0",
