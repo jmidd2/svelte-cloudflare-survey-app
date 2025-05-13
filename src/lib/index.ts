@@ -1,1 +1,146 @@
 // place files you want to import through the `$lib` alias in this folder.
+import type { HtmlFormElements } from '$lib/types';
+
+export const formElements: HtmlFormElements[] = [
+  'checkbox',
+  'date',
+  'email',
+  'number',
+  'radio',
+  'range',
+  'tel',
+  'text',
+  'textarea',
+  'select',
+] as const;
+
+export const sampleFormFieldLabels = [
+  // Personal Information
+  'Full Name',
+  'First Name',
+  'Last Name',
+  'Email Address',
+  'Phone Number',
+  'Company Name',
+  'Job Title',
+  'Department',
+  'Age',
+  'Gender',
+  'Location',
+  'Country',
+  'City',
+  'Postal Code',
+  'Address',
+
+  // Feedback Specific
+  'Overall Rating',
+  'Satisfaction Level',
+  'Would You Recommend Us',
+  'Net Promoter Score',
+  'How Likely Are You to Recommend Our Product',
+  'Experience Rating',
+  'What Did You Like Most',
+  'What Could Be Improved',
+  'Areas for Improvement',
+  'Additional Comments',
+  'Specific Suggestions',
+  'Your Feedback',
+  'Tell Us More',
+
+  // Product Feedback
+  'Product Quality',
+  'Ease of Use',
+  'Value for Money',
+  'Features Used',
+  'Missing Features',
+  'Product Performance',
+  'Product Reliability',
+  'Product Design',
+  'Which Features Do You Find Most Useful',
+  'How Often Do You Use Our Product',
+  'Which Alternative Products Did You Consider',
+
+  // Service Feedback
+  'Service Quality',
+  'Response Time',
+  'Staff Friendliness',
+  'Issue Resolution',
+  'Wait Time',
+  'Support Experience',
+  'How Quickly Was Your Issue Resolved',
+  'Was Your Issue Completely Resolved',
+  'Did Our Staff Meet Your Expectations',
+
+  // Website Feedback
+  'Website Usability',
+  'Website Navigation',
+  'Website Design',
+  'Website Speed',
+  'Mobile Experience',
+  'Search Functionality',
+  'Content Quality',
+  'Information Clarity',
+  'How Easy Was It to Find What You Were Looking For',
+
+  // Event Feedback
+  'Event Satisfaction',
+  'Speaker Quality',
+  'Content Relevance',
+  'Venue Rating',
+  'Event Organization',
+  'Would You Attend a Similar Event',
+  'Most Valuable Session',
+  'Least Valuable Session',
+  'How Did You Hear About This Event',
+
+  // Course/Training Feedback
+  'Course Content',
+  'Instructor Knowledge',
+  'Instructor Presentation Skills',
+  'Materials Quality',
+  'Pace of Training',
+  'Course Relevance to Your Job',
+  'What Topics Would You Like to See Added',
+  'Would You Take Another Course With Us',
+
+  // Customer Support Feedback
+  'Support Staff Knowledge',
+  'Support Staff Friendliness',
+  'Issue Resolution',
+  'Wait Time',
+  'First Contact Resolution',
+  'Support Channel Preference',
+  'How Could We Improve Our Support',
+
+  // Demographic Questions
+  'Age Range',
+  'Industry',
+  'Company Size',
+  'Role in Company',
+  'How Long Have You Been a Customer',
+  'How Often Do You Use Our Services',
+
+  // Open-Ended Questions
+  'What Features Would You Like to See',
+  'How Can We Better Serve You',
+  'Any Additional Comments',
+  'What Would Make This Better',
+  'What Was Missing From Your Experience',
+  'Describe Your Ideal Experience',
+  'What Problem Were You Trying to Solve',
+
+  // Consent and Contact
+  'May We Contact You About Your Feedback',
+  'Preferred Contact Method',
+  'Best Time to Contact You',
+  'Would You Like to Join Our Focus Group',
+  'May We Share Your Feedback Publicly',
+  'Would You Like to Receive Our Newsletter',
+
+  // Call to Action
+  'Next Steps',
+  'Preferred Solution',
+  'Action Items',
+  'Follow-Up Preference',
+  'Priority Level',
+];

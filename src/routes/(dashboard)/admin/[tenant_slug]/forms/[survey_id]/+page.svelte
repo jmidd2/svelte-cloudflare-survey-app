@@ -1,16 +1,31 @@
 <script lang="ts">
+import { deserialize } from '$app/forms';
+import { formElements, sampleFormFieldLabels } from '$lib';
+import FormElement from '$lib/components/FormElement.svelte';
 import FormFieldList from '$lib/dnd/FormFieldList.svelte';
+import { type InsertFormField } from '$lib/server/db/schema';
+import type { HtmlFormElements } from '$lib/types';
+import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 
 const { data } = $props();
 
 let formFields = $state(data.fields);
 const survey = $derived(data.survey);
-let lastUpdate = $derived(survey.updatedAt.toLocaleDateString());
+let lastUpdate = $derived(survey.updatedAt);
+let lastUpdateString = $derived(`${lastUpdate.toLocaleString()}`);
+let showSavedAlert = $state(false);
 let isActive = $derived(survey.active);
 type PageState = 'idle' | 'loading';
 const idle: PageState = 'idle';
 let pageState: PageState = $state(idle);
-let message: null | string = $state(null);
+let errorMessage: null | string = $state(null);
+const highestDropIndex = $derived(
+  formFields.reduce((prev, curr) => {
+    if (curr.orderIndex > prev) return curr.orderIndex;
+    return prev;
+  }, 0)
+);
+let addFieldForm: HTMLFormElement | undefined;
 
 const isAdmin = $derived(
   data.session?.user ? data.session.user.roles.includes('admin') : false
@@ -36,21 +51,154 @@ async function saveSorted() {
     const data = await response.json();
     console.log('response', data);
     if (data?.lastUpdated) {
-      lastUpdate = new Date(data.lastUpdated).toLocaleDateString();
+      lastUpdate = new Date(data.lastUpdated);
     }
-    message = 'Saved';
   } else {
-    message = 'Error';
+    errorMessage = 'Error';
   }
 
   setTimeout(() => {
-    message = null;
+    showSavedAlert = true;
     pageState = 'idle';
+  }, 1500);
+
+  setTimeout(() => {
+    // lastUpdateString = lastUpdate.toLocaleString();
+    showSavedAlert = false;
   }, 3000);
 }
 
 $inspect(formFields);
+
+let dropBox: HTMLDivElement | undefined;
+let dragState: 'idle' | 'is-dragged-over' = $state('idle');
+let elementBeingDropped = $state('');
+
+function generateFormFieldData(type: HtmlFormElements) {
+  const label =
+    sampleFormFieldLabels[
+      Math.floor(Math.random() * sampleFormFieldLabels.length)
+    ];
+
+  const options = [
+    { label: 'value 1', val: 'val-1' },
+    { label: 'value 2', val: 'val-2' },
+    { label: 'value 3', val: 'val-3' },
+  ];
+
+  let fieldData: Omit<InsertFormField, 'id'> = {
+    formId: survey.id,
+    type,
+    label,
+    placeholder: label,
+    orderIndex: highestDropIndex + 1,
+  };
+
+  switch (type) {
+    case 'checkbox':
+      break;
+    case 'date':
+      break;
+    case 'email':
+      fieldData.placeholder = 'email@email.com';
+      break;
+    case 'number':
+      fieldData.placeholder = '10';
+      break;
+    case 'radio':
+      fieldData.options = options;
+      break;
+    case 'range':
+      break;
+    case 'tel':
+      fieldData.placeholder = '111-222-3333';
+      break;
+    case 'text':
+      break;
+    case 'textarea':
+      break;
+    case 'select':
+      fieldData.options = options;
+      break;
+    default:
+      break;
+  }
+  return fieldData;
+}
+
+async function addFormField(field: InsertFormField) {
+  let formData = new FormData();
+  for (const [key, value] of Object.entries(field)) {
+    console.log(key, value);
+    if (typeof value === 'string' || typeof value === 'number') {
+      formData.set(key, value);
+    } else if (value instanceof Date) {
+      formData.set(key, value);
+    } else if (key === 'options') {
+      formData.set(
+        key,
+        new Blob([JSON.stringify(field[key])], { type: 'application/json' })
+      );
+    }
+  }
+
+  console.log(
+    formData
+      .entries()
+      .map(([k, v]) => ({ k, v }))
+      .toArray()
+  );
+
+  const response = await fetch('?/addFormField', {
+    method: 'POST',
+    body: formData,
+    headers: {
+      'x-svelte-action': 'true',
+    },
+  });
+
+  if (response.ok) {
+    const result = deserialize(await response.text());
+    console.log(result);
+    if (result.status === 200) {
+      formFields.push(result.data);
+    }
+  }
+}
+
+$effect(() => {
+  if (!dropBox) return;
+
+  dropTargetForElements({
+    element: dropBox,
+    onDragEnter: ({ source }) => {
+      if (!source.data.elementType) return;
+      elementBeingDropped = source.data.elementType as string;
+      dragState = 'is-dragged-over';
+    },
+    onDragLeave: () => {
+      elementBeingDropped = '';
+      dragState = 'idle';
+    },
+    onDrop: ({ source }) => {
+      dragState = 'idle';
+      if (!source.data.elementType) return;
+      elementBeingDropped = `Dropped ${source.data.elementType}`;
+
+      const newField = generateFormFieldData(source.data.elementType);
+
+      addFormField(newField);
+      // formFields.push({
+      //   id: '',
+      //   createdAt: new Date(Date.now()),
+      //   updatedAt: new Date(Date.now()),
+      //   ...newField,
+      // });
+    },
+  });
+});
 </script>
+<form bind:this={addFieldForm} method="post" action="?/addFormField" class="hidden"></form>
 <div class="border-b pb-2 mb-2">
     <h1 class="flex flex-col text-2xl mb-2">{survey.title} <span class="text-sm">Survey #{data.id}</span></h1>
     <p>{survey.description}</p>
@@ -65,8 +213,11 @@ $inspect(formFields);
             <path class="opacity-75" fill="currentColor"
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
-        {:else}
-        {lastUpdate}
+    {:else}
+        {lastUpdateString}
+        {#if showSavedAlert}
+            Saved!
+        {/if}
     {/if}
 </div>
 <div class="border-b">
@@ -86,9 +237,29 @@ $inspect(formFields);
     </div>
 </div>
 
-{#if pageState === 'idle' && message}
-    {message}
+{#if pageState === 'idle' && errorMessage}
+    {errorMessage}
 {/if}
 <div class="text-black">
     <FormFieldList bind:fields={formFields} {saveSorted}/>
 </div>
+<div class="grid grid-cols-[auto_1fr]">
+    <div>
+        <ul>
+            {#each formElements as element}
+                <FormElement label={element}></FormElement>
+            {/each}
+        </ul>
+    </div>
+    <div bind:this={dropBox}
+         class={['flex flex-col items-center justify-center bg-amber-500/30 rounded-xl', {'bg-pink-400': dragState === 'is-dragged-over'}]}>
+        <p class="">Drag elements here</p>
+        {#if elementBeingDropped !== ''}
+            <p>{elementBeingDropped}</p>
+        {/if}
+    </div>
+</div>
+
+<style>
+
+</style>

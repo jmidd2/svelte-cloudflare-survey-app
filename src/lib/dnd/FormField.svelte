@@ -1,5 +1,6 @@
 <script lang="ts">
 import type { SelectFormField } from '$lib/server/db/schema';
+import type { HtmlFormElements } from '$lib/types';
 import {
   attachClosestEdge,
   extractClosestEdge,
@@ -24,6 +25,7 @@ interface FieldState {
   container?: HTMLElement;
   closestEdge?: Edge | null;
 }
+
 type Props = {
   field: SelectFormField;
 };
@@ -110,29 +112,59 @@ $effect(() => {
     })
   );
 });
+
+function isHtmlInput(type: HtmlFormElements) {
+  return type !== 'textarea' && type !== 'select';
+}
 </script>
 
 <div class="relative">
-    <div
-            data-field-id={field.id}
-            bind:this={element}
-            class:opacity-40={state.type === 'is-dragging'}
-            class={`flex text-sm bg-white
+    <div class="bg-white rounded">
+        <div
+                data-field-id={field.id}
+                bind:this={element}
+                class:opacity-40={state.type === 'is-dragging'}
+                class={`flex text-sm
                 flex-row items-center
-                border border-solid border-spark-secondary rounded p-2 pl-0
+                border border-solid border-spark-secondary  p-2 pl-0
                 hover:bg-slate-100 hover:cursor-grab`}
-    >
-        <DragHandle />
-        <span class="truncate flex-grow flex-shrink">{field.label}</span>
-        <Status status={field.type} />
+        >
+            <DragHandle/>
+            <span class="truncate flex-grow flex-shrink">{field.label}</span>
+            <Status status={field.type}/>
+        </div>
+        <div class="p-2 flex-col" class:flex={field.type !== 'checkbox' && field.type !== 'radio'}>
+            <label for={field.label.toLowerCase().replaceAll(' ', '-')}>{field.label}</label>
+            {#if isHtmlInput(field.type)}
+                {#if field.type === 'radio'}
+                    {#if field.options}
+                        {#each field.options as {val, label}, index}
+                            <label for={`${field.label.toLowerCase().replaceAll(' ', '-')}-${index}`}>{label}</label>
+                            <input type="radio" id={`${field.label.toLowerCase().replaceAll(' ', '-')}-${index}`} name={field.label.toLowerCase().replaceAll(' ', '-')} value={val}>
+                            {/each}
+                        {/if}
+                    {:else}
+                <input id={field.label.toLowerCase().replaceAll(' ', '-')} type={field.type} placeholder={field.placeholder} />
+                    {/if}
+            {:else if field.type === 'textarea'}
+                <textarea id={field.label.toLowerCase().replaceAll(' ', '-')}></textarea>
+            {:else if field.type === 'select'}
+                <select id={field.label.toLowerCase().replaceAll(' ', '-')}>
+                    {#if field.options}
+                        {#each field.options as item}
+                            <option value={item.val}>{item.label}</option>
+                        {/each}
+                    {/if}
+                </select>
+            {/if}
+        </div>
     </div>
-
     {#if state.type === 'is-dragging-over' && state.closestEdge}
-        <DropIndicator edge={state.closestEdge} gap={'8px'} />
+        <DropIndicator edge={state.closestEdge} gap={'8px'}/>
     {/if}
 </div>
 {#if state.type === 'preview'}
     <Portal target={state.container}>
-        <DragPreview {field} />
+        <DragPreview {field}/>
     </Portal>
 {/if}

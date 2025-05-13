@@ -1,11 +1,10 @@
+import { formElements } from '$lib';
+import type { HtmlFormElements } from '$lib/types';
 import { type InferSelectModel, type SQL, sql } from 'drizzle-orm';
 // src/lib/db/schema.ts
-import {
-  integer,
-  primaryKey,
-  sqliteTable,
-  text,
-} from 'drizzle-orm/sqlite-core';
+import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { createInsertSchema } from 'drizzle-zod';
+import { z } from 'zod';
 
 const timestamps = {
   createdAt: integer('created_at', { mode: 'timestamp_ms' })
@@ -22,7 +21,8 @@ export const tenants = sqliteTable('tenants', {
   name: text('name').notNull(),
   slug: text('slug')
     .generatedAlwaysAs(
-      (): SQL => sql`lower(replace(${tenants.name}, ' ', '-'))`,
+      (): SQL => sql`lower
+                (replace(${tenants.name}, ' ', '-'))`,
       {
         mode: 'virtual',
       }
@@ -59,11 +59,13 @@ export const formFields = sqliteTable('form_fields', {
   formId: text('form_id')
     .notNull()
     .references(() => forms.id, { onDelete: 'cascade' }),
-  type: text('type').notNull(), // 'text', 'textarea', 'select', 'radio', 'checkbox', etc.
+  type: text('type').notNull().$type<HtmlFormElements>(), // 'text', 'textarea', 'select', 'radio', 'checkbox', etc.
   label: text('label').notNull(),
   placeholder: text('placeholder'),
   required: integer('required', { mode: 'boolean' }).notNull().default(false),
-  options: text('options', { mode: 'json' }), // JSON string for options (select, radio, etc.)
+  options: text('options', { mode: 'json' }).$type<
+    Array<{ val: string; label: string }>
+  >(), // JSON string for options (select, radio, etc.)
   orderIndex: integer('order_index').notNull(),
   ...timestamps,
 });
@@ -81,3 +83,13 @@ export const submissions = sqliteTable('submissions', {
 });
 
 export type SelectFormField = InferSelectModel<typeof formFields>;
+export type InsertFormField = typeof formFields.$inferInsert;
+
+export const formFieldInsertSchema = createInsertSchema(formFields, {
+  type: z.custom<HtmlFormElements>(val => {
+    if (typeof val !== 'string') {
+      return false;
+    }
+    return formElements.includes(val as HtmlFormElements);
+  }),
+});
