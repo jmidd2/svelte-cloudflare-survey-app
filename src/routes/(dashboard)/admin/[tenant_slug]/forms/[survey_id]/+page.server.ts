@@ -32,13 +32,6 @@ export const load: PageServerLoad = async function ({
     id: params.survey_id,
   };
 };
-//
-// export const actions = {
-//   default: async ({ locals, platform, request }) => {
-//     const data = await request.formData();
-//     console.log('actions', data.get('id'));
-//   },
-// } satisfies Actions;
 
 export const actions = {
   addFormField: async ({ locals, request }) => {

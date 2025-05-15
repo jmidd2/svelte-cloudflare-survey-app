@@ -1,6 +1,11 @@
 <script lang="ts">
 import { deserialize } from '$app/forms';
-import { formElements, isFormFieldData, sampleFormFieldLabels } from '$lib';
+import {
+  formElements,
+  isFormFieldData,
+  isHtmlFormField,
+  sampleFormFieldLabels,
+} from '$lib';
 import FormField from '$lib/dnd/FormField.svelte';
 import type {
   InsertFormField,
@@ -9,8 +14,13 @@ import type {
 import type { HtmlFormElements } from '$lib/types';
 import { triggerPostMoveFlash } from '@atlaskit/pragmatic-drag-and-drop-flourish/trigger-post-move-flash';
 import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
+import type { Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/types';
 import { reorderWithEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/reorder-with-edge';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import type {
+  BaseEventPayload,
+  ElementDragType,
+} from '@atlaskit/pragmatic-drag-and-drop/types';
 import { v4 as uuid } from 'uuid';
 import { isFieldData } from './utils.js';
 
@@ -98,20 +108,6 @@ async function addFormField(field: InsertFormField) {
       'x-svelte-action': 'true',
     },
   });
-
-  // if (response.ok) {
-  //     const result = deserialize(await response.text());
-  //     console.log(result);
-  //     if (result.status === 200) {
-  //         if (
-  //             result.type === 'success' &&
-  //             result.data &&
-  //             isFormFieldData(result.data)
-  //         ) {
-  //             formFields.push(result.data);
-  //         }
-  //     }
-  // }
 }
 
 type Props = {
@@ -120,124 +116,135 @@ type Props = {
 };
 let { fields = $bindable(), saveSorted }: Props = $props();
 
+function modifyOrderIndex(
+  list: typeof fields,
+  source: BaseEventPayload<ElementDragType>['source'],
+  indexOfTarget: number,
+  closestEdgeOfTarget: Edge | null
+) {
+  const copy = $state.snapshot(list);
+  let temp: SelectFormField = {
+    id: 'preview',
+    createdAt: new Date(Date.now()),
+    updatedAt: new Date(Date.now()),
+    formId: 'preview-form-id',
+    type: formElements[0],
+    label: 'This is a label',
+    required: false,
+    placeholder: 'placeholder',
+    options: null,
+    orderIndex: 0,
+  };
+
+  const targetOrderIndex = fields[indexOfTarget].orderIndex;
+  const targetFormId = fields[indexOfTarget].formId;
+
+  if (!isHtmlFormField(source.data.elementType))
+    throw new Error('not a HTML form tag');
+
+  if (closestEdgeOfTarget === 'top') {
+    temp = generateFormFieldData(
+      source.data.elementType,
+      targetOrderIndex,
+      targetFormId
+    );
+    for (const element of copy) {
+      if (element.orderIndex >= targetOrderIndex) {
+        element.orderIndex++;
+      }
+    }
+    // new element will be orderIndex - 1 and increment indexOfTarget to end
+  } else if (closestEdgeOfTarget === 'bottom') {
+    temp = generateFormFieldData(
+      source.data.elementType,
+      targetOrderIndex + 1,
+      targetFormId
+    );
+    // new element will be orderIndex + 1 and increment indexOfTarget + 1 to end
+    for (const element of copy) {
+      if (element.orderIndex > targetOrderIndex) {
+        element.orderIndex++;
+      }
+    }
+  }
+
+  return { reorderedList: copy, newField: temp };
+}
+
+async function handleDrop({
+  location,
+  source,
+}: BaseEventPayload<ElementDragType>) {
+  const target = location.current.dropTargets[0];
+  if (!target) {
+    return;
+  }
+
+  const sourceData = source.data;
+  const targetData = target.data;
+
+  if (!(isFieldData(sourceData) || isFieldData(targetData))) {
+    return;
+  }
+  const closestEdgeOfTarget = extractClosestEdge(targetData);
+
+  let indexOfSource = -1;
+  let indexOfTarget = fields.findIndex(task => task.id === targetData.fieldId);
+
+  if (indexOfTarget < 0) {
+    return;
+  }
+
+  if (source.data.fieldId === 'preview') {
+    const { reorderedList, newField } = modifyOrderIndex(
+      fields,
+      source,
+      indexOfTarget,
+      closestEdgeOfTarget
+    );
+
+    fields = reorderWithEdge({
+      list: [...reorderedList, newField],
+      startIndex: fields.length,
+      indexOfTarget,
+      closestEdgeOfTarget,
+      axis: 'vertical',
+    });
+
+    await addFormField(newField);
+  } else {
+    indexOfSource = fields.findIndex(task => task.id === sourceData.fieldId);
+
+    if (indexOfSource < 0) {
+      return;
+    }
+
+    fields = reorderWithEdge({
+      list: fields,
+      startIndex: indexOfSource,
+      indexOfTarget,
+      closestEdgeOfTarget,
+      axis: 'vertical',
+    });
+
+    const element = document.querySelector(
+      `[data-task-id="${sourceData.fieldId}"]`
+    );
+
+    if (element instanceof HTMLElement) {
+      triggerPostMoveFlash(element);
+    }
+  }
+
+  saveSorted();
+}
+
 $effect(() => {
   return monitorForElements({
     canMonitor({ source }) {
       return isFieldData(source.data);
     },
-    async onDrop({ location, source }) {
-      const target = location.current.dropTargets[0];
-      if (!target) {
-        return;
-      }
-
-      const sourceData = source.data;
-      const targetData = target.data;
-
-      if (!(isFieldData(sourceData) || isFieldData(targetData))) {
-        return;
-      }
-      console.log(location, target, source);
-
-      let indexOfSource = -1;
-      let indexOfTarget = -1;
-      let temp: SelectFormField = {
-        id: 'preview',
-        createdAt: new Date(Date.now()),
-        updatedAt: new Date(Date.now()),
-        formId: 'preview-form-id',
-        type: formElements[0],
-        label: 'This is a label',
-        required: false,
-        placeholder: 'placeholder',
-        options: null,
-        orderIndex: 0,
-      };
-
-      if (source.data.fieldId === 'preview') {
-        console.log('preview');
-        indexOfTarget = fields.findIndex(
-          task => task.id === targetData.fieldId
-        );
-
-        if (indexOfTarget < 0) {
-          return;
-        }
-
-        const copy = $state.snapshot(fields);
-
-        const targetOrderIndex = fields[indexOfTarget].orderIndex;
-        const targetFormId = fields[indexOfTarget].formId;
-
-        const closestEdgeOfTarget = extractClosestEdge(targetData);
-
-        if (closestEdgeOfTarget === 'top') {
-          temp = generateFormFieldData(
-            source.data.elementType,
-            targetOrderIndex,
-            targetFormId
-          );
-          for (const element of copy) {
-            if (element.orderIndex >= targetOrderIndex) {
-              element.orderIndex++;
-            }
-          }
-          // new element will be orderIndex - 1 and increment indexOfTarget to end
-        } else if (closestEdgeOfTarget === 'bottom') {
-          temp = generateFormFieldData(
-            source.data.elementType,
-            targetOrderIndex + 1,
-            targetFormId
-          );
-          // new element will be orderIndex + 1 and increment indexOfTarget + 1 to end
-          for (const element of copy) {
-            if (element.orderIndex > targetOrderIndex) {
-              element.orderIndex++;
-            }
-          }
-        }
-
-        const list = [...copy, temp];
-        console.log(list);
-
-        fields = reorderWithEdge({
-          list,
-          startIndex: fields.length,
-          indexOfTarget,
-          closestEdgeOfTarget,
-          axis: 'vertical',
-        });
-        await addFormField(temp);
-      } else {
-        indexOfSource = fields.findIndex(
-          task => task.id === sourceData.fieldId
-        );
-        indexOfTarget = fields.findIndex(
-          task => task.id === targetData.fieldId
-        );
-
-        if (indexOfTarget < 0 || indexOfSource < 0) {
-          return;
-        }
-
-        const closestEdgeOfTarget = extractClosestEdge(targetData);
-
-        fields = reorderWithEdge({
-          list: fields,
-          startIndex: indexOfSource,
-          indexOfTarget,
-          closestEdgeOfTarget,
-          axis: 'vertical',
-        });
-        const element = document.querySelector(
-          `[data-task-id="${sourceData.fieldId}"]`
-        );
-        if (element instanceof HTMLElement) {
-          triggerPostMoveFlash(element);
-        }
-      }
-      saveSorted();
-    },
+    onDrop: handleDrop,
   });
 });
 </script>

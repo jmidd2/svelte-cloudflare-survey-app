@@ -12,31 +12,6 @@ export const POST: RequestHandler = async ({ locals, request }) => {
     const inputs = data.sortedData;
     const formId = data.formId;
 
-    // const id = data.get('id')?.toString();
-    // if (!id) {
-    //   return new Response(
-    //     JSON.stringify({ success: false, error: 'id is missing' }),
-    //     {
-    //       headers: {
-    //         'Content-Type': 'application/json',
-    //       },
-    //     }
-    //   );
-    // }
-    //
-    // let orderIndex: string | number | undefined = data
-    //   .get('orderIndex')
-    //   ?.toString();
-    // if (!orderIndex) {
-    //   return new Response(
-    //     JSON.stringify({ success: false, error: 'orderIndex is missing' }),
-    //     {
-    //       headers: {
-    //         'Content-Type': 'application/json',
-    //       },
-    //     }
-    //   );
-    // }
     // You have to be sure that inputs array is not empty
     if (inputs.length === 0) {
       return error(500, { message: 'no inputs provided' });
