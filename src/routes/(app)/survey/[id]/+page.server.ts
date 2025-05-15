@@ -1,6 +1,6 @@
-import { forms } from '$lib/server/db/schema';
+import { formFields, forms } from '$lib/server/db/schema';
 import { type Actions, error } from '@sveltejs/kit';
-import { eq } from 'drizzle-orm';
+import { asc, eq } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async function ({ params, locals }) {
@@ -9,7 +9,9 @@ export const load: PageServerLoad = async function ({ params, locals }) {
   const survey = await locals.db.query.forms.findFirst({
     where: eq(forms.id, params.id),
     with: {
-      fields: true,
+      fields: {
+        orderBy: asc(formFields.orderIndex),
+      },
     },
   });
 

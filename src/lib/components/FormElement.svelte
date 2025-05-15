@@ -46,7 +46,8 @@ $effect(() => {
 
       if (
         source.data.elementType === 'radio' ||
-        source.data.elementType === 'select'
+        source.data.elementType === 'select' ||
+        source.data.elementType === 'checkbox'
       ) {
         previewData.options = [
           { label: 'Option 1', val: 'val-1' },

@@ -55,6 +55,7 @@ function generateFormFieldData(
 
   switch (type) {
     case 'checkbox':
+      fieldData.options = options;
       break;
     case 'date':
       break;

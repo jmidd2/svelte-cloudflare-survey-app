@@ -118,6 +118,7 @@ function generateFormFieldData(
 
   switch (type) {
     case 'checkbox':
+      fieldData.options = options;
       break;
     case 'date':
       break;
@@ -147,44 +148,6 @@ function generateFormFieldData(
   }
 
   return fieldData;
-}
-
-async function addFormField(field: InsertFormField) {
-  let formData = new FormData();
-  for (const [key, value] of Object.entries(field)) {
-    if (typeof value === 'string' || typeof value === 'number') {
-      formData.set(key, value.toString());
-    } else if (value instanceof Date) {
-      formData.set(key, value.getTime().toString());
-    } else if (key === 'options') {
-      formData.set(
-        key,
-        new Blob([JSON.stringify(field[key])], { type: 'application/json' })
-      );
-    }
-  }
-
-  const response = await fetch('?/addFormField', {
-    method: 'POST',
-    body: formData,
-    headers: {
-      'x-svelte-action': 'true',
-    },
-  });
-
-  if (response.ok) {
-    const result = deserialize(await response.text());
-    console.log(result);
-    if (result.status === 200) {
-      if (
-        result.type === 'success' &&
-        result.data &&
-        isFormFieldData(result.data)
-      ) {
-        formFields.push(result.data);
-      }
-    }
-  }
 }
 
 $effect(() => {
