@@ -1,7 +1,7 @@
-<script>
+<script lang="ts">
 let { target = globalThis.document?.body, children } = $props();
 
-let ref;
+let ref: HTMLDivElement;
 
 $effect(() => {
   if (target) {

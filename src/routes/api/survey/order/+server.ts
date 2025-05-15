@@ -1,44 +1,45 @@
 import { formFields, forms } from '$lib/server/db/schema';
-import { json } from '@sveltejs/kit';
+import { error, fail, json } from '@sveltejs/kit';
 import { type SQL, eq, inArray, sql } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ locals, request }) => {
-  const text = await request.text();
-  const data = JSON.parse(text);
-
-  const inputs = data.sortedData;
-  const formId = data.formId;
-
-  // const id = data.get('id')?.toString();
-  // if (!id) {
-  //   return new Response(
-  //     JSON.stringify({ success: false, error: 'id is missing' }),
-  //     {
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //     }
-  //   );
-  // }
-  //
-  // let orderIndex: string | number | undefined = data
-  //   .get('orderIndex')
-  //   ?.toString();
-  // if (!orderIndex) {
-  //   return new Response(
-  //     JSON.stringify({ success: false, error: 'orderIndex is missing' }),
-  //     {
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //     }
-  //   );
-  // }
   try {
+    const text = await request.text();
+    const data = JSON.parse(text);
+    if (!(data.sortedData && data.formId))
+      return error(404, { message: 'missing inputs' });
+    const inputs = data.sortedData;
+    const formId = data.formId;
+
+    // const id = data.get('id')?.toString();
+    // if (!id) {
+    //   return new Response(
+    //     JSON.stringify({ success: false, error: 'id is missing' }),
+    //     {
+    //       headers: {
+    //         'Content-Type': 'application/json',
+    //       },
+    //     }
+    //   );
+    // }
+    //
+    // let orderIndex: string | number | undefined = data
+    //   .get('orderIndex')
+    //   ?.toString();
+    // if (!orderIndex) {
+    //   return new Response(
+    //     JSON.stringify({ success: false, error: 'orderIndex is missing' }),
+    //     {
+    //       headers: {
+    //         'Content-Type': 'application/json',
+    //       },
+    //     }
+    //   );
+    // }
     // You have to be sure that inputs array is not empty
     if (inputs.length === 0) {
-      return;
+      return error(500, { message: 'no inputs provided' });
     }
 
     const sqlChunks: SQL[] = [];
@@ -75,7 +76,8 @@ export const POST: RequestHandler = async ({ locals, request }) => {
       .where(eq(forms.id, formId))
       .returning({ updatedAt: forms.updatedAt });
 
-    if (!survey || survey.length === 0) throw new Error('surey not found');
+    if (!survey || survey.length === 0)
+      return error(500, { message: 'survey not found' });
 
     return json({
       sucess: true,
@@ -83,10 +85,8 @@ export const POST: RequestHandler = async ({ locals, request }) => {
     });
   } catch (e) {
     console.error(e);
-    return new Response(JSON.stringify({ success: false, error: e.message }), {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    if (e instanceof Error) return error(500, { message: e.message });
+
+    return error(500, { message: 'there was an internal error' });
   }
 };

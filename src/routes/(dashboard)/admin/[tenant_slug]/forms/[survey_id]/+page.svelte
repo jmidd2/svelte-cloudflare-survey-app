@@ -1,48 +1,66 @@
 <script lang="ts">
 import { deserialize } from '$app/forms';
-import { formElements, sampleFormFieldLabels } from '$lib';
+import {
+  formElements,
+  isFormFieldData,
+  isHtmlFormField,
+  sampleFormFieldLabels,
+} from '$lib';
 import FormElement from '$lib/components/FormElement.svelte';
 import FormFieldList from '$lib/dnd/FormFieldList.svelte';
-import { type InsertFormField } from '$lib/server/db/schema';
+import {
+  type InsertFormField,
+  type SelectFormField,
+} from '$lib/server/db/schema';
 import type { HtmlFormElements } from '$lib/types';
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { v4 as uuid } from 'uuid';
+
+type PageState = 'idle' | 'loading';
+const idle: PageState = 'idle';
 
 const { data } = $props();
 
 let formFields = $state(data.fields);
 const survey = $derived(data.survey);
+
 let lastUpdate = $derived(survey.updatedAt);
 let lastUpdateString = $derived(`${lastUpdate.toLocaleString()}`);
+
 let showSavedAlert = $state(false);
 let isActive = $derived(survey.active);
-type PageState = 'idle' | 'loading';
-const idle: PageState = 'idle';
+
 let pageState: PageState = $state(idle);
 let errorMessage: null | string = $state(null);
+
 const highestDropIndex = $derived(
   formFields.reduce((prev, curr) => {
     if (curr.orderIndex > prev) return curr.orderIndex;
     return prev;
   }, 0)
 );
-let addFieldForm: HTMLFormElement | undefined;
 
 const isAdmin = $derived(
   data.session?.user ? data.session.user.roles.includes('admin') : false
 );
 
-async function saveSorted() {
-  const sortedData = formFields.map((val, index) => {
-    return {
-      orderIndex: index + 1,
-      id: val.id,
-    };
-  });
+async function saveSorted(sortedData?: { orderIndex: number; id: string }[]) {
+  let data: { orderIndex: number; id: string }[] = [];
+  if (sortedData) {
+    data = sortedData;
+  } else {
+    data = formFields.map((val, index) => {
+      return {
+        orderIndex: index + 1,
+        id: val.id,
+      };
+    });
+  }
 
   pageState = 'loading';
   const response = await fetch('/api/survey/order', {
     method: 'POST',
-    body: JSON.stringify({ formId: survey.id, sortedData }),
+    body: JSON.stringify({ formId: survey.id, sortedData: data }),
     headers: {
       'Content-Type': 'application/json',
     },
@@ -63,18 +81,17 @@ async function saveSorted() {
   }, 1500);
 
   setTimeout(() => {
-    // lastUpdateString = lastUpdate.toLocaleString();
     showSavedAlert = false;
   }, 3000);
 }
-
-$inspect(formFields);
 
 let dropBox: HTMLDivElement | undefined;
 let dragState: 'idle' | 'is-dragged-over' = $state('idle');
 let elementBeingDropped = $state('');
 
-function generateFormFieldData(type: HtmlFormElements) {
+function generateFormFieldData(
+  type: HtmlFormElements
+): Exclude<SelectFormField, 'createdAt' | 'updatedAt'> {
   const label =
     sampleFormFieldLabels[
       Math.floor(Math.random() * sampleFormFieldLabels.length)
@@ -86,12 +103,17 @@ function generateFormFieldData(type: HtmlFormElements) {
     { label: 'value 3', val: 'val-3' },
   ];
 
-  let fieldData: Omit<InsertFormField, 'id'> = {
+  let fieldData: SelectFormField = {
+    id: uuid(),
     formId: survey.id,
     type,
     label,
     placeholder: label,
     orderIndex: highestDropIndex + 1,
+    createdAt: new Date(Date.now()),
+    updatedAt: new Date(Date.now()),
+    required: false,
+    options: null,
   };
 
   switch (type) {
@@ -123,17 +145,17 @@ function generateFormFieldData(type: HtmlFormElements) {
     default:
       break;
   }
+
   return fieldData;
 }
 
 async function addFormField(field: InsertFormField) {
   let formData = new FormData();
   for (const [key, value] of Object.entries(field)) {
-    console.log(key, value);
     if (typeof value === 'string' || typeof value === 'number') {
-      formData.set(key, value);
+      formData.set(key, value.toString());
     } else if (value instanceof Date) {
-      formData.set(key, value);
+      formData.set(key, value.getTime().toString());
     } else if (key === 'options') {
       formData.set(
         key,
@@ -141,13 +163,6 @@ async function addFormField(field: InsertFormField) {
       );
     }
   }
-
-  console.log(
-    formData
-      .entries()
-      .map(([k, v]) => ({ k, v }))
-      .toArray()
-  );
 
   const response = await fetch('?/addFormField', {
     method: 'POST',
@@ -161,7 +176,13 @@ async function addFormField(field: InsertFormField) {
     const result = deserialize(await response.text());
     console.log(result);
     if (result.status === 200) {
-      formFields.push(result.data);
+      if (
+        result.type === 'success' &&
+        result.data &&
+        isFormFieldData(result.data)
+      ) {
+        formFields.push(result.data);
+      }
     }
   }
 }
@@ -180,25 +201,23 @@ $effect(() => {
       elementBeingDropped = '';
       dragState = 'idle';
     },
-    onDrop: ({ source }) => {
+    onDrop: ({ location, source }) => {
       dragState = 'idle';
-      if (!source.data.elementType) return;
+      if (
+        !(source.data.elementType && isHtmlFormField(source.data.elementType))
+      )
+        return;
+
       elementBeingDropped = `Dropped ${source.data.elementType}`;
 
       const newField = generateFormFieldData(source.data.elementType);
-
-      addFormField(newField);
-      // formFields.push({
-      //   id: '',
-      //   createdAt: new Date(Date.now()),
-      //   updatedAt: new Date(Date.now()),
-      //   ...newField,
-      // });
+      // addFormField(newField);
     },
   });
 });
+
+$inspect(formFields);
 </script>
-<form bind:this={addFieldForm} method="post" action="?/addFormField" class="hidden"></form>
 <div class="border-b pb-2 mb-2">
     <h1 class="flex flex-col text-2xl mb-2">{survey.title} <span class="text-sm">Survey #{data.id}</span></h1>
     <p>{survey.description}</p>
@@ -240,9 +259,6 @@ $effect(() => {
 {#if pageState === 'idle' && errorMessage}
     {errorMessage}
 {/if}
-<div class="text-black">
-    <FormFieldList bind:fields={formFields} {saveSorted}/>
-</div>
 <div class="grid grid-cols-[auto_1fr]">
     <div>
         <ul>
@@ -252,11 +268,11 @@ $effect(() => {
         </ul>
     </div>
     <div bind:this={dropBox}
-         class={['flex flex-col items-center justify-center bg-amber-500/30 rounded-xl', {'bg-pink-400': dragState === 'is-dragged-over'}]}>
-        <p class="">Drag elements here</p>
-        {#if elementBeingDropped !== ''}
-            <p>{elementBeingDropped}</p>
-        {/if}
+         class={['rounded-xl border-dashed border p-4 my-4', {'bg-amber-500/30 ': dragState === 'is-dragged-over'}]}>
+        <p class="text-center font-bold">Drag elements here</p>
+        <div class="text-black mt-2">
+            <FormFieldList bind:fields={formFields} {saveSorted}/>
+        </div>
     </div>
 </div>
 

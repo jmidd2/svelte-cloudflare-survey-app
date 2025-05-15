@@ -5,6 +5,9 @@ import { reset, seed } from 'drizzle-seed';
 import { formElements, sampleFormFieldLabels } from '../src/lib';
 
 async function main() {
+  if (!process.env.DATABASE_URL) {
+    throw new Error('DATABASE_URL is required');
+  }
   const client = createClient({ url: process.env.DATABASE_URL });
   const db = drizzle(client, { schema });
 

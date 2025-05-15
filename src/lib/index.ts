@@ -1,7 +1,28 @@
+import type { SelectFormField } from '$lib/server/db/schema';
 // place files you want to import through the `$lib` alias in this folder.
 import type { HtmlFormElements } from '$lib/types';
 
+export function isHtmlFormField(
+  fieldType: unknown
+): fieldType is HtmlFormElements {
+  return formElements.includes(<HtmlFormElements>fieldType);
+}
+
+export function isFormFieldData(data: unknown): data is SelectFormField {
+  return (
+    !!(data as SelectFormField).createdAt &&
+    !!(data as SelectFormField).updatedAt &&
+    !!(data as SelectFormField).id &&
+    !!(data as SelectFormField).formId &&
+    !!(data as SelectFormField).type &&
+    !!(data as SelectFormField).label &&
+    (data as SelectFormField).required !== undefined &&
+    !!(data as SelectFormField).orderIndex
+  );
+}
+
 export const formElements: HtmlFormElements[] = [
+  'text',
   'checkbox',
   'date',
   'email',
@@ -9,10 +30,22 @@ export const formElements: HtmlFormElements[] = [
   'radio',
   'range',
   'tel',
-  'text',
   'textarea',
   'select',
 ] as const;
+
+export const formElementTags: Record<HtmlFormElements, string> = {
+  checkbox: 'Checkbox',
+  date: 'Date',
+  email: 'Email',
+  number: 'Number',
+  radio: 'Radio',
+  range: 'Range',
+  tel: 'Telephone',
+  text: 'Textbox',
+  textarea: 'Textarea',
+  select: 'Select',
+} as const;
 
 export const sampleFormFieldLabels = [
   // Personal Information

@@ -1,12 +1,12 @@
-import { formElements } from '$lib';
+import { formElements, isHtmlFormField } from '$lib';
 import { getFormById, getFormFields } from '$lib/server/db';
 import {
   type InsertFormField,
   formFieldInsertSchema,
   formFields,
 } from '$lib/server/db/schema';
-import type { HtmlFormElements } from '$lib/types';
 import { fail, json } from '@sveltejs/kit';
+import { eq } from 'drizzle-orm';
 import { v4 as uuid } from 'uuid';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -39,10 +39,6 @@ export const load: PageServerLoad = async function ({
 //     console.log('actions', data.get('id'));
 //   },
 // } satisfies Actions;
-
-function isHtmlFormField(fieldType: unknown): fieldType is HtmlFormElements {
-  return formElements.includes(<HtmlFormElements>fieldType);
-}
 
 export const actions = {
   addFormField: async ({ locals, request }) => {
@@ -80,5 +76,14 @@ export const actions = {
       .returning();
 
     return result[0];
+  },
+  deleteFormField: async ({ locals, request }) => {
+    const formData = await request.formData();
+    const fieldId = formData.get('fieldId');
+    if (!fieldId) fail(404, { message: 'field id is required' });
+
+    await locals.db.delete(formFields).where(eq(formFields.id, fieldId));
+
+    return { success: true };
   },
 } satisfies Actions;

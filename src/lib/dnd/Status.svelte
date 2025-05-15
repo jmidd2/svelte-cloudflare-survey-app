@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { SelectFormField } from '$lib/server/db/schema';
+import { formElementTags } from '$lib';
 import type { HtmlFormElements } from '$lib/types';
 
 const bgColor: Record<HtmlFormElements, string> = {
@@ -15,19 +15,6 @@ const bgColor: Record<HtmlFormElements, string> = {
   textarea: 'bg-green-200',
 };
 
-const label: Record<HtmlFormElements, string> = {
-  text: 'Text Box',
-  select: 'Select',
-  radio: 'Radio',
-  checkbox: 'Checkbox',
-  date: 'Date',
-  tel: 'Telephone',
-  email: 'Email',
-  number: 'Number',
-  range: 'Range',
-  textarea: 'Textarea',
-};
-
 let { status }: { status: HtmlFormElements } = $props();
 </script>
 
@@ -35,6 +22,6 @@ let { status }: { status: HtmlFormElements } = $props();
     <span
             class={`${bgColor[status]} uppercase p-1 rounded font-semibold flex-shrink-0 text-xs text-slate-900 `}
     >
-    {label[status]}
+    {formElementTags[status]}
     </span>
 </div>
