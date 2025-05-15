@@ -250,7 +250,7 @@ $effect(() => {
 </script>
 
 <div class="grid grid-cols-1 gap-y-4 p-2">
-    {#each fields as field}
-        <FormField {field}/>
+    {#each fields as field, index}
+        <FormField bind:field={fields[index]}/>
     {/each}
 </div>

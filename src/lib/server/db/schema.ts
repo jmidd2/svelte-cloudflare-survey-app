@@ -1,6 +1,6 @@
 import { formElements } from '$lib';
 import type { HtmlFormElements } from '$lib/types';
-import { type InferSelectModel, type SQL, sql } from 'drizzle-orm';
+import { type InferSelectModel, type SQL, relations, sql } from 'drizzle-orm';
 // src/lib/db/schema.ts
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 import { createInsertSchema } from 'drizzle-zod';
@@ -53,6 +53,10 @@ export const forms = sqliteTable('forms', {
   ...timestamps,
 });
 
+export const formsRelations = relations(forms, ({ many }) => ({
+  fields: many(formFields),
+}));
+
 // Form fields table - stores fields for each form
 export const formFields = sqliteTable('form_fields', {
   id: text('id').primaryKey(),
@@ -70,13 +74,32 @@ export const formFields = sqliteTable('form_fields', {
   ...timestamps,
 });
 
+export const formFieldRelations = relations(formFields, ({ one }) => ({
+  form: one(forms, {
+    fields: [formFields.formId],
+    references: [forms.id],
+  }),
+}));
+
+type SubmissionData =
+  | {
+      formFieldId: string;
+      fieldType: Extract<'checkbox', HtmlFormElements>;
+      values: Array<string | number>;
+    }
+  | {
+      formFieldId: string;
+      fieldType: Exclude<HtmlFormElements, 'checkbox'>;
+      value: string | number;
+    };
+
 // Form submissions table - stores user submissions
 export const submissions = sqliteTable('submissions', {
   id: text('id').primaryKey(),
   formId: text('form_id')
     .notNull()
     .references(() => forms.id, { onDelete: 'cascade' }),
-  data: text('data', { mode: 'json' }).notNull(), // JSON string with form data
+  data: text('data', { mode: 'json' }).$type<SubmissionData>().notNull(), // JSON string with form data
   ipHash: text('ip_hash'), // Anonymized IP hash
   userAgentHash: text('user_agent_hash'), // Anonymized user agent hash
   createdAt: timestamps.createdAt,

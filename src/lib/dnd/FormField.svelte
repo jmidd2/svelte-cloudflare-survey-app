@@ -1,5 +1,5 @@
 <script lang="ts">
-import { isHtmlFormField } from '$lib';
+import { formElementTags, formElements, isHtmlFormField } from '$lib';
 import type { SelectFormField } from '$lib/server/db/schema';
 import {
   attachClosestEdge,
@@ -29,7 +29,7 @@ interface FieldState {
 type Props = {
   field: SelectFormField;
 };
-let { field }: Props = $props();
+let { field = $bindable() }: Props = $props();
 
 let element: HTMLDivElement | undefined;
 const idle: FieldState = { type: 'idle' };
