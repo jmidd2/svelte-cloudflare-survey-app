@@ -1,6 +1,13 @@
-import type { SelectFormField } from '$lib/server/db/schema';
+import type {
+  SelectFormField,
+  SelectFormFieldWithHash,
+} from '$lib/server/db/schema';
 // place files you want to import through the `$lib` alias in this folder.
 import type { HtmlFormElements } from '$lib/types';
+
+export function genSlug({ label, id }: Pick<SelectFormField, 'label' | 'id'>) {
+  return `${label.toLowerCase().replaceAll(' ', '-')}-${id}`;
+}
 
 export function isHtmlFormField(
   fieldType: unknown
@@ -45,6 +52,7 @@ export const formElementTags: Record<HtmlFormElements, string> = {
   text: 'Textbox',
   textarea: 'Textarea',
   select: 'Select',
+  'yes-no': 'Yes/No',
 } as const;
 
 export const sampleFormFieldLabels = [

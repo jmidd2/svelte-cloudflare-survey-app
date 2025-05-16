@@ -8,4 +8,5 @@ export type HtmlFormElements =
   | 'tel'
   | 'text'
   | 'textarea'
-  | 'select';
+  | 'select'
+  | 'yes-no';

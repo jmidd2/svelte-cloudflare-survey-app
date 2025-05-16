@@ -1,27 +1,51 @@
 <script lang="ts">
+import { enhance } from '$app/forms';
 import { isHtmlFormField } from '$lib';
+import type { SelectFormFieldWithHash } from '$lib/server/db/schema';
 
-const { data } = $props();
+const { data, form } = $props();
 
 const survey = $derived(data.survey);
 $inspect(data.survey);
+$inspect(form);
+
+function createSlug({ label, hash }: SelectFormFieldWithHash) {
+  console.log(label, hash);
+  return `${label.toLowerCase().replaceAll(' ', '-')}-${hash}`;
+}
 </script>
 <div>
     <h1>{survey.title}</h1>
     <p>{survey.description}</p>
-    <form method="post">
+    {#if form}
+        <div class:bg-red-700={!form.success} class:bg-green-600={form.success} class="my-2 rounded-xl px-4 py-2">
+            {#if form.success}
+                Form submitted!
+            {:else}
+                {#if form.status === 404}
+                    Survey not found
+                {:else if form.status === 400}
+                    Please fill out all required fields
+                {/if}
+            {/if}
+        </div>
+    {/if}
+    <form method="post" use:enhance>
         {#each survey.fields as field}
             <div class="p-2 flex flex-col">
-                <label
-                        for={field.label.toLowerCase().replaceAll(' ', '-')}>{field.label}</label>
+                <label class="font-lg"
+                       for={createSlug(field)}>{field.label}
+                    {#if field.required}<span class="text-red-500 font-bold">*</span>{/if}
+                </label>
                 {#if isHtmlFormField(field.type)}
                     {#if (field.type === 'radio' || field.type === 'checkbox') && field.options}
                         {#each field.options as {val, label}, index}
                             <div>
                                 <input type={field.type}
-                                       id={`${field.label.toLowerCase().replaceAll(' ', '-')}-${index}`}
-                                       name={field.label.toLowerCase().replaceAll(' ', '-')} value={val}>
-                                <label for={`${field.label.toLowerCase().replaceAll(' ', '-')}-${index}`}>{label}</label>
+                                       required={field.required}
+                                       id={`${createSlug(field)}-${index}`}
+                                       name={createSlug(field)} value={val}>
+                                <label for={`${createSlug(field)}-${index}`}>{label}</label>
                             </div>
                         {/each}
                         <!--{:else if field.type === 'checkbox'}-->
@@ -31,11 +55,13 @@ $inspect(data.survey);
                         <!--        <label for={`${field.label.toLowerCase().replaceAll(' ', '-')}`}>{field.label}</label>-->
                         <!--    </div>-->
                     {:else if field.type === 'textarea'}
-                        <textarea name={field.label.toLowerCase().replaceAll(' ', '-')}
-                                  id={field.label.toLowerCase().replaceAll(' ', '-')}></textarea>
+                        <textarea name={createSlug(field)}
+                                  required={field.required}
+                                  id={createSlug(field)}></textarea>
                     {:else if field.type === 'select'}
-                        <select name={field.label.toLowerCase().replaceAll(' ', '-')}
-                                id={field.label.toLowerCase().replaceAll(' ', '-')}>
+                        <select name={createSlug(field)}
+                                required={field.required}
+                                id={createSlug(field)}>
                             {#if field.options}
                                 {#each field.options as item}
                                     <option value={item.val}>{item.label}</option>
@@ -43,8 +69,9 @@ $inspect(data.survey);
                             {/if}
                         </select>
                     {:else}
-                        <input name={field.label.toLowerCase().replaceAll(' ', '-')}
-                               id={field.label.toLowerCase().replaceAll(' ', '-')} type={field.type}
+                        <input name={createSlug(field)}
+                               required={field.required}
+                               id={createSlug(field)} type={field.type}
                                placeholder={field.placeholder}/>
                     {/if}
                 {/if}

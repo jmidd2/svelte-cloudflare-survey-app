@@ -81,16 +81,18 @@ export const formFieldRelations = relations(formFields, ({ one }) => ({
   }),
 }));
 
-type SubmissionData =
+export type SubmissionData =
   | {
       formFieldId: string;
       fieldType: Extract<'checkbox', HtmlFormElements>;
+      primitive: 'string' | 'number' | 'boolean' | 'date';
       values: Array<string | number>;
     }
   | {
       formFieldId: string;
       fieldType: Exclude<HtmlFormElements, 'checkbox'>;
-      value: string | number;
+      primitive: 'string' | 'number' | 'boolean' | 'date';
+      value: string | number | boolean;
     };
 
 // Form submissions table - stores user submissions
@@ -99,14 +101,21 @@ export const submissions = sqliteTable('submissions', {
   formId: text('form_id')
     .notNull()
     .references(() => forms.id, { onDelete: 'cascade' }),
-  data: text('data', { mode: 'json' }).$type<SubmissionData>().notNull(), // JSON string with form data
+  data: text('data', { mode: 'json' }).$type<SubmissionData[]>().notNull(), // JSON string with form data
   ipHash: text('ip_hash'), // Anonymized IP hash
   userAgentHash: text('user_agent_hash'), // Anonymized user agent hash
   createdAt: timestamps.createdAt,
 });
 
 export type SelectFormField = InferSelectModel<typeof formFields>;
+export type SelectFormFieldWithHash = Omit<SelectFormField, 'id'> & {
+  hash: string;
+};
 export type InsertFormField = typeof formFields.$inferInsert;
+
+export type SelectForm = InferSelectModel<typeof forms>;
+
+export type SelectFormWithFields = SelectForm & { fields: SelectFormField[] };
 
 export const formFieldInsertSchema = createInsertSchema(formFields, {
   type: z.custom<HtmlFormElements>(val => {
