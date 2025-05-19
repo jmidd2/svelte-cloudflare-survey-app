@@ -1,11 +1,5 @@
 <script lang="ts">
-import { deserialize } from '$app/forms';
-import {
-  formElements,
-  isFormFieldData,
-  isHtmlFormField,
-  sampleFormFieldLabels,
-} from '$lib';
+import { formElements, isHtmlFormField, sampleFormFieldLabels } from '$lib';
 import FormField from '$lib/dnd/FormField.svelte';
 import type {
   InsertFormField,
@@ -113,11 +107,13 @@ async function addFormField(field: InsertFormField) {
 
 type Props = {
   fields: SelectFormField[];
-  saveSorted: () => void;
+  saveSorted: (
+    sortedData?: { orderIndex: number; id: string }[]
+  ) => Promise<void>;
 };
 let { fields = $bindable(), saveSorted }: Props = $props();
 
-function modifyOrderIndex(
+function addNewFieldToArray(
   list: typeof fields,
   source: BaseEventPayload<ElementDragType>['source'],
   indexOfTarget: number,
@@ -137,8 +133,8 @@ function modifyOrderIndex(
     orderIndex: 0,
   };
 
-  const targetOrderIndex = fields[indexOfTarget].orderIndex;
-  const targetFormId = fields[indexOfTarget].formId;
+  const targetOrderIndex = list[indexOfTarget].orderIndex;
+  const targetFormId = list[indexOfTarget].formId;
 
   if (!isHtmlFormField(source.data.elementType))
     throw new Error('not a HTML form tag');
@@ -149,11 +145,11 @@ function modifyOrderIndex(
       targetOrderIndex,
       targetFormId
     );
-    for (const element of copy) {
-      if (element.orderIndex >= targetOrderIndex) {
-        element.orderIndex++;
-      }
-    }
+    // for (const element of copy) {
+    //   if (element.orderIndex >= targetOrderIndex) {
+    //     element.orderIndex++;
+    //   }
+    // }
     // new element will be orderIndex - 1 and increment indexOfTarget to end
   } else if (closestEdgeOfTarget === 'bottom') {
     temp = generateFormFieldData(
@@ -162,14 +158,120 @@ function modifyOrderIndex(
       targetFormId
     );
     // new element will be orderIndex + 1 and increment indexOfTarget + 1 to end
-    for (const element of copy) {
-      if (element.orderIndex > targetOrderIndex) {
-        element.orderIndex++;
+    // for (const element of copy) {
+    //   if (element.orderIndex > targetOrderIndex) {
+    //     element.orderIndex++;
+    //   }
+    // }
+  }
+
+  const newCopy = reorderArray(
+    copy,
+    -1,
+    indexOfTarget,
+    temp,
+    closestEdgeOfTarget
+  );
+
+  return { list: newCopy, field: temp };
+}
+
+function reorderArray(
+  list,
+  sourceIndex,
+  targetIndex,
+  element,
+  edge?: Edge | null
+) {
+  let copy = [...list];
+
+  console.log(
+    sourceIndex >= 0 ? 'modify' : 'add',
+    { length: copy.length, source: sourceIndex, target: targetIndex, edge },
+    element
+  );
+
+  if (sourceIndex < 0) {
+    // new element is from a preview
+    if (targetIndex === 0) {
+      console.log('add @ beginning');
+      copy = [element, ...copy];
+    } else if (targetIndex === copy.length) {
+      console.log('add @ end');
+      copy = [...copy, element];
+    } else {
+      console.log('add in middle');
+      if (edge === 'top') {
+        copy = [
+          ...copy.slice(0, targetIndex),
+          element,
+          ...copy.slice(targetIndex),
+        ];
+      } else if (edge === 'bottom') {
+        copy = [
+          ...copy.slice(0, targetIndex + 1),
+          element,
+          ...copy.slice(targetIndex + 1),
+        ];
+      }
+    }
+  } else if (targetIndex + 1 === copy.length) {
+    console.log('target is end');
+    copy = [...copy.filter(e => e.id !== element.id), element];
+  } else if (sourceIndex === 0) {
+    console.log('source is beginning');
+    copy = [...copy.slice(1, targetIndex), element, ...copy.slice(targetIndex)];
+  } else {
+    if (targetIndex === 0) {
+      console.log('target is beginning');
+      copy = [element, ...copy.filter(e => e.id !== element.id)];
+    } else {
+      console.log('target is middle');
+      if (sourceIndex > targetIndex) {
+        // move up
+        copy = [
+          ...copy.slice(0, targetIndex),
+          element,
+          ...copy.filter(e => e.id !== element.id).slice(targetIndex),
+        ];
+      } else if (sourceIndex < targetIndex) {
+        // move down
+        copy = [
+          ...copy.filter(e => e.id !== element.id).slice(0, targetIndex),
+          element,
+          ...copy.slice(targetIndex + 1),
+        ];
       }
     }
   }
 
-  return { reorderedList: copy, newField: temp };
+  for (let i = 0; i < copy.length; i++) {
+    copy[i].orderIndex = i + 1;
+  }
+
+  return copy;
+}
+
+function modifyOrder(
+  list: typeof fields,
+  indexOfSource: number,
+  indexOfTarget: number,
+  closestEdgeOfTarget: Edge | null
+) {
+  let copy = $state.snapshot(list);
+
+  const targetOrderIndex = list[indexOfTarget].orderIndex;
+  const sourceField = copy[indexOfSource];
+
+  if (closestEdgeOfTarget === 'top') {
+    sourceField.orderIndex = targetOrderIndex;
+  } else if (closestEdgeOfTarget === 'bottom') {
+    sourceField.orderIndex = targetOrderIndex + 1;
+  }
+
+  copy = reorderArray(copy, indexOfSource, indexOfTarget, sourceField);
+
+  return copy;
 }
 
 async function handleDrop({
@@ -196,37 +298,37 @@ async function handleDrop({
     return;
   }
 
+  let copyOfFields = $state.snapshot(fields);
+  let newFields = [];
+
   if (source.data.fieldId === 'preview') {
-    const { reorderedList, newField } = modifyOrderIndex(
-      fields,
+    console.log('adding new field');
+    // New field being added
+    const { list, field } = addNewFieldToArray(
+      copyOfFields,
       source,
       indexOfTarget,
       closestEdgeOfTarget
     );
 
-    fields = reorderWithEdge({
-      list: [...reorderedList, newField],
-      startIndex: fields.length,
-      indexOfTarget,
-      closestEdgeOfTarget,
-      axis: 'vertical',
-    });
+    newFields = list;
 
-    await addFormField(newField);
+    await addFormField(field);
   } else {
+    // reordering existing items
+    console.log('reordering');
     indexOfSource = fields.findIndex(task => task.id === sourceData.fieldId);
 
     if (indexOfSource < 0) {
       return;
     }
 
-    fields = reorderWithEdge({
-      list: fields,
-      startIndex: indexOfSource,
+    newFields = modifyOrder(
+      copyOfFields,
+      indexOfSource,
       indexOfTarget,
-      closestEdgeOfTarget,
-      axis: 'vertical',
-    });
+      closestEdgeOfTarget
+    );
 
     const element = document.querySelector(
       `[data-task-id="${sourceData.fieldId}"]`
@@ -236,8 +338,13 @@ async function handleDrop({
       triggerPostMoveFlash(element);
     }
   }
-
-  saveSorted();
+  console.log(
+    'new fields',
+    newFields,
+    newFields.map(e => e.orderIndex)
+  );
+  await saveSorted(newFields);
+  fields = newFields;
 }
 
 $effect(() => {

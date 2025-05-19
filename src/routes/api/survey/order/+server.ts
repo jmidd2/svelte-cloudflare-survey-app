@@ -1,4 +1,4 @@
-import { formFields, forms } from '$lib/server/db/schema';
+import { type SelectFormField, formFields, forms } from '$lib/server/db/schema';
 import { error, fail, json } from '@sveltejs/kit';
 import { type SQL, eq, inArray, sql } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
@@ -6,7 +6,16 @@ import type { RequestHandler } from './$types';
 export const POST: RequestHandler = async ({ locals, request }) => {
   try {
     const text = await request.text();
-    const data = JSON.parse(text);
+    const data: { sortedData: SelectFormField[]; formId: string } =
+      JSON.parse(text);
+    // console.log(data);
+    const test = [];
+
+    for (const ele of data.sortedData) {
+      test.push({ o: ele.orderIndex, i: ele.id });
+    }
+    console.log('test', test);
+
     if (!(data.sortedData && data.formId))
       return error(404, { message: 'missing inputs' });
     const inputs = data.sortedData;
@@ -18,7 +27,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
     }
 
     const sqlChunks: SQL[] = [];
-    const ids: number[] = [];
+    const ids: string[] = [];
     const timeSqlChunks: SQL[] = [];
 
     sqlChunks.push(sql`(case`);

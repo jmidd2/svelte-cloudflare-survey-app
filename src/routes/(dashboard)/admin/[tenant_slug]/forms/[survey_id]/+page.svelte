@@ -40,6 +40,13 @@ const highestDropIndex = $derived(
   }, 0)
 );
 
+$effect(() => {
+  console.log(
+    'state order',
+    formFields.map(e => e.orderIndex)
+  );
+});
+
 const isAdmin = $derived(
   data.session?.user ? data.session.user.roles.includes('admin') : false
 );
