@@ -1,10 +1,10 @@
-import { formElements } from '$lib';
+import { formElements, isHtmlFormField } from '$lib';
 import type { HtmlFormElements } from '$lib/types';
 import { type InferSelectModel, type SQL, relations, sql } from 'drizzle-orm';
 // src/lib/db/schema.ts
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 import { createInsertSchema } from 'drizzle-zod';
-import { z } from 'zod';
+import { z } from 'zod/v4';
 
 const timestamps = {
   createdAt: integer('created_at', { mode: 'timestamp_ms' })
@@ -108,6 +108,7 @@ export const submissions = sqliteTable('submissions', {
 });
 
 export type SelectFormField = InferSelectModel<typeof formFields>;
+
 export type SelectFormFieldWithHash = Omit<SelectFormField, 'id'> & {
   hash: string;
 };

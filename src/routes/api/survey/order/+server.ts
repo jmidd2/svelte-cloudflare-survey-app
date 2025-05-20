@@ -8,13 +8,8 @@ export const POST: RequestHandler = async ({ locals, request }) => {
     const text = await request.text();
     const data: { sortedData: SelectFormField[]; formId: string } =
       JSON.parse(text);
-    // console.log(data);
-    const test = [];
 
-    for (const ele of data.sortedData) {
-      test.push({ o: ele.orderIndex, i: ele.id });
-    }
-    console.log('test', test);
+    console.table(data.sortedData.map(e => ({ o: e.orderIndex, i: e.id })));
 
     if (!(data.sortedData && data.formId))
       return error(404, { message: 'missing inputs' });
@@ -26,34 +21,35 @@ export const POST: RequestHandler = async ({ locals, request }) => {
       return error(500, { message: 'no inputs provided' });
     }
 
-    const sqlChunks: SQL[] = [];
-    const ids: string[] = [];
-    const timeSqlChunks: SQL[] = [];
-
-    sqlChunks.push(sql`(case`);
-    timeSqlChunks.push(sql`(case`);
-
-    for (const input of inputs) {
-      sqlChunks.push(
-        sql`when ${formFields.id} = ${input.id} then ${input.orderIndex}`
-      );
-      timeSqlChunks.push(
-        sql`when ${formFields.id} = ${input.id} then ${Date.now()}`
-      );
-      ids.push(input.id);
-    }
-
-    sqlChunks.push(sql`end)`);
-    timeSqlChunks.push(sql`end)`);
-
-    const finalSql: SQL = sql.join(sqlChunks, sql.raw(' '));
-    const finalTimeSql: SQL = sql.join(timeSqlChunks, sql.raw(' '));
-
-    await locals.db
-      .update(formFields)
-      .set({ orderIndex: finalSql, updatedAt: finalTimeSql })
-      .where(inArray(formFields.id, ids));
-
+    // const sqlChunks: SQL[] = [];
+    // const ids: string[] = [];
+    // const timeSqlChunks: SQL[] = [];
+    //
+    // sqlChunks.push(sql`(case`);
+    // timeSqlChunks.push(sql`(case`);
+    //
+    // for (const input of inputs) {
+    //   console.table({ id: input.id, type: input.type, oi: input.orderIndex });
+    //   sqlChunks.push(
+    //     sql`when ${formFields.id} = ${input.id} then ${input.orderIndex}`
+    //   );
+    //   timeSqlChunks.push(
+    //     sql`when ${formFields.id} = ${input.id} then ${Date.now()}`
+    //   );
+    //   ids.push(input.id);
+    // }
+    //
+    // sqlChunks.push(sql`end)`);
+    // timeSqlChunks.push(sql`end)`);
+    //
+    // const finalSql: SQL = sql.join(sqlChunks, sql.raw(' '));
+    // const finalTimeSql: SQL = sql.join(timeSqlChunks, sql.raw(' '));
+    //
+    // await locals.db
+    //   .update(formFields)
+    //   .set({ orderIndex: finalSql, updatedAt: finalTimeSql })
+    //   .where(inArray(formFields.id, ids));
+    //
     const survey = await locals.db
       .update(forms)
       .set({ updatedAt: new Date(Date.now()) })
@@ -62,6 +58,23 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 
     if (!survey || survey.length === 0)
       return error(500, { message: 'survey not found' });
+
+    await locals.db.transaction(async tx => {
+      const promises: Promise<any>[] = [];
+      for (const field of data.sortedData) {
+        promises.push(
+          tx
+            .update(formFields)
+            .set({
+              orderIndex: field.orderIndex,
+              updatedAt: new Date(Date.now()),
+            })
+            .where(eq(formFields.id, field.id))
+        );
+      }
+
+      await Promise.allSettled(promises);
+    });
 
     return json({
       sucess: true,

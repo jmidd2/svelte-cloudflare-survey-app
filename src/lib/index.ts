@@ -28,6 +28,24 @@ export function isFormFieldData(data: unknown): data is SelectFormField {
   );
 }
 
+export function isSelectFormField(field: unknown): field is SelectFormField {
+  return (
+    (field as SelectFormField).formId !== undefined &&
+    (field as SelectFormField).id !== undefined &&
+    (field as SelectFormField).type !== undefined &&
+    isHtmlFormField((field as SelectFormField).type) &&
+    (field as SelectFormField).label !== undefined &&
+    (field as SelectFormField).required !== undefined &&
+    (field as SelectFormField).placeholder !== undefined &&
+    (field as SelectFormField).orderIndex !== undefined &&
+    (((field.type === 'select' ||
+      field.type === 'radio' ||
+      field.type === 'checkbox') &&
+      Array.isArray((field as SelectFormField).options)) ||
+      field.options === null)
+  );
+}
+
 export const formElements: HtmlFormElements[] = [
   'text',
   'checkbox',

@@ -14,7 +14,9 @@ export const load: PageServerLoad = async function ({
   params,
   locals,
   parent,
+  depends,
 }) {
+  depends('survey-fields:latest');
   if (!params.survey_id) throw new Error('id is required');
 
   const { session } = await parent();
@@ -62,21 +64,27 @@ export const actions = {
     }
 
     const parsed = formFieldInsertSchema.parse(data);
-    console.log(parsed);
+    console.log('parsed', parsed);
     const result = await locals.db
       .insert(formFields)
       .values(parsed)
       .returning();
+
+    console.table(result);
 
     return result[0];
   },
   deleteFormField: async ({ locals, request }) => {
     const formData = await request.formData();
     const fieldId = formData.get('fieldId');
-    if (!fieldId) fail(404, { message: 'field id is required' });
 
-    await locals.db.delete(formFields).where(eq(formFields.id, fieldId));
+    if (!fieldId) return fail(404, { message: 'field id is required' });
 
-    return { success: true };
+    const deletedIds = await locals.db
+      .delete(formFields)
+      .where(eq(formFields.id, fieldId.toString()))
+      .returning({ id: formFields.id });
+
+    return { success: true, id: deletedIds[0].id };
   },
 } satisfies Actions;

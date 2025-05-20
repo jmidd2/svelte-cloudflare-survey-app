@@ -1,22 +1,32 @@
 <script lang="ts">
-import { formElements, isHtmlFormField, sampleFormFieldLabels } from '$lib';
+import { deserialize } from '$app/forms';
+import {
+  isHtmlFormField,
+  isSelectFormField,
+  sampleFormFieldLabels,
+} from '$lib';
 import FormField from '$lib/dnd/FormField.svelte';
-import type {
-  InsertFormField,
-  SelectFormField,
+import {
+  type InsertFormField,
+  type SelectFormField,
 } from '$lib/server/db/schema.js';
-import type { HtmlFormElements } from '$lib/types';
+import type { HtmlFormElements, SaveSortedFnArgs } from '$lib/types';
 import { triggerPostMoveFlash } from '@atlaskit/pragmatic-drag-and-drop-flourish/trigger-post-move-flash';
 import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import type { Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/types';
-import { reorderWithEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/reorder-with-edge';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import type {
   BaseEventPayload,
   ElementDragType,
 } from '@atlaskit/pragmatic-drag-and-drop/types';
-import { v4 as uuid } from 'uuid';
+import type { ActionResult } from '@sveltejs/kit';
 import { isFieldData } from './utils.js';
+
+type Props = {
+  fields: SelectFormField[];
+  saveSorted: (args?: SaveSortedFnArgs) => Promise<void>;
+};
+let { fields = $bindable(), saveSorted }: Props = $props();
 
 function generateFormFieldData(
   type: HtmlFormElements,
@@ -35,7 +45,7 @@ function generateFormFieldData(
   ];
 
   let fieldData: SelectFormField = {
-    id: uuid(),
+    id: 'preview-temp',
     formId,
     type,
     label,
@@ -103,35 +113,26 @@ async function addFormField(field: InsertFormField) {
       'x-svelte-action': 'true',
     },
   });
+
+  const result: ActionResult<{ data: SelectFormField }, { message: string }> =
+    deserialize(await response.text());
+
+  if (result.type === 'success' && isSelectFormField(result.data)) {
+    return result.data;
+  }
+
+  throw new Error('a valid form field was not created');
 }
 
-type Props = {
-  fields: SelectFormField[];
-  saveSorted: (
-    sortedData?: { orderIndex: number; id: string }[]
-  ) => Promise<void>;
-};
-let { fields = $bindable(), saveSorted }: Props = $props();
-
-function addNewFieldToArray(
+async function addNewFieldToArray(
   list: typeof fields,
   source: BaseEventPayload<ElementDragType>['source'],
   indexOfTarget: number,
   closestEdgeOfTarget: Edge | null
 ) {
   const copy = $state.snapshot(list);
-  let temp: SelectFormField = {
-    id: 'preview',
-    createdAt: new Date(Date.now()),
-    updatedAt: new Date(Date.now()),
-    formId: 'preview-form-id',
-    type: formElements[0],
-    label: 'This is a label',
-    required: false,
-    placeholder: 'placeholder',
-    options: null,
-    orderIndex: 0,
-  };
+  let temp: SelectFormField;
+  let newTemp: SelectFormField | null = null;
 
   const targetOrderIndex = list[indexOfTarget].orderIndex;
   const targetFormId = list[indexOfTarget].formId;
@@ -145,42 +146,28 @@ function addNewFieldToArray(
       targetOrderIndex,
       targetFormId
     );
-    // for (const element of copy) {
-    //   if (element.orderIndex >= targetOrderIndex) {
-    //     element.orderIndex++;
-    //   }
-    // }
-    // new element will be orderIndex - 1 and increment indexOfTarget to end
   } else if (closestEdgeOfTarget === 'bottom') {
     temp = generateFormFieldData(
       source.data.elementType,
       targetOrderIndex + 1,
       targetFormId
     );
-    // new element will be orderIndex + 1 and increment indexOfTarget + 1 to end
-    // for (const element of copy) {
-    //   if (element.orderIndex > targetOrderIndex) {
-    //     element.orderIndex++;
-    //   }
-    // }
+  } else {
+    throw new Error('not a valid edge');
   }
 
-  const newCopy = reorderArray(
-    copy,
-    -1,
-    indexOfTarget,
-    temp,
-    closestEdgeOfTarget
-  );
+  newTemp = await addFormField(temp);
 
-  return { list: newCopy, field: temp };
+  if (!newTemp) throw new Error('not a valid form field');
+
+  return reorderArray(copy, -1, indexOfTarget, newTemp, closestEdgeOfTarget);
 }
 
 function reorderArray(
-  list,
-  sourceIndex,
-  targetIndex,
-  element,
+  list: typeof fields,
+  sourceIndex: number,
+  targetIndex: number,
+  element: SelectFormField,
   edge?: Edge | null
 ) {
   let copy = [...list];
@@ -195,7 +182,15 @@ function reorderArray(
     // new element is from a preview
     if (targetIndex === 0) {
       console.log('add @ beginning');
-      copy = [element, ...copy];
+      if (edge === 'top') {
+        copy = [element, ...copy];
+      } else if (edge === 'bottom') {
+        copy = [
+          ...copy.slice(0, targetIndex + 1),
+          element,
+          ...copy.slice(targetIndex + 1),
+        ];
+      }
     } else if (targetIndex === copy.length) {
       console.log('add @ end');
       copy = [...copy, element];
@@ -217,7 +212,15 @@ function reorderArray(
     }
   } else if (targetIndex + 1 === copy.length) {
     console.log('target is end');
-    copy = [...copy.filter(e => e.id !== element.id), element];
+    if (edge === 'top') {
+      copy = [
+        ...copy.slice(0, targetIndex),
+        element,
+        ...copy.slice(targetIndex),
+      ];
+    } else if (edge === 'bottom') {
+      copy = [...copy.filter(e => e.id !== element.id), element];
+    }
   } else if (sourceIndex === 0) {
     console.log('source is beginning');
     copy = [...copy.slice(1, targetIndex), element, ...copy.slice(targetIndex)];
@@ -299,21 +302,17 @@ async function handleDrop({
   }
 
   let copyOfFields = $state.snapshot(fields);
-  let newFields = [];
+  let newFields: SelectFormField[];
 
   if (source.data.fieldId === 'preview') {
     console.log('adding new field');
     // New field being added
-    const { list, field } = addNewFieldToArray(
+    newFields = await addNewFieldToArray(
       copyOfFields,
       source,
       indexOfTarget,
       closestEdgeOfTarget
     );
-
-    newFields = list;
-
-    await addFormField(field);
   } else {
     // reordering existing items
     console.log('reordering');
@@ -338,12 +337,8 @@ async function handleDrop({
       triggerPostMoveFlash(element);
     }
   }
-  console.log(
-    'new fields',
-    newFields,
-    newFields.map(e => e.orderIndex)
-  );
-  await saveSorted(newFields);
+
+  await saveSorted({ sortedData: newFields });
   fields = newFields;
 }
 
@@ -359,6 +354,6 @@ $effect(() => {
 
 <div class="grid grid-cols-1 gap-y-4 p-2">
     {#each fields as field, index}
-        <FormField bind:field={fields[index]}/>
+        <FormField bind:field={fields[index]} {saveSorted}/>
     {/each}
 </div>

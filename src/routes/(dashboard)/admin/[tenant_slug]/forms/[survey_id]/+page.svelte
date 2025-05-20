@@ -12,7 +12,7 @@ import {
   type InsertFormField,
   type SelectFormField,
 } from '$lib/server/db/schema';
-import type { HtmlFormElements } from '$lib/types';
+import type { HtmlFormElements, SaveSortedFnArgs } from '$lib/types';
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { v4 as uuid } from 'uuid';
 
@@ -21,7 +21,7 @@ const idle: PageState = 'idle';
 
 const { data } = $props();
 
-let formFields = $state(data.fields);
+let formFields = $derived(data.fields);
 const survey = $derived(data.survey);
 
 let lastUpdate = $derived(survey.updatedAt);
@@ -51,10 +51,19 @@ const isAdmin = $derived(
   data.session?.user ? data.session.user.roles.includes('admin') : false
 );
 
-async function saveSorted(sortedData?: { orderIndex: number; id: string }[]) {
+async function saveSorted(args?: SaveSortedFnArgs) {
   let data: { orderIndex: number; id: string }[] = [];
-  if (sortedData) {
-    data = sortedData;
+  if (args?.sortedData) {
+    data = args.sortedData;
+  } else if (args?.removedId) {
+    data = formFields
+      .filter(e => e.id !== args.removedId)
+      .map((val, index) => {
+        return {
+          orderIndex: index + 1,
+          id: val.id,
+        };
+      });
   } else {
     data = formFields.map((val, index) => {
       return {
@@ -72,6 +81,7 @@ async function saveSorted(sortedData?: { orderIndex: number; id: string }[]) {
       'Content-Type': 'application/json',
     },
   });
+
   if (response.ok) {
     const data = await response.json();
     console.log('response', data);
@@ -177,11 +187,6 @@ $effect(() => {
         !(source.data.elementType && isHtmlFormField(source.data.elementType))
       )
         return;
-
-      elementBeingDropped = `Dropped ${source.data.elementType}`;
-
-      const newField = generateFormFieldData(source.data.elementType);
-      // addFormField(newField);
     },
   });
 });

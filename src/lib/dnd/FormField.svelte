@@ -1,6 +1,9 @@
 <script lang="ts">
-import { formElementTags, formElements, isHtmlFormField } from '$lib';
+import { applyAction, deserialize, enhance } from '$app/forms';
+import { goto, invalidate, invalidateAll } from '$app/navigation';
+import { isHtmlFormField } from '$lib';
 import type { SelectFormField } from '$lib/server/db/schema';
+import type { SaveSortedFnArgs } from '$lib/types';
 import {
   attachClosestEdge,
   extractClosestEdge,
@@ -28,8 +31,9 @@ interface FieldState {
 
 type Props = {
   field: SelectFormField;
+  saveSorted: (args?: SaveSortedFnArgs) => Promise<void>;
 };
-let { field = $bindable() }: Props = $props();
+let { field = $bindable(), saveSorted }: Props = $props();
 
 let element: HTMLDivElement | undefined;
 const idle: FieldState = { type: 'idle' };
@@ -123,7 +127,7 @@ $effect(() => {
             class="flex text-sm flex-row items-center py-2 px-4 pl-0 hover:bg-slate-100 hover:cursor-grab rounded-t-xl"
     >
         <DragHandle/>
-        <span class="truncate flex-grow flex-shrink">{field.label}</span>
+        <span class="truncate flex-grow flex-shrink">{field.label}</span>{field.orderIndex}
         <Status status={field.type}/>
     </div>
     <div class="p-2 flex flex-col">
@@ -138,12 +142,12 @@ $effect(() => {
                         <label for={`${field.label.toLowerCase().replaceAll(' ', '-')}-${index}`}>{label}</label>
                     </div>
                 {/each}
-            <!--{:else if field.type === 'checkbox'}-->
-            <!--    <div>-->
-            <!--        <input type="checkbox" id={`${field.label.toLowerCase().replaceAll(' ', '-')}`}-->
-            <!--               name={field.label.toLowerCase().replaceAll(' ', '-')}>-->
-            <!--        <label for={`${field.label.toLowerCase().replaceAll(' ', '-')}`}>{field.label}</label>-->
-            <!--    </div>-->
+                <!--{:else if field.type === 'checkbox'}-->
+                <!--    <div>-->
+                <!--        <input type="checkbox" id={`${field.label.toLowerCase().replaceAll(' ', '-')}`}-->
+                <!--               name={field.label.toLowerCase().replaceAll(' ', '-')}>-->
+                <!--        <label for={`${field.label.toLowerCase().replaceAll(' ', '-')}`}>{field.label}</label>-->
+                <!--    </div>-->
             {:else if field.type === 'textarea'}
                 <textarea id={field.label.toLowerCase().replaceAll(' ', '-')}></textarea>
             {:else if field.type === 'select'}
@@ -161,9 +165,23 @@ $effect(() => {
         {/if}
     </div>
     <div class="py-2 px-4 text-right border-t border-t-slate-200 rounded-b-xl bg-slate-50">
-        <form class="inline" method="post" action="?/deleteFormField">
+        <form class="inline" method="post" action="?/deleteFormField" use:enhance={({ formElement, formData, action, cancel })=>{
+            return async ({result}) => {
+                if (result.type === 'redirect') {
+                    goto(result.location);
+                } else {
+                    await applyAction(result);
+                    console.log('action result', result)
+                    if (result.type === 'success' && result.data && typeof result.data.id === "string") {
+                        await saveSorted({removedId: result.data.id})
+                        await invalidate('survey-fields:latest')
+                    }
+                }
+            }
+        }}>
             <input type="hidden" name="fieldId" id="fieldId" value={field.id}>
-            <button type="submit" class="text-red-400 hover:text-red-600 rounded p-1 cursor-pointer group inline-flex items-center">
+            <button type="submit"
+                    class="text-red-400 hover:text-red-600 rounded p-1 cursor-pointer group inline-flex items-center">
                 <span class="sr-only">Delete</span>
                 <svg xmlns="http://www.w3.org/2000/svg" class="block group-hover:hidden" width="26" height="26"
                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
