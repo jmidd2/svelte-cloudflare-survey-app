@@ -14,6 +14,7 @@ export type HtmlFormElements =
 declare function saveSorted(args: SaveSortedFnArgs): Promise<void>;
 
 export type SaveSortedFnArgs = {
-  sortedData?: { orderIndex: number; id: string }[];
+  sortedList: { orderIndex: number; id: string }[];
   removedId?: string;
+  surveyId: string;
 };

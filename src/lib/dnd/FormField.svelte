@@ -1,9 +1,8 @@
 <script lang="ts">
-import { applyAction, deserialize, enhance } from '$app/forms';
-import { goto, invalidate, invalidateAll } from '$app/navigation';
+import { applyAction, enhance } from '$app/forms';
+import { goto, invalidate } from '$app/navigation';
 import { isHtmlFormField } from '$lib';
 import type { SelectFormField } from '$lib/server/db/schema';
-import type { SaveSortedFnArgs } from '$lib/types';
 import {
   attachClosestEdge,
   extractClosestEdge,
@@ -31,9 +30,9 @@ interface FieldState {
 
 type Props = {
   field: SelectFormField;
-  saveSorted: (args?: SaveSortedFnArgs) => Promise<void>;
+  saveSorted: (removeId: string) => Promise<void>;
 };
-let { field = $bindable(), saveSorted }: Props = $props();
+let { field, saveSorted }: Props = $props();
 
 let element: HTMLDivElement | undefined;
 const idle: FieldState = { type: 'idle' };
@@ -119,12 +118,12 @@ $effect(() => {
 });
 </script>
 
-<div class="relative bg-white rounded-xl flex flex-col justify-between text-black"
-     class:opacity-40={state.type === 'is-dragging'}>
+<div class="relative bg-white rounded-xl flex flex-col justify-between text-black hover:cursor-grab"
+     class:opacity-40={state.type === 'is-dragging'}
+     data-field-id={field.id}
+     bind:this={element}>
     <div
-            data-field-id={field.id}
-            bind:this={element}
-            class="flex text-sm flex-row items-center py-2 px-4 pl-0 hover:bg-slate-100 hover:cursor-grab rounded-t-xl"
+            class="flex text-sm flex-row items-center py-2 px-4 pl-0 hover:bg-slate-100 rounded-t-xl"
     >
         <DragHandle/>
         <span class="truncate flex-grow flex-shrink">{field.label}</span>{field.orderIndex}
@@ -173,7 +172,7 @@ $effect(() => {
                     await applyAction(result);
                     console.log('action result', result)
                     if (result.type === 'success' && result.data && typeof result.data.id === "string") {
-                        await saveSorted({removedId: result.data.id})
+                        await saveSorted(result.data.id)
                         await invalidate('survey-fields:latest')
                     }
                 }

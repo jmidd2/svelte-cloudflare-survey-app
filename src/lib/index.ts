@@ -1,9 +1,9 @@
-import type {
-  SelectFormField,
-  SelectFormFieldWithHash,
-} from '$lib/server/db/schema';
-// place files you want to import through the `$lib` alias in this folder.
-import type { HtmlFormElements } from '$lib/types';
+import { applyAction, deserialize } from '$app/forms';
+import { goto } from '$app/navigation';
+import { sampleFormFieldLabels } from '$lib/sample';
+import type { SelectFormField } from '$lib/server/db/schema';
+import type { HtmlFormElements, SaveSortedFnArgs } from '$lib/types';
+import type { ActionResult } from '@sveltejs/kit';
 
 export function genSlug({ label, id }: Pick<SelectFormField, 'label' | 'id'>) {
   return `${label.toLowerCase().replaceAll(' ', '-')}-${id}`;
@@ -38,11 +38,11 @@ export function isSelectFormField(field: unknown): field is SelectFormField {
     (field as SelectFormField).required !== undefined &&
     (field as SelectFormField).placeholder !== undefined &&
     (field as SelectFormField).orderIndex !== undefined &&
-    (((field.type === 'select' ||
-      field.type === 'radio' ||
-      field.type === 'checkbox') &&
+    ((((field as SelectFormField).type === 'select' ||
+      (field as SelectFormField).type === 'radio' ||
+      (field as SelectFormField).type === 'checkbox') &&
       Array.isArray((field as SelectFormField).options)) ||
-      field.options === null)
+      (field as SelectFormField).options === null)
   );
 }
 
@@ -73,133 +73,109 @@ export const formElementTags: Record<HtmlFormElements, string> = {
   'yes-no': 'Yes/No',
 } as const;
 
-export const sampleFormFieldLabels = [
-  // Personal Information
-  'Full Name',
-  'First Name',
-  'Last Name',
-  'Email Address',
-  'Phone Number',
-  'Company Name',
-  'Job Title',
-  'Department',
-  'Age',
-  'Gender',
-  'Location',
-  'Country',
-  'City',
-  'Postal Code',
-  'Address',
+export async function saveSorted({
+  sortedList,
+  surveyId,
+  ...args
+}: SaveSortedFnArgs): Promise<void> {
+  let sortedData: { orderIndex: number; id: string }[] = [...sortedList];
 
-  // Feedback Specific
-  'Overall Rating',
-  'Satisfaction Level',
-  'Would You Recommend Us',
-  'Net Promoter Score',
-  'How Likely Are You to Recommend Our Product',
-  'Experience Rating',
-  'What Did You Like Most',
-  'What Could Be Improved',
-  'Areas for Improvement',
-  'Additional Comments',
-  'Specific Suggestions',
-  'Your Feedback',
-  'Tell Us More',
+  if (args?.removedId) {
+    sortedData = sortedList
+      .filter(e => e.id !== args.removedId)
+      .map((val, index) => {
+        return {
+          orderIndex: index + 1,
+          id: val.id,
+        };
+      });
+  }
 
-  // Product Feedback
-  'Product Quality',
-  'Ease of Use',
-  'Value for Money',
-  'Features Used',
-  'Missing Features',
-  'Product Performance',
-  'Product Reliability',
-  'Product Design',
-  'Which Features Do You Find Most Useful',
-  'How Often Do You Use Our Product',
-  'Which Alternative Products Did You Consider',
+  const formData = new FormData();
 
-  // Service Feedback
-  'Service Quality',
-  'Response Time',
-  'Staff Friendliness',
-  'Issue Resolution',
-  'Wait Time',
-  'Support Experience',
-  'How Quickly Was Your Issue Resolved',
-  'Was Your Issue Completely Resolved',
-  'Did Our Staff Meet Your Expectations',
+  formData.set('formId', surveyId);
 
-  // Website Feedback
-  'Website Usability',
-  'Website Navigation',
-  'Website Design',
-  'Website Speed',
-  'Mobile Experience',
-  'Search Functionality',
-  'Content Quality',
-  'Information Clarity',
-  'How Easy Was It to Find What You Were Looking For',
+  formData.set(
+    'sortedData',
+    new Blob([JSON.stringify(sortedData)], { type: 'application/json' })
+  );
 
-  // Event Feedback
-  'Event Satisfaction',
-  'Speaker Quality',
-  'Content Relevance',
-  'Venue Rating',
-  'Event Organization',
-  'Would You Attend a Similar Event',
-  'Most Valuable Session',
-  'Least Valuable Session',
-  'How Did You Hear About This Event',
+  const response = await fetch('?/reorder', {
+    method: 'POST',
+    body: formData,
+    headers: {
+      'x-svelte-action': 'true',
+    },
+  });
 
-  // Course/Training Feedback
-  'Course Content',
-  'Instructor Knowledge',
-  'Instructor Presentation Skills',
-  'Materials Quality',
-  'Pace of Training',
-  'Course Relevance to Your Job',
-  'What Topics Would You Like to See Added',
-  'Would You Take Another Course With Us',
+  const result: ActionResult<{ lastUpdated: Date }, { message: string }> =
+    deserialize(await response.text());
 
-  // Customer Support Feedback
-  'Support Staff Knowledge',
-  'Support Staff Friendliness',
-  'Issue Resolution',
-  'Wait Time',
-  'First Contact Resolution',
-  'Support Channel Preference',
-  'How Could We Improve Our Support',
+  if (result.type === 'redirect') {
+    await goto(result.location);
+  }
 
-  // Demographic Questions
-  'Age Range',
-  'Industry',
-  'Company Size',
-  'Role in Company',
-  'How Long Have You Been a Customer',
-  'How Often Do You Use Our Services',
+  if (result.type === 'success') {
+    const data = result.data;
+    console.log('response', data);
+  }
+  applyAction(result);
+}
 
-  // Open-Ended Questions
-  'What Features Would You Like to See',
-  'How Can We Better Serve You',
-  'Any Additional Comments',
-  'What Would Make This Better',
-  'What Was Missing From Your Experience',
-  'Describe Your Ideal Experience',
-  'What Problem Were You Trying to Solve',
+export function generateFormFieldData(
+  type: HtmlFormElements
+): Pick<SelectFormField, 'label' | 'placeholder' | 'required' | 'options'> {
+  const label =
+    sampleFormFieldLabels[
+      Math.floor(Math.random() * sampleFormFieldLabels.length)
+    ];
 
-  // Consent and Contact
-  'May We Contact You About Your Feedback',
-  'Preferred Contact Method',
-  'Best Time to Contact You',
-  'Would You Like to Join Our Focus Group',
-  'May We Share Your Feedback Publicly',
-  'Would You Like to Receive Our Newsletter',
+  const options = [
+    { label: 'value 1', val: 'val-1' },
+    { label: 'value 2', val: 'val-2' },
+    { label: 'value 3', val: 'val-3' },
+  ];
 
-  // Call to Action
-  'Next Steps',
-  'Preferred Solution',
-  'Action Items',
-  'Follow-Up Preference',
-  'Priority Level',
-];
+  const fieldData: Pick<
+    SelectFormField,
+    'label' | 'placeholder' | 'required' | 'options'
+  > = {
+    label,
+    placeholder: label,
+    required: false,
+    options: null,
+  };
+
+  switch (type) {
+    case 'checkbox':
+      fieldData.options = options;
+      break;
+    case 'date':
+      break;
+    case 'email':
+      fieldData.placeholder = 'email@email.com';
+      break;
+    case 'number':
+      fieldData.placeholder = '10';
+      break;
+    case 'radio':
+      fieldData.options = options;
+      break;
+    case 'range':
+      break;
+    case 'tel':
+      fieldData.placeholder = '111-222-3333';
+      break;
+    case 'text':
+      break;
+    case 'textarea':
+      break;
+    case 'select':
+      fieldData.options = options;
+      break;
+    default:
+      break;
+  }
+
+  return fieldData;
+}

@@ -2,7 +2,8 @@ import * as schema from '$lib/server/db/schema';
 import { createClient } from '@libsql/client';
 import { drizzle } from 'drizzle-orm/libsql';
 import { reset, seed } from 'drizzle-seed';
-import { formElements, sampleFormFieldLabels } from '../src/lib';
+import { formElements } from '../src/lib';
+import { sampleFormFieldLabels } from '../src/lib/sample';
 
 async function main() {
   if (!process.env.DATABASE_URL) {

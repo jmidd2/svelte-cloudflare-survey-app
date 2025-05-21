@@ -1,43 +1,27 @@
 <script lang="ts">
-import { deserialize } from '$app/forms';
-import {
-  formElements,
-  isFormFieldData,
-  isHtmlFormField,
-  sampleFormFieldLabels,
-} from '$lib';
+import { formElements, isHtmlFormField } from '$lib';
 import FormElement from '$lib/components/FormElement.svelte';
 import FormFieldList from '$lib/dnd/FormFieldList.svelte';
-import {
-  type InsertFormField,
-  type SelectFormField,
-} from '$lib/server/db/schema';
-import type { HtmlFormElements, SaveSortedFnArgs } from '$lib/types';
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { v4 as uuid } from 'uuid';
+import type { PageProps } from './$types';
 
 type PageState = 'idle' | 'loading';
 const idle: PageState = 'idle';
 
-const { data } = $props();
-
+const { data, form: formProp }: PageProps = $props();
+$inspect(formProp);
 let formFields = $derived(data.fields);
 const survey = $derived(data.survey);
 
-let lastUpdate = $derived(survey.updatedAt);
+let lastUpdate = $derived(formProp?.lastUpdated ?? survey.updatedAt);
 let lastUpdateString = $derived(`${lastUpdate.toLocaleString()}`);
 
 let showSavedAlert = $state(false);
 let isActive = $derived(survey.active);
 
 let pageState: PageState = $state(idle);
-let errorMessage: null | string = $state(null);
-
-const highestDropIndex = $derived(
-  formFields.reduce((prev, curr) => {
-    if (curr.orderIndex > prev) return curr.orderIndex;
-    return prev;
-  }, 0)
+let errorMessage: null | string = $derived(
+  formProp?.error ? formProp.message : null
 );
 
 $effect(() => {
@@ -51,121 +35,8 @@ const isAdmin = $derived(
   data.session?.user ? data.session.user.roles.includes('admin') : false
 );
 
-async function saveSorted(args?: SaveSortedFnArgs) {
-  let data: { orderIndex: number; id: string }[] = [];
-  if (args?.sortedData) {
-    data = args.sortedData;
-  } else if (args?.removedId) {
-    data = formFields
-      .filter(e => e.id !== args.removedId)
-      .map((val, index) => {
-        return {
-          orderIndex: index + 1,
-          id: val.id,
-        };
-      });
-  } else {
-    data = formFields.map((val, index) => {
-      return {
-        orderIndex: index + 1,
-        id: val.id,
-      };
-    });
-  }
-
-  pageState = 'loading';
-  const response = await fetch('/api/survey/order', {
-    method: 'POST',
-    body: JSON.stringify({ formId: survey.id, sortedData: data }),
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (response.ok) {
-    const data = await response.json();
-    console.log('response', data);
-    if (data?.lastUpdated) {
-      lastUpdate = new Date(data.lastUpdated);
-    }
-  } else {
-    errorMessage = 'Error';
-  }
-
-  setTimeout(() => {
-    showSavedAlert = true;
-    pageState = 'idle';
-  }, 1500);
-
-  setTimeout(() => {
-    showSavedAlert = false;
-  }, 3000);
-}
-
 let dropBox: HTMLDivElement | undefined;
 let dragState: 'idle' | 'is-dragged-over' = $state('idle');
-let elementBeingDropped = $state('');
-
-function generateFormFieldData(
-  type: HtmlFormElements
-): Exclude<SelectFormField, 'createdAt' | 'updatedAt'> {
-  const label =
-    sampleFormFieldLabels[
-      Math.floor(Math.random() * sampleFormFieldLabels.length)
-    ];
-
-  const options = [
-    { label: 'value 1', val: 'val-1' },
-    { label: 'value 2', val: 'val-2' },
-    { label: 'value 3', val: 'val-3' },
-  ];
-
-  let fieldData: SelectFormField = {
-    id: uuid(),
-    formId: survey.id,
-    type,
-    label,
-    placeholder: label,
-    orderIndex: highestDropIndex + 1,
-    createdAt: new Date(Date.now()),
-    updatedAt: new Date(Date.now()),
-    required: false,
-    options: null,
-  };
-
-  switch (type) {
-    case 'checkbox':
-      fieldData.options = options;
-      break;
-    case 'date':
-      break;
-    case 'email':
-      fieldData.placeholder = 'email@email.com';
-      break;
-    case 'number':
-      fieldData.placeholder = '10';
-      break;
-    case 'radio':
-      fieldData.options = options;
-      break;
-    case 'range':
-      break;
-    case 'tel':
-      fieldData.placeholder = '111-222-3333';
-      break;
-    case 'text':
-      break;
-    case 'textarea':
-      break;
-    case 'select':
-      fieldData.options = options;
-      break;
-    default:
-      break;
-  }
-
-  return fieldData;
-}
 
 $effect(() => {
   if (!dropBox) return;
@@ -174,14 +45,12 @@ $effect(() => {
     element: dropBox,
     onDragEnter: ({ source }) => {
       if (!source.data.elementType) return;
-      elementBeingDropped = source.data.elementType as string;
       dragState = 'is-dragged-over';
     },
     onDragLeave: () => {
-      elementBeingDropped = '';
       dragState = 'idle';
     },
-    onDrop: ({ location, source }) => {
+    onDrop: ({ source }) => {
       dragState = 'idle';
       if (
         !(source.data.elementType && isHtmlFormField(source.data.elementType))
@@ -232,7 +101,7 @@ $inspect(formFields);
 </div>
 
 {#if pageState === 'idle' && errorMessage}
-    {errorMessage}
+    <p class="bg-red-500 text-white p-3">{errorMessage}</p>
 {/if}
 <div class="grid grid-cols-[auto_1fr]">
     <div>
@@ -246,7 +115,7 @@ $inspect(formFields);
          class={['rounded-xl border-dashed border p-4 my-4', {'bg-amber-500/30 ': dragState === 'is-dragged-over'}]}>
         <p class="text-center font-bold">Drag elements here</p>
         <div class="text-black mt-2">
-            <FormFieldList bind:fields={formFields} {saveSorted}/>
+            <FormFieldList bind:fields={formFields} bind:pageState={pageState} />
         </div>
     </div>
 </div>
