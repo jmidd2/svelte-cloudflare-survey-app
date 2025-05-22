@@ -1,5 +1,5 @@
 <script lang="ts">
-import FormFieldList from '$lib/dnd/FormFieldList.svelte';
+import FormFieldList from '$lib/components/FormFieldList.svelte';
 
 const { data } = $props();
 let fields = $derived(data.fields ?? []);

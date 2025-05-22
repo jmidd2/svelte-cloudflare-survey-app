@@ -1,6 +1,6 @@
 <script lang="ts">
 import { formElementTags, formElements } from '$lib';
-import FormField from '$lib/dnd/FormField.svelte';
+import FormField from '$lib/components/FormField.svelte';
 import Portal from '$lib/dnd/Portal.svelte';
 import { getFieldData } from '$lib/dnd/utils';
 import type { HtmlFormElements } from '$lib/types';

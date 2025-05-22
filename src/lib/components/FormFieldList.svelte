@@ -6,7 +6,8 @@ import {
   isSelectFormField,
   saveSorted,
 } from '$lib';
-import FormField from '$lib/dnd/FormField.svelte';
+import FormField from '$lib/components/FormField.svelte';
+import { isFieldData } from '$lib/dnd';
 import {
   type InsertFormField,
   type SelectFormField,
@@ -20,7 +21,6 @@ import type {
   ElementDragType,
 } from '@atlaskit/pragmatic-drag-and-drop/types';
 import type { ActionResult } from '@sveltejs/kit';
-import { isFieldData } from './utils.js';
 
 type Props = {
   fields: SelectFormField[];

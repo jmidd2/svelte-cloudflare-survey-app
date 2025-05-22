@@ -1,7 +1,8 @@
 <script lang="ts">
 import { applyAction, enhance } from '$app/forms';
 import { goto, invalidate } from '$app/navigation';
-import { isHtmlFormField } from '$lib';
+import EditFieldOptionList from '$lib/components/EditFieldOptionList.svelte';
+import { getFieldData, isFieldData } from '$lib/dnd';
 import type { SelectFormField } from '$lib/server/db/schema';
 import {
   attachClosestEdge,
@@ -15,12 +16,11 @@ import {
 } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { pointerOutsideOfPreview } from '@atlaskit/pragmatic-drag-and-drop/element/pointer-outside-of-preview';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
-import DragHandle from './DragHandle.svelte';
+import DragHandle from '../dnd/DragHandle.svelte';
+import DropIndicator from '../dnd/DropIndicator.svelte';
+import Portal from '../dnd/Portal.svelte';
 import DragPreview from './DragPreview.svelte';
-import DropIndicator from './DropIndicator.svelte';
-import Portal from './Portal.svelte';
 import Status from './Status.svelte';
-import { getFieldData, isFieldData } from './utils';
 
 interface FieldState {
   type: 'idle' | 'preview' | 'is-dragging' | 'is-dragging-over';
@@ -95,8 +95,10 @@ $effect(() => {
         const closestEdge = extractClosestEdge(self.data);
         state = { type: 'is-dragging-over', closestEdge };
       },
-      onDrag({ self }) {
+      onDrag({ self, location }) {
         const closestEdge = extractClosestEdge(self.data);
+        console.log('location');
+        console.table(location);
 
         // Only need to update state if nothing has changed.
         // Prevents re-rendering.
@@ -116,6 +118,20 @@ $effect(() => {
     })
   );
 });
+
+function hasOptions(element: SelectFormField) {
+  return (
+    canHaveOptions(element) && !!element.options && element.options.length > 0
+  );
+}
+
+function canHaveOptions(element: SelectFormField) {
+  return (
+    element.type === 'select' ||
+    element.type === 'checkbox' ||
+    element.type === 'radio'
+  );
+}
 </script>
 
 <div class="relative bg-white rounded-xl flex flex-col justify-between text-black hover:cursor-grab"
@@ -123,47 +139,41 @@ $effect(() => {
      data-field-id={field.id}
      bind:this={element}>
     <div
-            class="flex text-sm flex-row items-center py-2 px-4 pl-0 hover:bg-slate-100 rounded-t-xl"
+            class="flex text-lg flex-row items-center py-2 px-4 pl-0 hover:bg-slate-100 rounded-t-xl"
     >
         <DragHandle/>
-        <span class="truncate flex-grow flex-shrink">{field.label}</span>{field.orderIndex}
+        <span class="truncate flex-grow flex-shrink ml-3">{field.label}</span>
+        <!--        <span class="text-sm">{field.orderIndex}</span>-->
         <Status status={field.type}/>
     </div>
-    <div class="p-2 flex flex-col">
-        <label
-                for={field.label.toLowerCase().replaceAll(' ', '-')}>{field.label}</label>
-        {#if isHtmlFormField(field.type)}
-            {#if (field.type === 'radio' || field.type === 'checkbox') && field.options}
-                {#each field.options as {val, label}, index}
-                    <div>
-                        <input type={field.type} id={`${field.label.toLowerCase().replaceAll(' ', '-')}-${index}`}
-                               name={field.label.toLowerCase().replaceAll(' ', '-')} value={val}>
-                        <label for={`${field.label.toLowerCase().replaceAll(' ', '-')}-${index}`}>{label}</label>
-                    </div>
-                {/each}
-                <!--{:else if field.type === 'checkbox'}-->
-                <!--    <div>-->
-                <!--        <input type="checkbox" id={`${field.label.toLowerCase().replaceAll(' ', '-')}`}-->
-                <!--               name={field.label.toLowerCase().replaceAll(' ', '-')}>-->
-                <!--        <label for={`${field.label.toLowerCase().replaceAll(' ', '-')}`}>{field.label}</label>-->
-                <!--    </div>-->
-            {:else if field.type === 'textarea'}
-                <textarea id={field.label.toLowerCase().replaceAll(' ', '-')}></textarea>
-            {:else if field.type === 'select'}
-                <select id={field.label.toLowerCase().replaceAll(' ', '-')}>
-                    {#if field.options}
-                        {#each field.options as item}
-                            <option value={item.val}>{item.label}</option>
-                        {/each}
+    <div class="p-4 flex flex-col">
+        <form>
+            <input type="hidden" value={field.id}/>
+            <div class="flex flex-col my-4">
+                <label for="label">Label</label>
+                <input type="text" id="label" name="label" value={field.label}>
+            </div>
+            <div class="flex flex-col my-4">
+                <label for="placeholder">Placeholder</label>
+                <input type="text" id="placeholder" name="placeholder" value={field.placeholder}>
+            </div>
+            <div class="flex items-center gap-3 my-4">
+                <label for="required">Field Required?</label>
+                <input type="checkbox" id="required" name="required" checked={field.required}>
+            </div>
+            {#if canHaveOptions(field)}
+                <div class="flex flex-col my-4 border border-spark-secondary-500 rounded-2xl">
+                    <h3 class="ml-4 text-lg font-bold mt-2 mb-1">Options</h3>
+                    {#if !!field.options && field.options.length > 0}
+                        <EditFieldOptionList options={field.options}></EditFieldOptionList>
                     {/if}
-                </select>
-            {:else}
-                <input id={field.label.toLowerCase().replaceAll(' ', '-')} type={field.type}
-                       placeholder={field.placeholder}/>
+                    <button type="button" class="my-3 ml-4 mr-auto hover:cursor-pointer">Add Option</button>
+                </div>
             {/if}
-        {/if}
+        </form>
     </div>
-    <div class="py-2 px-4 text-right border-t border-t-slate-200 rounded-b-xl bg-slate-50">
+    <div class="py-2 px-4 text-right border-t border-t-slate-200 rounded-b-xl bg-slate-50 align-middle flex justify-end items-center">
+        Save
         <form class="inline" method="post" action="?/deleteFormField" use:enhance={({ formElement, formData, action, cancel })=>{
             return async ({result}) => {
                 if (result.type === 'redirect') {

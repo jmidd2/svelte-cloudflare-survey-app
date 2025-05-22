@@ -1,7 +1,7 @@
 <script lang="ts">
 import { formElements, isHtmlFormField } from '$lib';
 import FormElement from '$lib/components/FormElement.svelte';
-import FormFieldList from '$lib/dnd/FormFieldList.svelte';
+import FormFieldList from '$lib/components/FormFieldList.svelte';
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import type { PageProps } from './$types';
 

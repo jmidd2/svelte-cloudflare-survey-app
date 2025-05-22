@@ -20,7 +20,7 @@ let { status }: { status: HtmlFormElements } = $props();
 
 <div class="flex w-[100px] justify-end">
     <span
-            class={`${bgColor[status]} uppercase p-1 rounded font-semibold flex-shrink-0 text-xs text-slate-900 `}
+            class={`${bgColor[status]} uppercase p-1 rounded font-semibold flex-shrink-0 text-sm text-slate-900 `}
     >
     {formElementTags[status]}
     </span>
