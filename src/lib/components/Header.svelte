@@ -1,22 +1,37 @@
 <script lang="ts">
 import type { Session } from '@auth/core/types';
-import { signOut } from '@auth/sveltekit/client';
-import { SignIn } from '@auth/sveltekit/components';
+import { signIn, signOut } from '@auth/sveltekit/client';
 import { type Snippet } from 'svelte';
 import { slide } from 'svelte/transition';
 
 interface HeaderProps {
   session: Session | null;
   children?: Snippet;
-  navLinks: Snippet;
+  navLinks: Snippet<[typeof closeMenus]>;
 }
 
-const { session, children, navLinks }: HeaderProps = $props();
+const { session, navLinks }: HeaderProps = $props();
 
 let showProfileMenu = $state(false);
 let showMobileNavMenu = $state(false);
 
 const user = $derived(session?.user);
+
+let signInLoading = $derived(false);
+
+$effect(() => {
+  if (signInLoading && !!user) {
+    signInLoading = false;
+  }
+});
+
+let signOutLoading = $derived(false);
+
+$effect(() => {
+  if (signOutLoading && !user) {
+    signOutLoading = false;
+  }
+});
 
 const userImage = $derived(user?.image ?? 'https://cataas.com/cat?type=xsmall');
 
@@ -30,6 +45,16 @@ $inspect(isSmallScreen);
 function closeMenus() {
   showMobileNavMenu = false;
   showProfileMenu = false;
+}
+
+function handleFocusLoss({ relatedTarget, currentTarget }: FocusEvent) {
+  if (
+    relatedTarget instanceof HTMLElement &&
+    currentTarget instanceof HTMLElement &&
+    currentTarget?.contains(relatedTarget)
+  )
+    return;
+  closeMenus();
 }
 </script>
 <svelte:window bind:innerWidth={windowInnerWidth}></svelte:window>
@@ -83,24 +108,34 @@ function closeMenus() {
                             <!--                               class="rounded-md px-3 py-2 text-sm font-medium  hover:bg-spark-primary-700 hover:text-white">Dashboard</a>-->
                             <!--                            <a href="/survey/1"-->
                             <!--                               class="rounded-md px-3 py-2 text-sm font-medium  hover:bg-spark-primary-700 hover:text-white">Survey</a>-->
-                            {@render navLinks()}
+                            {@render navLinks(closeMenus)}
                         </div>
                     </div>
                 </div>
-                <div class="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
+                <div onfocusout={handleFocusLoss} class="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
                     {#if user}
                         <!-- Profile dropdown -->
                         <div class="relative ml-3">
                             <div>
-                                <button type="button" onclick={() => showProfileMenu = !showProfileMenu}
-                                        class="relative flex rounded-full bg-spark-primary cursor-pointer text-sm focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-hidden"
-                                        id="user-menu-button" aria-expanded="false" aria-haspopup="true">
-                                    <span class="absolute -inset-1.5"></span>
-                                    <span class="sr-only">Open user menu</span>
-                                    <img class="size-8 rounded-full"
-                                         src={userImage}
-                                         alt="">
-                                </button>
+                                {#if signOutLoading}
+                                    <svg class="-ml-7 size-5 animate-spin text-white"
+                                         xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                                stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor"
+                                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                {:else}
+                                    <button type="button" onclick={() => showProfileMenu = !showProfileMenu}
+                                            class="relative flex rounded-full bg-spark-primary cursor-pointer text-sm focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-hidden"
+                                            id="user-menu-button" aria-expanded="false" aria-haspopup="true">
+                                        <span class="absolute -inset-1.5"></span>
+                                        <span class="sr-only">Open user menu</span>
+                                        <img class="size-8 rounded-full"
+                                             src={userImage}
+                                             alt="">
+                                    </button>
+                                {/if}
                             </div>
 
                             <!--
@@ -127,7 +162,7 @@ function closeMenus() {
                                        role="menuitem"
                                        tabindex="-1"
                                        id="user-menu-item-1">Settings</a>
-                                    <button onclick={() => signOut()}
+                                    <button onclick={async () => { showProfileMenu = false; signOutLoading = true; await signOut()}}
                                             class="cursor-pointer w-full hover:bg-slate-200 text-left block px-4 py-2 text-sm text-gray-700"
                                             role="menuitem" tabindex="-1"
                                             id="user-menu-item-2">Sign out
@@ -137,12 +172,21 @@ function closeMenus() {
                         </div>
                     {:else}
                         <div>
-                            <SignIn provider="auth0" signInPage="login">
-                                <div slot="submitButton"
-                                     class="">
-                                    Sign in
-                                </div>
-                            </SignIn>
+                            {#if signInLoading}
+                                <svg class="-ml-7 size-5 animate-spin text-white"
+                                     xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                            stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor"
+                                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            {:else}
+                                <button type="button" class="hover:cursor-pointer"
+                                        onclick={async () => {signInLoading = true; await signIn('auth0');}}>
+                                    Sign In
+                                </button>
+                            {/if}
+
                         </div>
                     {/if}
                 </div>
