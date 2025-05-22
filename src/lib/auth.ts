@@ -1,6 +1,6 @@
 import Auth0, { type Auth0Profile } from '@auth/core/providers/auth0';
 import { SvelteKitAuth, type SvelteKitAuthConfig } from '@auth/sveltekit';
-
+const DEFAULT_MAX_AGE = 24 * 60 * 60; // 1 day
 export const { handle, signIn, signOut } = SvelteKitAuth(async req => {
   if (!req.platform) throw new Error('Unsupported platform');
 
@@ -12,6 +12,16 @@ export const { handle, signIn, signOut } = SvelteKitAuth(async req => {
     secret: env?.AUTH_SECRET,
     trustHost: true,
     debug: true,
+    jwt: {
+      maxAge: env?.AUTH_MAX_AGE ?? DEFAULT_MAX_AGE,
+    },
+    cookies: {
+      sessionToken: {
+        options: {
+          maxAge: env?.AUTH_MAX_AGE ?? DEFAULT_MAX_AGE, // 1 day
+        },
+      },
+    },
     providers: [
       Auth0({
         wellKnown: '',
