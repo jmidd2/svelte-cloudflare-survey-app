@@ -45,7 +45,7 @@ declare global {
         AUTH_AUTH0_ISSUER: string;
         AUTH_AUTH0_AUTHORIZATION: string;
         AUTH_SECRET: string;
-        AUTH_MAX_AGE: number;
+        AUTH_MAX_AGE: string;
       };
       context: {
         // biome-ignore lint/suspicious/noExplicitAny: <explanation>
