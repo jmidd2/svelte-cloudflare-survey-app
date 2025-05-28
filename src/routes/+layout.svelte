@@ -36,11 +36,10 @@ if (data.session?.user) {
         {#snippet navLinks(closeMenu)}
             {#each links as link}
                 <a href={link.href} class:active={link.compare(page.url.pathname)}
-                    onclick={closeMenu}
+                   onclick={closeMenu}
                    class="rounded-md px-3 py-2 text-sm font-medium block sm:inline hover:bg-spark-primary-700 hover:text-white focus:ring-2 focus:ring-white focus:outline-hidden focus:ring-inset">{link.name}</a>
             {/each}
         {/snippet}
     </Header>
-    <main class="bg-spark-secondary-800/40 flex-1 w-full lg:w-250 mx-auto p-4">{@render children()}</main>
-    <Footer>This is a footer</Footer>
+    {@render children()}
 </div>

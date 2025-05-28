@@ -103,8 +103,9 @@ $inspect(formFields);
 {#if pageState === 'idle' && errorMessage}
     <p class="bg-red-500 text-white p-3">{errorMessage}</p>
 {/if}
-<div class="grid grid-cols-[auto_1fr]">
-    <div>
+
+<div class="flex flex-1 overflow-hidden">
+    <div class="w-64 border-r flex flex-col h-full">
         <ul>
             {#each formElements as element}
                 <FormElement label={element}></FormElement>
@@ -112,11 +113,13 @@ $inspect(formFields);
         </ul>
     </div>
     <div bind:this={dropBox}
-         class={['rounded-xl border-dashed border p-4 my-4', {'bg-amber-500/30 ': dragState === 'is-dragged-over'}]}>
-        <p class="text-center font-bold">Drag elements here</p>
-        <div class="text-black mt-2">
+         class={['flex flex-1 flex-col', {'bg-amber-500/30 ': dragState === 'is-dragged-over'}]}>
+        <div class="text-black overflow-y-auto">
             <FormFieldList bind:fields={formFields} bind:pageState={pageState} />
         </div>
+    </div>
+    <div class="w-80 border-l overflow-y-auto">
+        Properties
     </div>
 </div>
 
