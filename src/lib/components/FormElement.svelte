@@ -7,14 +7,17 @@ import type { HtmlFormElements } from '$lib/types';
 import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
+import type { Icon as IconType } from '@lucide/svelte';
 
 type Props = {
-  label: HtmlFormElements;
+  element: HtmlFormElements;
+  label: string;
+  icon: typeof IconType;
 };
 
-let { label }: Props = $props();
-let element: HTMLLIElement | undefined;
-let state: 'idle' | 'is-dragging' | 'preview' | 'is-dragging-over' =
+let { label, element, icon: Icon }: Props = $props();
+let dragElement: HTMLLIElement | undefined;
+let elementState: 'idle' | 'is-dragging' | 'preview' | 'is-dragging-over' =
   $state('idle');
 
 const previewData = $state({
@@ -33,11 +36,11 @@ const previewData = $state({
 let container: HTMLElement | undefined;
 
 $effect(() => {
-  if (!element) return;
+  if (!dragElement) return;
   draggable({
-    element,
+    element: dragElement,
     onGenerateDragPreview: ({ nativeSetDragImage, location, source }) => {
-      if (!element) return;
+      if (!dragElement) return;
       previewData.type = source.data.elementType;
       previewData.placeholder =
         formElementTags[source.data.elementType as HtmlFormElements];
@@ -59,12 +62,12 @@ $effect(() => {
       setCustomNativeDragPreview({
         nativeSetDragImage,
         getOffset: preserveOffsetOnSource({
-          element,
+          element: dragElement,
           input: location.current.input,
         }),
         render(test) {
           console.log(test);
-          state = 'preview';
+          elementState = 'preview';
           container = test.container;
         },
       });
@@ -74,31 +77,25 @@ $effect(() => {
       ...getFieldData(previewData),
     }),
     onDragStart: () => {
-      state = 'is-dragging';
+      elementState = 'is-dragging';
     },
     onDrop: () => {
-      state = 'idle';
+      elementState = 'idle';
     },
   });
 });
 </script>
 
-<li bind:this={element}
-    class={['border', {'border-white border-dashed opacity-75 bg-slate-200/40': state !== 'idle', 'border-transparent border-solid': state === 'idle'}]}>{label}</li>
-{#if state === 'preview'}
+
+<li bind:this={dragElement}
+    class={['border flex items-center p-2 rounded-md cursor-move hover:bg-accent hover:text-black', {'bg-background': elementState !== 'idle', 'border-transparent border-solid': elementState === 'idle'}]}>
+    <Icon class="h-4 w-4 mr-2" />
+    <span>{label}</span></li>
+{#if elementState === 'preview'}
     <Portal target={container}>
         <FormField field={previewData}></FormField>
     </Portal>
 {/if}
 <style>
-    li {
-        padding: 0.5rem;
-        margin: 0 1rem;
-        text-align: center;
 
-        &:hover {
-            border-color: white;
-            cursor: pointer;
-        }
-    }
 </style>

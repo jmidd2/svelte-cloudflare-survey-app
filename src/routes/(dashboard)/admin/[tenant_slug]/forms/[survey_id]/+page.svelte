@@ -1,8 +1,28 @@
 <script lang="ts">
-import { formElements, isHtmlFormField } from '$lib';
+import { formElementTags, formElements, isHtmlFormField } from '$lib';
 import FormElement from '$lib/components/FormElement.svelte';
 import FormFieldList from '$lib/components/FormFieldList.svelte';
+import * as Accordion from '$lib/components/ui/accordion';
+import { Input } from '$lib/components/ui/input';
+import { Label } from '$lib/components/ui/label';
+import { Switch } from '$lib/components/ui/switch';
+import { Tabs, TabsList, TabsTrigger } from '$lib/components/ui/tabs';
+import { TabsContent } from '$lib/components/ui/tabs/index.js';
+import type { HtmlFormElements } from '$lib/types';
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import {
+  Calendar,
+  Check,
+  ChevronsLeftRightEllipsis,
+  Hash,
+  type Icon as IconType,
+  List,
+  ListTodo,
+  Mail,
+  Phone,
+  Text,
+  TextCursorInput,
+} from '@lucide/svelte';
 import type { PageProps } from './$types';
 
 type PageState = 'idle' | 'loading';
@@ -60,6 +80,32 @@ $effect(() => {
   });
 });
 
+const formElementIcons: Record<HtmlFormElements, typeof IconType> = {
+  checkbox: ListTodo,
+  date: Calendar,
+  email: Mail,
+  number: Hash,
+  radio: List,
+  range: ChevronsLeftRightEllipsis,
+  tel: Phone,
+  text: TextCursorInput,
+  textarea: Text,
+  select: List,
+  'yes-no': Check,
+};
+
+const draggableFormElements = new Map<
+  HtmlFormElements,
+  { label: string; icon: typeof IconType }
+>();
+
+for (const element of formElements) {
+  draggableFormElements.set(element, {
+    label: formElementTags[element],
+    icon: formElementIcons[element],
+  });
+}
+
 $inspect(formFields);
 </script>
 <div class="border-b pb-2 mb-2">
@@ -105,21 +151,84 @@ $inspect(formFields);
 {/if}
 
 <div class="flex flex-1 overflow-hidden">
-    <div class="w-64 border-r flex flex-col h-full">
-        <ul>
-            {#each formElements as element}
-                <FormElement label={element}></FormElement>
-            {/each}
-        </ul>
+    <div class="w-64 border-r border-spark-secondary-600 flex flex-col h-full">
+        <Accordion.Root type="multiple" value={['toolbox']}>
+            <Accordion.Item value="toolbox">
+                <Accordion.Trigger class="px-4 py-2 hover:cursor-pointer">Toolbox</Accordion.Trigger>
+                <Accordion.Content class="px-4 pb-4 pt-1">
+                    <ul class="space-y-2">
+                        {#each draggableFormElements as [element, {icon, label}]}
+                            <FormElement {element} {label} {icon}></FormElement>
+                        {/each}
+                    </ul>
+                </Accordion.Content>
+            </Accordion.Item>
+            <Accordion.Item value="form-elements">
+                <Accordion.Trigger class="px-4 py-2 hover:cursor-pointer">Form Elements</Accordion.Trigger>
+                <Accordion.Content class="px-4 pb-4 pt-1">
+                    Elements in form
+                </Accordion.Content>
+            </Accordion.Item>
+        </Accordion.Root>
     </div>
     <div bind:this={dropBox}
-         class={['flex flex-1 flex-col', {'bg-amber-500/30 ': dragState === 'is-dragged-over'}]}>
-        <div class="text-black overflow-y-auto">
-            <FormFieldList bind:fields={formFields} bind:pageState={pageState} />
+         class={['flex flex-1 flex-col']}>
+        <div class="flex-1 p-6 overflow-auto bg-muted/10">
+            <div class="max-w-4xl mx-auto p-6 rounded-lg shadow-sm border">
+                <h1 class="flex flex-col text-2xl mb-2">{survey.title} <span class="text-sm">Survey #{data.id}</span>
+                </h1>
+                <p>{survey.description}</p>
+                <FormFieldList bind:fields={formFields} bind:pageState={pageState}/>
+            </div>
         </div>
     </div>
-    <div class="w-80 border-l overflow-y-auto">
-        Properties
+    <div class="w-100 border-l bg-muted/20 p-4 overflow-y-auto">
+        <h2 class="font-semibold mb-4">Properties</h2>
+        <Tabs value="general">
+            <TabsList class="grid w-full grid-cols-4">
+                <TabsTrigger value="general" class="hover:cursor-pointer">General</TabsTrigger>
+                <TabsTrigger value="specific" class="hover:cursor-pointer">Specific</TabsTrigger>
+                <TabsTrigger value="validation" class="hover:cursor-pointer">Validation</TabsTrigger>
+                <TabsTrigger value="interaction" class="hover:cursor-pointer">Interaction</TabsTrigger>
+            </TabsList>
+            <TabsContent value="general" class="space-y-4 pt-4">
+                <div class="space-y-2">
+                    <Label for="label">Label</Label>
+                    <Input id="label"/>
+                </div>
+
+                <div class="space-y-2">
+                    <Label for="placeholder">Placeholder</Label>
+                    <Input id="placeholder" />
+                </div>
+
+                <div class="space-y-2">
+                    <Label for="defaultValue">Default Value</Label>
+                    <Input id="defaultValue" />
+                </div>
+
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <Label for="isVisible">Visible</Label>
+                        <Switch id="isVisible" />
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <Label for="isEnabled">Enabled</Label>
+                    <Switch id="isEnabled" />
+                </div>
+            </TabsContent>
+            <TabsContent value="specific" class="space-y-4 pt-4">
+                Specific
+            </TabsContent>
+            <TabsContent value="validation" class="space-y-4 pt-4">
+                Validation
+            </TabsContent>
+            <TabsContent value="interaction" class="space-y-4 pt-4">
+                Interaction
+            </TabsContent>
+        </Tabs>
     </div>
 </div>
 

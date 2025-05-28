@@ -2,6 +2,7 @@
 import { applyAction, enhance } from '$app/forms';
 import { goto, invalidate } from '$app/navigation';
 import EditFieldOptionList from '$lib/components/EditFieldOptionList.svelte';
+import { Button } from '$lib/components/ui/button';
 import { getFieldData, isFieldData } from '$lib/dnd';
 import type { SelectFormField } from '$lib/server/db/schema';
 import {
@@ -173,7 +174,7 @@ function canHaveOptions(element: SelectFormField) {
         </form>
     </div>
     <div class="py-2 px-4 text-right border-t border-t-slate-200 rounded-b-xl bg-slate-50 align-middle flex justify-end items-center">
-        Save
+        <Button>Save</Button>
         <form class="inline" method="post" action="?/deleteFormField" use:enhance={({ formElement, formData, action, cancel })=>{
             return async ({result}) => {
                 if (result.type === 'redirect') {
@@ -189,8 +190,8 @@ function canHaveOptions(element: SelectFormField) {
             }
         }}>
             <input type="hidden" name="fieldId" id="fieldId" value={field.id}>
-            <button type="submit"
-                    class="text-red-400 hover:text-red-600 rounded p-1 cursor-pointer group inline-flex items-center">
+            <Button type="submit"
+                    class="text-red-400 hover:text-red-600 cursor-pointer group inline-flex items-center">
                 <span class="sr-only">Delete</span>
                 <svg xmlns="http://www.w3.org/2000/svg" class="block group-hover:hidden" width="26" height="26"
                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -207,7 +208,7 @@ function canHaveOptions(element: SelectFormField) {
                     <path d="M20 6a1 1 0 0 1 .117 1.993l-.117 .007h-.081l-.919 11a3 3 0 0 1 -2.824 2.995l-.176 .005h-8c-1.598 0 -2.904 -1.249 -2.992 -2.75l-.005 -.167l-.923 -11.083h-.08a1 1 0 0 1 -.117 -1.993l.117 -.007h16zm-9.489 5.14a1 1 0 0 0 -1.218 1.567l1.292 1.293l-1.292 1.293l-.083 .094a1 1 0 0 0 1.497 1.32l1.293 -1.292l1.293 1.292l.094 .083a1 1 0 0 0 1.32 -1.497l-1.292 -1.293l1.292 -1.293l.083 -.094a1 1 0 0 0 -1.497 -1.32l-1.293 1.292l-1.293 -1.292l-.094 -.083z"/>
                     <path d="M14 2a2 2 0 0 1 2 2a1 1 0 0 1 -1.993 .117l-.007 -.117h-4l-.007 .117a1 1 0 0 1 -1.993 -.117a2 2 0 0 1 1.85 -1.995l.15 -.005h4z"/>
                 </svg>
-            </button>
+            </Button>
         </form>
     </div>
     {#if state.type === 'is-dragging-over' && state.closestEdge}
