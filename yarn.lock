@@ -1834,12 +1834,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@lucide/svelte@npm:^0.511.0":
-  version: 0.511.0
-  resolution: "@lucide/svelte@npm:0.511.0"
+"@lucide/svelte@npm:^0.482.0":
+  version: 0.482.0
+  resolution: "@lucide/svelte@npm:0.482.0"
   peerDependencies:
     svelte: ^5
-  checksum: 10c0/24107f15e4df6038201dc0255c47d93bb0d87d4c47dbd399d73e99f4c97ee5c3b9c160b16df85f34140ccd46f5cb8830b4b9f49553f269d8d9cebd964d807257
+  checksum: 10c0/f2f09f9e7d618ac6cb63092669813a31229e240251881d16affbfd8d53d038e89a0928025f5886011dfe901cdae7e9cdf4b39082fe2fe67897fa55cc0526658d
   languageName: node
   linkType: hard
 
@@ -2609,9 +2609,11 @@ __metadata:
     "@auth/sveltekit": "npm:^1.9.2"
     "@biomejs/biome": "npm:^1.9.4"
     "@cloudflare/workers-types": "npm:^4.20250529.0"
+    "@floating-ui/core": "npm:^1.7.0"
+    "@floating-ui/dom": "npm:^1.7.0"
     "@internationalized/date": "npm:^3.8.1"
     "@libsql/client": "npm:^0.15.7"
-    "@lucide/svelte": "npm:^0.511.0"
+    "@lucide/svelte": "npm:^0.482.0"
     "@playwright/test": "npm:^1.52.0"
     "@sveltejs/adapter-auto": "npm:^6.0.1"
     "@sveltejs/adapter-cloudflare": "npm:^7.0.3"

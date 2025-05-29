@@ -24,9 +24,14 @@ import type { ActionResult } from '@sveltejs/kit';
 
 type Props = {
   fields: SelectFormField[];
+  selectedFormField: SelectFormField | null;
   pageState: 'idle' | 'loading';
 };
-let { fields = $bindable(), pageState = $bindable() }: Props = $props();
+let {
+  fields = $bindable(),
+  selectedFormField = $bindable(),
+  pageState = $bindable(),
+}: Props = $props();
 
 async function addFormField(field: InsertFormField) {
   let formData = new FormData();
@@ -159,6 +164,6 @@ $effect(() => {
 
 <div class="grid grid-cols-1 gap-y-4 p-2">
     {#each fields as field, index}
-        <FormField {field} saveSorted={async (removedId) => { await saveSorted({sortedList: fields, removedId, surveyId: fields[0].formId}) }}/>
+        <FormField {index} selected={selectedFormField?.id === field.id} onclick={()=>{ if (selectedFormField?.id !== field.id) selectedFormField = field; console.log('form-field:', index)}} {field} saveSorted={async (removedId) => { await saveSorted({sortedList: fields, removedId, surveyId: fields[0].formId}) }}/>
     {/each}
 </div>

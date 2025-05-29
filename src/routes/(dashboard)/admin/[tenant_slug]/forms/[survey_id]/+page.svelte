@@ -2,12 +2,19 @@
 import { formElementTags, formElements, isHtmlFormField } from '$lib';
 import FormElement from '$lib/components/FormElement.svelte';
 import FormFieldList from '$lib/components/FormFieldList.svelte';
-import * as Accordion from '$lib/components/ui/accordion';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '$lib/components/ui/accordion';
 import { Input } from '$lib/components/ui/input';
 import { Label } from '$lib/components/ui/label';
+import * as Select from '$lib/components/ui/select';
 import { Switch } from '$lib/components/ui/switch';
 import { Tabs, TabsList, TabsTrigger } from '$lib/components/ui/tabs';
 import { TabsContent } from '$lib/components/ui/tabs/index.js';
+import type { SelectFormField } from '$lib/server/db/schema';
 import type { HtmlFormElements } from '$lib/types';
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import {
@@ -43,6 +50,8 @@ let pageState: PageState = $state(idle);
 let errorMessage: null | string = $derived(
   formProp?.error ? formProp.message : null
 );
+
+let selectedFormField: SelectFormField | null = $state(null);
 
 $effect(() => {
   console.log(
@@ -106,13 +115,13 @@ for (const element of formElements) {
   });
 }
 
-$inspect(formFields);
+$inspect(selectedFormField);
 </script>
-<div class="border-b pb-2 mb-2">
+<div class="border-b pb-2 mb-2 hidden">
     <h1 class="flex flex-col text-2xl mb-2">{survey.title} <span class="text-sm">Survey #{data.id}</span></h1>
     <p>{survey.description}</p>
 </div>
-<div class="inline-flex items-center">
+<div class="items-center hidden">
     Last Update:
     {#if pageState === 'loading'}
         saving
@@ -129,7 +138,7 @@ $inspect(formFields);
         {/if}
     {/if}
 </div>
-<div class="border-b">
+<div class="border-b hidden">
     <h2>Settings</h2>
     <div class="flex gap-2 items-center">
         <label for="active">Active: </label>
@@ -152,24 +161,24 @@ $inspect(formFields);
 
 <div class="flex flex-1 overflow-hidden">
     <div class="w-64 border-r border-spark-secondary-600 flex flex-col h-full">
-        <Accordion.Root type="multiple" value={['toolbox']}>
-            <Accordion.Item value="toolbox">
-                <Accordion.Trigger class="px-4 py-2 hover:cursor-pointer">Toolbox</Accordion.Trigger>
-                <Accordion.Content class="px-4 pb-4 pt-1">
+        <Accordion type="multiple" value={['toolbox']}>
+            <AccordionItem value="toolbox">
+                <AccordionTrigger class="px-4 py-2 hover:cursor-pointer">Toolbox</AccordionTrigger>
+                <AccordionContent class="px-4 pb-4 pt-1">
                     <ul class="space-y-2">
                         {#each draggableFormElements as [element, {icon, label}]}
                             <FormElement {element} {label} {icon}></FormElement>
                         {/each}
                     </ul>
-                </Accordion.Content>
-            </Accordion.Item>
-            <Accordion.Item value="form-elements">
-                <Accordion.Trigger class="px-4 py-2 hover:cursor-pointer">Form Elements</Accordion.Trigger>
-                <Accordion.Content class="px-4 pb-4 pt-1">
+                </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="form-elements">
+                <AccordionTrigger class="px-4 py-2 hover:cursor-pointer">Form Elements</AccordionTrigger>
+                <AccordionContent class="px-4 pb-4 pt-1">
                     Elements in form
-                </Accordion.Content>
-            </Accordion.Item>
-        </Accordion.Root>
+                </AccordionContent>
+            </AccordionItem>
+        </Accordion>
     </div>
     <div bind:this={dropBox}
          class={['flex flex-1 flex-col']}>
@@ -178,7 +187,8 @@ $inspect(formFields);
                 <h1 class="flex flex-col text-2xl mb-2">{survey.title} <span class="text-sm">Survey #{data.id}</span>
                 </h1>
                 <p>{survey.description}</p>
-                <FormFieldList bind:fields={formFields} bind:pageState={pageState}/>
+                <FormFieldList bind:selectedFormField={selectedFormField} bind:fields={formFields}
+                               bind:pageState={pageState}/>
             </div>
         </div>
     </div>
@@ -192,31 +202,42 @@ $inspect(formFields);
                 <TabsTrigger value="interaction" class="hover:cursor-pointer">Interaction</TabsTrigger>
             </TabsList>
             <TabsContent value="general" class="space-y-4 pt-4">
-                <div class="space-y-2">
+                <div class="space-y-2 ">
                     <Label for="label">Label</Label>
-                    <Input id="label"/>
+                    <Input id="label" class="" value={selectedFormField?.label} placeholder={selectedFormField?.label}/>
                 </div>
 
                 <div class="space-y-2">
                     <Label for="placeholder">Placeholder</Label>
-                    <Input id="placeholder" />
+                    <Input id="placeholder"/>
                 </div>
 
                 <div class="space-y-2">
                     <Label for="defaultValue">Default Value</Label>
-                    <Input id="defaultValue" />
+                    <Input id="defaultValue"/>
                 </div>
 
                 <div class="space-y-2">
                     <div class="flex items-center justify-between">
                         <Label for="isVisible">Visible</Label>
-                        <Switch id="isVisible" />
+                        <Switch id="isVisible"/>
                     </div>
                 </div>
 
                 <div class="flex items-center justify-between">
                     <Label for="isEnabled">Enabled</Label>
-                    <Switch id="isEnabled" />
+                    <Switch id="isEnabled"/>
+                </div>
+                <div class="flex items-center justify-between relative">
+                    <Label for="isEnabled">Enabled</Label>
+                    <Select.Root type="single">
+                        <Select.Trigger class="w-[180px]"></Select.Trigger>
+                        <Select.Content strategy="absolute">
+                            <Select.Item value="light">Light</Select.Item>
+                            <Select.Item value="dark">Dark</Select.Item>
+                            <Select.Item value="system">System</Select.Item>
+                        </Select.Content>
+                    </Select.Root>
                 </div>
             </TabsContent>
             <TabsContent value="specific" class="space-y-4 pt-4">
