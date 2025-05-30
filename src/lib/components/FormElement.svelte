@@ -15,7 +15,7 @@ type Props = {
   icon: typeof IconType;
 };
 
-let { label, element, icon: Icon }: Props = $props();
+let { label, element: elementType, icon: Icon }: Props = $props();
 let dragElement: HTMLLIElement | undefined;
 let elementState: 'idle' | 'is-dragging' | 'preview' | 'is-dragging-over' =
   $state('idle');
@@ -73,7 +73,7 @@ $effect(() => {
       });
     },
     getInitialData: () => ({
-      elementType: label,
+      elementType,
       ...getFieldData(previewData),
     }),
     onDragStart: () => {

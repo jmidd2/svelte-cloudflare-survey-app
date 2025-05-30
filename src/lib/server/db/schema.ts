@@ -1,11 +1,10 @@
-import { formElements } from '$lib';
 import type { HtmlFormElements } from '$lib/types';
-import { isHtmlFormField } from '$lib/utils';
 import { type InferSelectModel, type SQL, relations, sql } from 'drizzle-orm';
 // src/lib/db/schema.ts
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod/v4';
+import { formElements } from '../../index';
 
 const timestamps = {
   createdAt: integer('created_at', { mode: 'timestamp_ms' })
@@ -23,7 +22,12 @@ export const tenants = sqliteTable('tenants', {
   slug: text('slug')
     .generatedAlwaysAs(
       (): SQL => sql`lower
-                (replace(${tenants.name}, ' ', '-'))`,
+                (replace(
+      ${tenants.name},
+      ' ',
+      '-'
+      )
+      )`,
       {
         mode: 'virtual',
       }
@@ -33,6 +37,29 @@ export const tenants = sqliteTable('tenants', {
   active: integer('active', { mode: 'boolean' }).notNull().default(true),
   ...timestamps,
 });
+
+// function generateRandomSuffix(length = 4) {
+//   const bytes = Math.ceil(length / 2);
+//   const buffer = new Uint8Array(bytes);
+//   crypto.getRandomValues(buffer);
+//   return Array.from(buffer, byte => byte.toString(16).padStart(2, '0'))
+//     .join('')
+//     .substring(0, length);
+// }
+//
+// function generateUniqueFormSlug(title: string, hexLength = 5): SQL {
+//   const slug = title
+//     .normalize()
+//     .toLocaleLowerCase()
+//     .replaceAll(/\W/g, '-')
+//     .replaceAll(/-{2,}/g, '-')
+//     .replace(/^-|-$/gm, '')
+//     .trim();
+//
+//   return sql`${slug}
+//   -
+//   ${generateRandomSuffix(hexLength)}`;
+// }
 
 // Forms table - stores form definitions
 export const forms = sqliteTable('forms', {
@@ -44,6 +71,17 @@ export const forms = sqliteTable('forms', {
   description: text('description'),
   createdBy: text('created_by').notNull(), // Auth0 user ID
   active: integer('active', { mode: 'boolean' }).notNull().default(true),
+  slug: text('slug').$default((): SQL => {
+    return sql`
+        lower(
+          trim(
+            replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(${forms.title},' ', '-'),'_','-'),'&','and'),'@','at'),'#',''),'%',''),'+',''),'=',''),'!',''),'?',''),'.',''),',',''),'--','-')
+            ||'-'||
+            substr(lower(hex(randomblob(16))),1,5)
+          )
+        )
+      `;
+  }),
   settings: text('settings', { mode: 'json' }).$type<{
     email: string;
     name: string;

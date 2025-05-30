@@ -1,4 +1,4 @@
-import { getFormById, getFormFields } from '$lib/server/db';
+import { getFormBySlug, getFormFields } from '$lib/server/db';
 import {
   type InsertFormField,
   type SelectFormField,
@@ -7,7 +7,7 @@ import {
   forms,
 } from '$lib/server/db/schema';
 import { isHtmlFormField } from '$lib/utils';
-import { fail } from '@sveltejs/kit';
+import { error, fail } from '@sveltejs/kit';
 import { type SQL, eq, inArray, sql } from 'drizzle-orm';
 import { v4 as uuid } from 'uuid';
 import type { Actions, PageServerLoad } from './$types';
@@ -19,21 +19,20 @@ export const load: PageServerLoad = async function ({
   depends,
 }) {
   depends('survey-fields:latest');
-  if (!params.survey_id) throw new Error('id is required');
+  if (!params.slug) throw new Error('slug is required');
 
   const { session } = await parent();
 
-  const survey = await getFormById(locals.db, params.survey_id);
+  const survey = await getFormBySlug(locals.db, params.slug);
 
-  if (!survey) throw new Error('survey not found');
+  if (!survey) return error(404, 'survey not found');
 
-  const fields = await getFormFields(locals.db, params.survey_id);
+  const fields = await getFormFields(locals.db, survey.id);
 
   return {
     session,
     survey,
     fields,
-    id: params.survey_id,
   };
 };
 

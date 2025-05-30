@@ -17,6 +17,7 @@ import {
 import { Textarea } from '$lib/components/ui/textarea';
 import { getFieldData, isFieldData } from '$lib/dnd';
 import type { SelectFormField } from '$lib/server/db/schema';
+import { genSlug } from '$lib/utils';
 import {
   attachClosestEdge,
   extractClosestEdge,
@@ -162,6 +163,7 @@ function canHaveOptions(element: SelectFormField) {
 }
 
 let value = $state(null);
+const elementId = genSlug(field);
 </script>
 
 
@@ -185,7 +187,7 @@ let value = $state(null);
     <div class="p-4 flex flex-col border-x">
         {#if canHaveOptions(field)}
             {#if field.type === 'select'}
-                <Select type="single" bind:value>
+                <Select type="single" bind:value id={elementId} name={elementId}>
                     <SelectTrigger class="w-45">{value ?? 'Select an option'}</SelectTrigger>
                     <SelectContent>
 
@@ -212,6 +214,7 @@ let value = $state(null);
                     {/if}
                 </RadioGroup>
             {:else if field.type === 'checkbox'}
+              <div class="grid gap-3">
                 {#if hasOptions(field)}
                     {#each field.options as opt, index}
                         <div class="flex items-center space-x-2">
@@ -223,13 +226,13 @@ let value = $state(null);
                 {:else}
                     <span>No options</span>
                 {/if}
-
+              </div>
             {/if}
         {:else}
             {#if field.type === 'textarea'}
-                <Textarea></Textarea>
+                <Textarea id={elementId} name={elementId}></Textarea>
             {:else}
-                <Input type={field.type}/>
+                <Input type={field.type} value="" id={elementId} name={elementId} />
             {/if}
         {/if}
         <!--        <form>-->

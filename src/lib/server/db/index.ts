@@ -134,14 +134,14 @@ export async function createForm(
 /**
  * Get form by ID with tenant verification
  */
-export async function getFormById(
+export async function getFormBySlug(
   db: DrizzleClient,
-  id: string,
+  slug: string,
   tenantId?: string // Optional for public access
 ) {
   // Build the query
   const filters: SQL[] = [];
-  filters.push(eq(schema.forms.id, id));
+  filters.push(eq(schema.forms.slug, slug));
 
   // Add tenant filter if provided (for admin access)
   if (tenantId) {

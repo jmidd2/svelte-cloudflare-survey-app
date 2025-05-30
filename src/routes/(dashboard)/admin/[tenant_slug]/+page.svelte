@@ -13,8 +13,8 @@ $inspect(data);
         <div class="border-b my-2 py-3">
         <h2>{survey.title}</h2>
         <p>{survey.description}</p>
-            <a href={`/survey/${survey.id}`}>Take Survey</a>
-            <a href={`${tenantSlug}/forms/${survey.id}`}>Edit</a>
+            <a href={`/survey/${survey.slug}`}>Take Survey</a>
+            <a href={`${tenantSlug}/forms/${survey.slug}`}>Edit</a>
         </div>
     {/each}
 </div>

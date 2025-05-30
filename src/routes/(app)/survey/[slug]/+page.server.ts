@@ -38,11 +38,11 @@ class NotFoundError extends Error {}
 
 async function getFormWithFields(
   db: ServerLoadEvent['locals']['db'],
-  id: string
+  slug: string
 ) {
   const survey: SelectFormWithFields | undefined =
     await db.query.forms.findFirst({
-      where: eq(forms.id, id),
+      where: eq(forms.slug, slug),
       with: {
         fields: {
           orderBy: asc(formFields.orderIndex),
@@ -165,10 +165,10 @@ function convertFieldValue(
 }
 
 export const load: PageServerLoad = async function ({ params, locals }) {
-  if (!params.id) return error(400, { message: 'id is required' });
+  if (!params.slug) return error(400, { message: 'slug is required' });
 
   try {
-    const survey = await getFormWithFields(locals.db, params.id);
+    const survey = await getFormWithFields(locals.db, params.slug);
 
     const fields: SelectFormFieldWithHash[] = survey.fields.map(
       ({ id, ...f }) => ({
@@ -178,7 +178,6 @@ export const load: PageServerLoad = async function ({ params, locals }) {
     );
 
     return {
-      id: params.id,
       survey: {
         ...survey,
         fields,

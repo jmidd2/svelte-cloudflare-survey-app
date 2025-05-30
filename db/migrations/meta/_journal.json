@@ -15,6 +15,13 @@
       "when": 1747085810788,
       "tag": "0001_tiny_red_hulk",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1748631978703,
+      "tag": "0002_slim_goblin_queen",
+      "breakpoints": true
     }
   ]
 }

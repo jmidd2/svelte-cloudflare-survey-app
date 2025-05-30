@@ -1,5 +1,4 @@
 import type { HtmlFormElements } from '$lib/types';
-
 export const formElements: HtmlFormElements[] = [
   'text',
   'checkbox',
