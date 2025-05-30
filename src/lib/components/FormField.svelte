@@ -243,7 +243,7 @@ $effect(() => {
             {#if field.type === 'textarea'}
                 <Textarea id={elementId} name={elementId}></Textarea>
             {:else}
-                <Input type={field.type} value="" id={elementId} name={elementId} />
+                <Input type={field.type} value="" placeholder={field.placeholder} id={elementId} name={elementId} />
             {/if}
         {/if}
         <!--        <form>-->
@@ -281,6 +281,7 @@ $effect(() => {
                     await applyAction(result);
                     console.log('action result', result)
                     if (result.type === 'success' && result.data && typeof result.data.id === "string") {
+
                         await saveSorted(result.data.id)
                         await invalidate('survey-fields:latest')
                     }

@@ -4,7 +4,27 @@ import { sampleFormFieldLabels } from '$lib/sample';
 import type { SelectFormField } from '$lib/server/db/schema';
 import type { HtmlFormElements, SaveSortedFnArgs } from '$lib/types';
 import type { ActionResult } from '@sveltejs/kit';
+const tlFieldDataKey = Symbol('toolbox-list-field');
 
+export type ToolboxListFieldData = {
+  [tlFieldDataKey]: true;
+  fieldId: string;
+};
+
+export function getToolboxListFieldData(
+  field: SelectFormField
+): ToolboxListFieldData {
+  return {
+    [tlFieldDataKey]: true,
+    fieldId: field.id,
+  };
+}
+
+export function isToolboxListFieldData(
+  data: Record<string | symbol, unknown>
+): data is ToolboxListFieldData {
+  return data[tlFieldDataKey] === true;
+}
 const fieldDataKey = Symbol('field');
 
 export type FieldData = {

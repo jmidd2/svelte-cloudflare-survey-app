@@ -7,7 +7,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '$lib/components/ui/accordion/index.js';
-import { Badge } from '$lib/components/ui/badge/index.js';
 import type { SelectFormField } from '$lib/server/db/schema';
 import type { HtmlFormElements } from '$lib/types';
 import {
@@ -24,13 +23,15 @@ import {
   Text,
   TextCursorInput,
 } from '@lucide/svelte';
+import ToolboxFormEleList from './ToolboxFormEleList.svelte';
 
 type Props = {
   formFields: SelectFormField[];
   selectedFormField: SelectFormField;
 };
 
-let { formFields, selectedFormField = $bindable() }: Props = $props();
+let { formFields = $bindable(), selectedFormField = $bindable() }: Props =
+  $props();
 const formElementIcons: Record<HtmlFormElements, typeof IconType> = {
   checkbox: ListTodo,
   date: Calendar,
@@ -59,7 +60,7 @@ for (const element of formElements) {
 </script>
 
 <div class="w-64 border-r border-spark-secondary-600 flex flex-col h-full">
-  <Accordion type="multiple" value={['toolbox', 'form-elements']}>
+  <Accordion type="multiple" value={['toolbox']}>
     <AccordionItem value="toolbox">
       <AccordionTrigger class="px-4 py-2 hover:cursor-pointer">Toolbox</AccordionTrigger>
       <AccordionContent class="px-4 pb-4 pt-1">
@@ -73,11 +74,7 @@ for (const element of formElements) {
     <AccordionItem value="form-elements">
       <AccordionTrigger class="px-4 py-2 hover:cursor-pointer">Form Elements</AccordionTrigger>
       <AccordionContent class="px-4 pb-4 pt-1">
-        <ul class="space-y-2">
-          {#each formFields as formField}
-            <li onclick={() => { selectedFormField = formField }} class={["cursor-grab line-clamp-1 flex border rounded-lg p-1 text-xs items-center", {'border-spark-primary':selectedFormField?.id === formField.id}]}><GripVertical class="size-3"></GripVertical><p class="truncate text-ellipsis flex-1 ml-1 mr-2">{formField.label}</p><Badge class="text-[10px]" variant="secondary">{formElementTags[formField.type]}</Badge></li>
-          {/each}
-        </ul>
+        <ToolboxFormEleList bind:selectedFormField bind:formFields />
       </AccordionContent>
     </AccordionItem>
   </Accordion>

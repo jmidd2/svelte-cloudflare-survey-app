@@ -80,6 +80,7 @@ async function handleDrop({
 
   let indexOfSource = -1;
   let indexOfTarget = fields.findIndex(task => task.id === targetData.fieldId);
+  let newFieldId: string | undefined;
 
   if (indexOfTarget < 0) {
     return;
@@ -104,6 +105,8 @@ async function handleDrop({
       ...generateFormFieldData(source.data.elementType),
     });
 
+    newFieldId = newField.id;
+
     indexOfSource = copyOfFields.length;
 
     copyOfFields = [...copyOfFields, newField];
@@ -114,14 +117,6 @@ async function handleDrop({
 
     if (indexOfSource < 0) {
       return;
-    }
-
-    const element = document.querySelector(
-      `[data-task-id="${sourceData.fieldId}"]`
-    );
-
-    if (element instanceof HTMLElement) {
-      triggerPostMoveFlash(element);
     }
   }
 
@@ -144,6 +139,12 @@ async function handleDrop({
     surveyId: copyOfFields[0].formId,
   });
   fields = newFields;
+  if (newFieldId) {
+    const newFieldIndex = fields.findIndex(item => item.id === newFieldId);
+    if (newFieldIndex > 0) {
+      selectedFormField = fields[newFieldIndex];
+    }
+  }
   pageState = 'idle';
 }
 
