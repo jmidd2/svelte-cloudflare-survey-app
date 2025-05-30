@@ -177,7 +177,7 @@ const elementId = genSlug(field);
      data-field-id={field.id}>
     <div
             bind:this={dragHandle}
-            class="flex text-lg border flex-row items-center py-2 px-4 pl-0 hover:bg-muted hover:cursor-pointer rounded-t-xl"
+            class="flex text-lg border flex-row items-center py-2 px-4 pl-0 hover:bg-muted cursor-grab rounded-t-xl"
     >
         <DragHandle/>
         <span class="truncate flex-grow flex-shrink ml-3">{field.label}</span>

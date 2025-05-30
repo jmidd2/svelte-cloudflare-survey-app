@@ -88,7 +88,7 @@ $effect(() => {
 
 
 <li bind:this={dragElement}
-    class={['border flex items-center p-2 rounded-md cursor-move hover:bg-accent hover:text-black', {'bg-background': elementState !== 'idle', 'border-transparent border-solid': elementState === 'idle'}]}>
+    class={['border flex items-center p-2 rounded-md cursor-grab hover:bg-accent', {'bg-background': elementState !== 'idle', 'border-transparent border-solid': elementState === 'idle'}]}>
     <Icon class="h-4 w-4 mr-2" />
     <span>{label}</span></li>
 {#if elementState === 'preview'}

@@ -119,7 +119,7 @@ for (const element of formElements) {
 $inspect(selectedFormField);
 </script>
 <div class="border-b pb-2 mb-2 hidden">
-    <h1 class="flex flex-col text-2xl mb-2">{survey.title} <span class="text-sm">Survey #{data.id}</span></h1>
+    <h1 class="flex flex-col text-2xl mb-2">{survey.title} <span class="text-sm">Survey #{survey.id}</span></h1>
     <p>{survey.description}</p>
 </div>
 <div class="items-center hidden">
@@ -185,7 +185,7 @@ $inspect(selectedFormField);
          class={['flex flex-1 flex-col']}>
         <div class="flex-1 p-6 overflow-auto bg-muted/10">
             <div class="max-w-4xl mx-auto p-6 rounded-lg shadow-sm border">
-                <h1 class="flex flex-col text-2xl mb-2">{survey.title} <span class="text-sm">Survey #{data.id}</span>
+                <h1 class="flex flex-col text-2xl mb-2">{survey.title} <span class="text-sm text-muted-foreground">Survey #{survey.id}</span>
                 </h1>
                 <p>{survey.description}</p>
                 <FormFieldList bind:selectedFormField={selectedFormField} bind:fields={formFields}
