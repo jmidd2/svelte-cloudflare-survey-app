@@ -94,6 +94,24 @@ export async function saveSorted({
   applyAction(result);
 }
 
+export type HasOptions = SelectFormField & {
+  options: { val: string; label: string }[];
+};
+
+export function hasOptions(element: SelectFormField): element is HasOptions {
+  return (
+    canHaveOptions(element) && !!element.options && element.options.length > 0
+  );
+}
+
+export function canHaveOptions(element: SelectFormField) {
+  return (
+    element.type === 'select' ||
+    element.type === 'checkbox' ||
+    element.type === 'radio'
+  );
+}
+
 export function generateFormFieldData(
   type: HtmlFormElements
 ): Pick<SelectFormField, 'label' | 'placeholder' | 'required' | 'options'> {

@@ -15,7 +15,12 @@ import {
   SelectTrigger,
 } from '$lib/components/ui/select';
 import { Textarea } from '$lib/components/ui/textarea';
-import { getFieldData, isFieldData } from '$lib/dnd';
+import {
+  canHaveOptions,
+  getFieldData,
+  hasOptions,
+  isFieldData,
+} from '$lib/dnd';
 import type { SelectFormField } from '$lib/server/db/schema';
 import { genSlug } from '$lib/utils';
 import {
@@ -145,24 +150,6 @@ $effect(() => {
     })
   );
 });
-
-type HasOptions = SelectFormField & {
-  options: { val: string; label: string }[];
-};
-
-function hasOptions(element: SelectFormField): element is HasOptions {
-  return (
-    canHaveOptions(element) && !!element.options && element.options.length > 0
-  );
-}
-
-function canHaveOptions(element: SelectFormField) {
-  return (
-    element.type === 'select' ||
-    element.type === 'checkbox' ||
-    element.type === 'radio'
-  );
-}
 
 let value = $state(null);
 const elementId = genSlug(field);
