@@ -1,43 +1,26 @@
 <script lang="ts">
-import { formElementTags, formElements } from '$lib';
-import FormElement from '$lib/components/FormElement.svelte';
 import FormFieldList from '$lib/components/FormFieldList.svelte';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '$lib/components/ui/accordion';
 import { Input } from '$lib/components/ui/input';
 import { Label } from '$lib/components/ui/label';
-import * as Select from '$lib/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from '$lib/components/ui/select';
 import { Switch } from '$lib/components/ui/switch';
 import { Tabs, TabsList, TabsTrigger } from '$lib/components/ui/tabs';
 import { TabsContent } from '$lib/components/ui/tabs/index.js';
 import type { SelectFormField } from '$lib/server/db/schema';
-import type { HtmlFormElements } from '$lib/types';
 import { isHtmlFormField } from '$lib/utils';
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import {
-  Calendar,
-  Check,
-  ChevronsLeftRightEllipsis,
-  Hash,
-  type Icon as IconType,
-  List,
-  ListTodo,
-  Mail,
-  Phone,
-  Text,
-  TextCursorInput,
-} from '@lucide/svelte';
 import type { PageProps } from './$types';
+import ToolboxSidebar from './ToolboxSidebar.svelte';
 
 type PageState = 'idle' | 'loading';
 const idle: PageState = 'idle';
 
 const { data, form: formProp }: PageProps = $props();
-$inspect(formProp);
 let formFields = $derived(data.fields);
 const survey = $derived(data.survey);
 
@@ -53,13 +36,6 @@ let errorMessage: null | string = $derived(
 );
 
 let selectedFormField: SelectFormField | null = $state(null);
-
-$effect(() => {
-  console.log(
-    'state order',
-    formFields.map(e => e.orderIndex)
-  );
-});
 
 const isAdmin = $derived(
   data.session?.user ? data.session.user.roles.includes('admin') : false
@@ -90,33 +66,15 @@ $effect(() => {
   });
 });
 
-const formElementIcons: Record<HtmlFormElements, typeof IconType> = {
-  checkbox: ListTodo,
-  date: Calendar,
-  email: Mail,
-  number: Hash,
-  radio: List,
-  range: ChevronsLeftRightEllipsis,
-  tel: Phone,
-  text: TextCursorInput,
-  textarea: Text,
-  select: List,
-  'yes-no': Check,
-};
+$effect(() => {
+  const selectedDiv = document.querySelector(
+    `[data-field-id="${selectedFormField?.id}"]`
+  );
 
-const draggableFormElements = new Map<
-  HtmlFormElements,
-  { label: string; icon: typeof IconType }
->();
+  if (!selectedDiv) return;
 
-for (const element of formElements) {
-  draggableFormElements.set(element, {
-    label: formElementTags[element],
-    icon: formElementIcons[element],
-  });
-}
-
-$inspect(selectedFormField);
+  selectedDiv.scrollIntoView({ block: 'center', behavior: 'smooth' });
+});
 </script>
 <div class="border-b pb-2 mb-2 hidden">
     <h1 class="flex flex-col text-2xl mb-2">{survey.title} <span class="text-sm">Survey #{survey.id}</span></h1>
@@ -161,26 +119,7 @@ $inspect(selectedFormField);
 {/if}
 
 <div class="flex flex-1 overflow-hidden">
-    <div class="w-64 border-r border-spark-secondary-600 flex flex-col h-full">
-        <Accordion type="multiple" value={['toolbox']}>
-            <AccordionItem value="toolbox">
-                <AccordionTrigger class="px-4 py-2 hover:cursor-pointer">Toolbox</AccordionTrigger>
-                <AccordionContent class="px-4 pb-4 pt-1">
-                    <ul class="space-y-2">
-                        {#each draggableFormElements as [element, {icon, label}]}
-                            <FormElement {element} {label} {icon}></FormElement>
-                        {/each}
-                    </ul>
-                </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="form-elements">
-                <AccordionTrigger class="px-4 py-2 hover:cursor-pointer">Form Elements</AccordionTrigger>
-                <AccordionContent class="px-4 pb-4 pt-1">
-                    Elements in form
-                </AccordionContent>
-            </AccordionItem>
-        </Accordion>
-    </div>
+    <ToolboxSidebar {formFields} bind:selectedFormField />
     <div bind:this={dropBox}
          class={['flex flex-1 flex-col']}>
         <div class="flex-1 p-6 overflow-auto bg-muted/10">
@@ -231,14 +170,14 @@ $inspect(selectedFormField);
                 </div>
                 <div class="flex items-center justify-between relative">
                     <Label for="isEnabled">Enabled</Label>
-                    <Select.Root type="single">
-                        <Select.Trigger class="w-[180px]"></Select.Trigger>
-                        <Select.Content strategy="absolute">
-                            <Select.Item value="light">Light</Select.Item>
-                            <Select.Item value="dark">Dark</Select.Item>
-                            <Select.Item value="system">System</Select.Item>
-                        </Select.Content>
-                    </Select.Root>
+                    <Select type="single">
+                        <SelectTrigger class="w-[180px]"></SelectTrigger>
+                        <SelectContent strategy="absolute">
+                            <SelectItem value="light">Light</SelectItem>
+                            <SelectItem value="dark">Dark</SelectItem>
+                            <SelectItem value="system">System</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
             </TabsContent>
             <TabsContent value="specific" class="space-y-4 pt-4">

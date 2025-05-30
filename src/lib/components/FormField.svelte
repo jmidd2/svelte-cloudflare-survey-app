@@ -49,6 +49,7 @@ type Props = {
   onclick: () => void;
   index: number;
   selected: boolean;
+  selectedFormFieldDiv: HTMLDivElement | null;
 };
 let {
   field,
@@ -56,6 +57,7 @@ let {
   onclick: handleClick,
   index,
   selected = $bindable(false),
+  selectedFormFieldDiv = $bindable(),
 }: Props = $props();
 
 let element: HTMLDivElement | undefined;
@@ -164,11 +166,20 @@ function canHaveOptions(element: SelectFormField) {
 
 let value = $state(null);
 const elementId = genSlug(field);
+
+let selectedDiv: HTMLDivElement | null = $state(null);
+// $inspect(selectedFormFieldDiv);
+$effect(() => {
+  if (!(selectedDiv && selected)) return;
+
+  selectedFormFieldDiv = selectedDiv;
+});
 </script>
 
 
 <div class={["relative  rounded-xl flex flex-col justify-between  border-3", selected && 'border-spark-primary', !selected && 'border-transparent']}
      onclick={handleClick}
+     bind:this={selectedDiv}
      role="button"
      bind:this={element}
      onkeydown={() => {}}
@@ -177,7 +188,7 @@ const elementId = genSlug(field);
      data-field-id={field.id}>
     <div
             bind:this={dragHandle}
-            class="flex text-lg border flex-row items-center py-2 px-4 pl-0 hover:bg-muted cursor-grab rounded-t-xl"
+            class="flex text-lg border flex-row items-center py-2 px-4 pl-0 bg-muted/40 hover:bg-muted cursor-grab rounded-t-xl"
     >
         <DragHandle/>
         <span class="truncate flex-grow flex-shrink ml-3">{field.label}</span>
