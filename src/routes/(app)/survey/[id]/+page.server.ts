@@ -1,5 +1,4 @@
 import crypto from 'node:crypto';
-import { genSlug } from '$lib';
 import {
   type SelectFormField,
   type SelectFormFieldWithHash,
@@ -9,6 +8,7 @@ import {
   forms,
   submissions,
 } from '$lib/server/db/schema';
+import { genSlug } from '$lib/utils';
 import { type Actions, type ServerLoadEvent, error, fail } from '@sveltejs/kit';
 import { asc, eq } from 'drizzle-orm';
 import { v4 as uuid } from 'uuid';
@@ -259,16 +259,14 @@ export const actions = {
         hashSubmission(getClientUserAgent(request.headers))
       );
 
-      await locals.db
-        .insert(submissions)
-        .values({
-          id: uuid(),
-          data,
-          formId: params.id,
-          ipHash: hashSubmission(getClientAddress()),
-          userAgentHash: hashSubmission(getClientUserAgent(request.headers)),
-          createdAt: new Date(Date.now()),
-        });
+      await locals.db.insert(submissions).values({
+        id: uuid(),
+        data,
+        formId: params.id,
+        ipHash: hashSubmission(getClientAddress()),
+        userAgentHash: hashSubmission(getClientUserAgent(request.headers)),
+        createdAt: new Date(Date.now()),
+      });
 
       return { success: true };
     } catch (e) {

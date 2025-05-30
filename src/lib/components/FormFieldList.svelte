@@ -1,17 +1,12 @@
 <script lang="ts">
 import { deserialize } from '$app/forms';
-import {
-  generateFormFieldData,
-  isHtmlFormField,
-  isSelectFormField,
-  saveSorted,
-} from '$lib';
 import FormField from '$lib/components/FormField.svelte';
-import { isFieldData } from '$lib/dnd';
+import { generateFormFieldData, isFieldData, saveSorted } from '$lib/dnd';
 import {
   type InsertFormField,
   type SelectFormField,
 } from '$lib/server/db/schema.js';
+import { isHtmlFormField, isSelectFormField } from '$lib/utils';
 import { triggerPostMoveFlash } from '@atlaskit/pragmatic-drag-and-drop-flourish/trigger-post-move-flash';
 import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { reorderWithEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/reorder-with-edge';

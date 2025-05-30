@@ -1,5 +1,6 @@
-import { formElements, isHtmlFormField } from '$lib';
+import { formElements } from '$lib';
 import type { HtmlFormElements } from '$lib/types';
+import { isHtmlFormField } from '$lib/utils';
 import { type InferSelectModel, type SQL, relations, sql } from 'drizzle-orm';
 // src/lib/db/schema.ts
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';

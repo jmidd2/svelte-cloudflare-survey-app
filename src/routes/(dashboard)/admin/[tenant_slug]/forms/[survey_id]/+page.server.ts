@@ -1,4 +1,3 @@
-import { isHtmlFormField } from '$lib';
 import { getFormById, getFormFields } from '$lib/server/db';
 import {
   type InsertFormField,
@@ -7,6 +6,7 @@ import {
   formFields,
   forms,
 } from '$lib/server/db/schema';
+import { isHtmlFormField } from '$lib/utils';
 import { fail } from '@sveltejs/kit';
 import { type SQL, eq, inArray, sql } from 'drizzle-orm';
 import { v4 as uuid } from 'uuid';

@@ -1,7 +1,7 @@
 <script lang="ts">
 import { enhance } from '$app/forms';
-import { isHtmlFormField } from '$lib';
 import type { SelectFormFieldWithHash } from '$lib/server/db/schema';
+import { isHtmlFormField } from '$lib/utils';
 
 const { data, form } = $props();
 

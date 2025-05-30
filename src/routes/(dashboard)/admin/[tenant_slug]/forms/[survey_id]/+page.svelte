@@ -1,5 +1,5 @@
 <script lang="ts">
-import { formElementTags, formElements, isHtmlFormField } from '$lib';
+import { formElementTags, formElements } from '$lib';
 import FormElement from '$lib/components/FormElement.svelte';
 import FormFieldList from '$lib/components/FormFieldList.svelte';
 import {
@@ -16,6 +16,7 @@ import { Tabs, TabsList, TabsTrigger } from '$lib/components/ui/tabs';
 import { TabsContent } from '$lib/components/ui/tabs/index.js';
 import type { SelectFormField } from '$lib/server/db/schema';
 import type { HtmlFormElements } from '$lib/types';
+import { isHtmlFormField } from '$lib/utils';
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import {
   Calendar,
