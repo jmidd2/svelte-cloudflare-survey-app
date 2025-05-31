@@ -20,13 +20,9 @@ export const load: PageServerLoad = async function ({
   depends,
 }) {
   depends('survey-fields:latest');
-  if (!params.slug) throw new Error('slug is required');
+  if (!params.survey_slug) throw new Error('slug is required');
 
-  const { session } = await parent();
-
-  const survey = await getFormBySlug(locals.db, params.slug);
-
-  if (!survey) return error(404, 'survey not found');
+  const { session, tenant, survey } = await parent();
 
   const fields = await getFormFields(locals.db, survey.id);
 
@@ -34,6 +30,7 @@ export const load: PageServerLoad = async function ({
     session,
     survey,
     fields,
+    tenant,
   };
 };
 

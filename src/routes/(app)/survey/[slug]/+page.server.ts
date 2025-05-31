@@ -168,7 +168,7 @@ export const load: PageServerLoad = async function ({ params, locals }) {
   if (!params.slug) return error(400, { message: 'slug is required' });
 
   try {
-    const survey = await getFormWithFields(locals.db, params.slug);
+    const survey = await getFormWithFields(locals.db, params.survey_slug);
 
     const fields: SelectFormFieldWithHash[] = survey.fields.map(
       ({ id, ...f }) => ({

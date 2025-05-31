@@ -144,6 +144,7 @@ function hasPlaceholder(field: SelectFormField) {
     <div class="flex-1 p-6 overflow-auto bg-muted/10">
       <div class="max-w-4xl mx-auto p-6 rounded-lg shadow-sm border">
         <div class="mb-3">
+          <!-- Add edit button next to title to open dialog with title and description, maybe settings -->
           <h1 class="flex flex-col text-2xl mb-2">{survey.title} <span
               class="text-sm text-muted-foreground">Survey #{survey.id}</span></h1>
           <p>{survey.description}</p>

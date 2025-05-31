@@ -4,12 +4,17 @@ import { isAdmin } from '$lib/server/utils';
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async function ({ locals, params }) {
-  const { tenant_slug } = params;
+export const load: PageServerLoad = async function ({
+  locals,
+  params,
+  parent,
+}) {
+  // const { tenant_slug } = params;
+  //
+  // const tenant = await getTenantBySlug(locals.db, tenant_slug);
 
-  const tenant = await getTenantBySlug(locals.db, tenant_slug);
-
-  if (!tenant) redirect(constants.HTTP_STATUS_SEE_OTHER, '/login');
+  // if (!tenant) redirect(constants.HTTP_STATUS_SEE_OTHER, '/login');
+  const { tenant } = await parent();
 
   const session = await locals.auth();
 
