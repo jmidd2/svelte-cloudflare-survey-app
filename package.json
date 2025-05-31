@@ -71,7 +71,7 @@
     "drizzle-zod": "^0.8.2",
     "jose": "^6.0.11",
     "uuid": "^11.1.0",
-    "zod": "^3.25.36"
+    "zod": "^3.25.42"
   },
   "packageManager": "yarn@4.9.1"
 }

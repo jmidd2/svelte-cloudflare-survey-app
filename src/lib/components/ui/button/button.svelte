@@ -21,6 +21,8 @@ export const buttonVariants = tv({
       ghost:
         'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50',
       link: 'text-primary underline-offset-4 hover:underline',
+      'outline-destructive':
+        'bg-background shadow-xs hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 border hover:bg-destructive/70 dark:hover:bg-destructive/60',
     },
     size: {
       default: 'h-9 px-4 py-2 has-[>svg]:px-3',
@@ -63,7 +65,7 @@ export type ButtonProps = WithElementRef<HTMLButtonAttributes> &
 	<a
 		bind:this={ref}
 		data-slot="button"
-		class={cn(buttonVariants({ variant, size }), className)}
+		class={cn(className, buttonVariants({ variant, size }))}
 		href={disabled ? undefined : href}
 		aria-disabled={disabled}
 		role={disabled ? "link" : undefined}
@@ -76,7 +78,7 @@ export type ButtonProps = WithElementRef<HTMLButtonAttributes> &
 	<button
 		bind:this={ref}
 		data-slot="button"
-		class={cn(buttonVariants({ variant, size }), className)}
+		class={cn(className, buttonVariants({ variant, size }))}
 		{type}
 		{disabled}
 		{...restProps}

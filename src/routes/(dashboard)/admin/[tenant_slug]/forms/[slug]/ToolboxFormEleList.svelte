@@ -8,13 +8,18 @@ import ToolboxFormEleListItem from './ToolboxFormEleListItem.svelte';
 
 type Props = {
   formFields: SelectFormField[];
-  selectedFormField: SelectFormField;
+  selectedFieldIndex: number;
+  selectedFormField: SelectFormField | null;
 };
 
-let { formFields = $bindable(), selectedFormField = $bindable() }: Props =
-  $props();
+let {
+  formFields = $bindable(),
+  selectedFieldIndex = $bindable(),
+  selectedFormField,
+}: Props = $props();
 
 let dragState: 'idle' | 'is-dragged-over' = $state('idle');
+
 $effect(() => {
   return monitorForElements({
     canMonitor({ source }) {
@@ -60,13 +65,17 @@ $effect(() => {
         surveyId: formFields[0].formId,
       });
       formFields = reorderFormFields;
+      if (selectedFieldIndex > -1)
+        selectedFieldIndex = formFields.findIndex(
+          item => item.id === sourceData.fieldId
+        );
     },
   });
 });
 </script>
 
 <ul class={["space-y-2 pt-5", {'bg-red-500': dragState === 'is-dragged-over'}]}>
-  {#each formFields as formField}
-    <ToolboxFormEleListItem bind:selectedFormField {formField} />
+  {#each formFields as formField, index}
+    <ToolboxFormEleListItem {selectedFormField} bind:selectedFieldIndex {index} {formField} />
   {/each}
 </ul>

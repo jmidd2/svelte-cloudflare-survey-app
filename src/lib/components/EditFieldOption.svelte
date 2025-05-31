@@ -75,10 +75,10 @@ $effect(() => {
         <DragHandle size={15}></DragHandle>
     </div>
     <div class="">
-        <Input class="w-full" id="option" name={`option-${index}`} type="text"
+        <Input class="w-full" id="options" name="options" type="text"
                value={opt.label}/>
     </div>
-    <Button variant="destructive" type="button" class="hover:cursor-pointer group ml-auto mr-3"><span
+    <Button variant="outline-destructive" size="icon" type="button" class="hover:cursor-pointer group ml-auto mr-3"><span
             class="sr-only">Delete Option</span>
         <MinusCircle/>
     </Button>

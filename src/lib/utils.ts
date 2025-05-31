@@ -9,8 +9,10 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 export type WithoutChild<T> = T extends { child?: any } ? Omit<T, 'child'> : T;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 export type WithoutChildren<T> = T extends { children?: any }
   ? Omit<T, 'children'>
   : T;
@@ -19,7 +21,7 @@ export type WithElementRef<T, U extends HTMLElement = HTMLElement> = T & {
   ref?: U | null;
 };
 
-export function genSlug({ label, id }: Pick<SelectFormField, 'label' | 'id'>) {
+export function genSlug({ label, id }: SelectFormField): string {
   return `${label.toLowerCase().replaceAll(' ', '-')}-${id}`;
 }
 

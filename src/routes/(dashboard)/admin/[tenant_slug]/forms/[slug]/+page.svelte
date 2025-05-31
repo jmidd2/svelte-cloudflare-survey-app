@@ -1,46 +1,57 @@
 <script lang="ts">
+import { applyAction, enhance } from '$app/forms';
+import { goto, invalidate } from '$app/navigation';
+import { navigating } from '$app/state';
+import { formElementTags, formElements } from '$lib';
 import EditFieldOptionList from '$lib/components/EditFieldOptionList.svelte';
 import FormFieldList from '$lib/components/FormFieldList.svelte';
 import { Button } from '$lib/components/ui/button';
 import { Input } from '$lib/components/ui/input';
 import { Label } from '$lib/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from '$lib/components/ui/select/index.js';
 import { Switch } from '$lib/components/ui/switch';
 import { Tabs, TabsList, TabsTrigger } from '$lib/components/ui/tabs';
 import { TabsContent } from '$lib/components/ui/tabs/index.js';
 import { canHaveOptions } from '$lib/dnd';
 import type { SelectFormField } from '$lib/server/db/schema';
 import { isHtmlFormField } from '$lib/utils';
+import { pageState } from '$stores/pageState.svelte';
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { PlusIcon } from '@lucide/svelte';
+import { slide } from 'svelte/transition';
 import type { PageProps } from './$types';
 import ToolboxSidebar from './ToolboxSidebar.svelte';
 
-type PageState = 'idle' | 'loading';
-const idle: PageState = 'idle';
-
 const { data, form: formProp }: PageProps = $props();
-let formFields = $derived(data.fields);
-const survey = $derived(data.survey);
 
+// Local state
+const survey = $derived(data.survey);
 let lastUpdate = $derived(formProp?.lastUpdated ?? survey.updatedAt);
 let lastUpdateString = $derived(`${lastUpdate.toLocaleString()}`);
-
-let showSavedAlert = $state(false);
 let isActive = $derived(survey.active);
-
-let pageState: PageState = $state(idle);
 let errorMessage: null | string = $derived(
   formProp?.error ? formProp.message : null
 );
-
-let selectedFormField: SelectFormField | null = $state(null);
-
 const isAdmin = $derived(
   data.session?.user ? data.session.user.roles.includes('admin') : false
 );
-
 let dropBox: HTMLDivElement | undefined;
 let dragState: 'idle' | 'is-dragged-over' = $state('idle');
+let tabValue = $state('general');
+
+// Shared State
+let formFields = $derived(data.fields);
+let selectedFieldIndex: number = $state(-1);
+let selectedFormField: SelectFormField | null = $derived(
+  selectedFieldIndex >= 0 ? formFields[selectedFieldIndex] : null
+);
+
+let showSavedAlert = $state(false);
 
 $effect(() => {
   if (!dropBox) return;
@@ -63,7 +74,6 @@ $effect(() => {
     },
   });
 });
-let tabValue = $state('general');
 $effect(() => {
   const selectedDiv = document.querySelector(
     `[data-field-id="${selectedFormField?.id}"]`
@@ -82,7 +92,7 @@ $effect(() => {
 });
 
 function hasPlaceholder(field: SelectFormField) {
-  return !canHaveOptions(field);
+  return !canHaveOptions(field) && field.type !== 'range';
 }
 </script>
 <div class="border-b pb-2 mb-2 hidden">
@@ -91,7 +101,7 @@ function hasPlaceholder(field: SelectFormField) {
 </div>
 <div class="items-center hidden">
   Last Update:
-  {#if pageState === 'loading'}
+  {#if pageState.state === 'loading'}
     saving
     <svg class="ml-1 size-5 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
          viewBox="0 0 24 24">
@@ -123,12 +133,12 @@ function hasPlaceholder(field: SelectFormField) {
   </div>
 </div>
 
-{#if pageState === 'idle' && errorMessage}
+{#if pageState.state === 'idle' && errorMessage}
   <p class="bg-red-500 text-white p-3">{errorMessage}</p>
 {/if}
 
 <div class="flex flex-1 overflow-hidden">
-  <ToolboxSidebar bind:formFields bind:selectedFormField/>
+  <ToolboxSidebar bind:formFields bind:selectedFieldIndex {selectedFormField}/>
   <div bind:this={dropBox}
        class={['flex flex-1 flex-col']}>
     <div class="flex-1 p-6 overflow-auto bg-muted/10">
@@ -138,7 +148,7 @@ function hasPlaceholder(field: SelectFormField) {
               class="text-sm text-muted-foreground">Survey #{survey.id}</span></h1>
           <p>{survey.description}</p>
           <p class="text-muted-foreground text-sm">Last Update:
-            {#if pageState === 'loading'}
+            {#if pageState.state === 'loading'}
               saving
               <svg class="ml-1 size-5 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
                    viewBox="0 0 24 24">
@@ -154,65 +164,98 @@ function hasPlaceholder(field: SelectFormField) {
             {/if}
           </p>
         </div>
-        <FormFieldList bind:selectedFormField={selectedFormField} bind:fields={formFields}
-                       bind:pageState={pageState}/>
+        <FormFieldList bind:selectedFieldIndex {selectedFormField} bind:fields={formFields}/>
       </div>
     </div>
   </div>
-  <div class="w-100 border-l bg-muted/20 p-4 overflow-y-auto">
-    <h2 class="font-semibold mb-4">Properties</h2>
-    <Tabs bind:value={tabValue}>
-      <TabsList class="grid w-full grid-cols-4">
-        <TabsTrigger value="general" class="hover:cursor-pointer">General</TabsTrigger>
-        <TabsTrigger value="options" disabled={!selectedFormField?.options || selectedFormField?.options.length === 0} class="hover:cursor-pointer">Options</TabsTrigger>
-        <TabsTrigger value="validation" class="hover:cursor-pointer">Validation</TabsTrigger>
-        <TabsTrigger value="interaction" class="hover:cursor-pointer">Interaction</TabsTrigger>
-      </TabsList>
-      <TabsContent value="general" class="space-y-4 pt-4">
-        {#if selectedFormField}
+  {#if !!selectedFormField}
+    <form use:enhance={({})=>{
+      return async ({result}) => {
+                if (result.type === 'redirect') {
+                    pageState.state = 'idle'
+                    goto(result.location);
+                } else {
+                    await applyAction(result);
+                    console.log('action result', result)
+                }
+                pageState.state = 'idle';
+            }
+    }} method="post" action="?/save-field"
+          class="w-100 border-l bg-muted/20 p-4 overflow-y-auto grid grid-rows-[auto_1fr_auto]"
+          transition:slide={{axis: 'x'}}>
+      <input type="hidden" id="fieldId" name="fieldId" bind:value={selectedFormField.id}>
+      <h2 class="font-semibold mb-4">Properties</h2>
+      <Tabs bind:value={tabValue}>
+        <TabsList class="grid w-full grid-cols-2">
+          <TabsTrigger value="general" class="hover:cursor-pointer">General</TabsTrigger>
+          <TabsTrigger value="options" disabled={!selectedFormField.options || selectedFormField.options.length === 0}
+                       class="hover:cursor-pointer">Options
+          </TabsTrigger>
+          <!--          <TabsTrigger value="validation" class="hover:cursor-pointer">Validation</TabsTrigger>-->
+          <!--          <TabsTrigger value="interaction" class="hover:cursor-pointer">Interaction</TabsTrigger>-->
+        </TabsList>
+        <TabsContent value="general" class="space-y-4 pt-4">
+          <div class="space-y-2 ">
+            <Label for="label">Type</Label>
+            <Select type="single" name="type" bind:value={selectedFormField.type}>
+              <SelectTrigger class="w-full">{formElementTags[selectedFormField.type]}</SelectTrigger>
+              <SelectContent>
+                {#each formElements.sort((a,b)=>a.localeCompare(b)) as ele}
+                <SelectItem value={ele}>{formElementTags[ele]}</SelectItem>
+                  {/each}
+              </SelectContent>
+            </Select>
+          </div>
           <div class="space-y-2 ">
             <Label for="label">Label</Label>
-            <Input id="label" class="" value={selectedFormField?.label} placeholder={selectedFormField?.label}/>
+            <Input id="label" name="label" class="" bind:value={selectedFormField.label}
+                   placeholder={selectedFormField.label}/>
           </div>
           {#if hasPlaceholder(selectedFormField)}
             <div class="space-y-2">
               <Label for="placeholder">Placeholder</Label>
-              <Input id="placeholder" value={selectedFormField?.placeholder}
-                     placeholder={selectedFormField?.placeholder}/>
+              <Input id="placeholder" name="placeholder" bind:value={selectedFormField.placeholder}
+                     placeholder={selectedFormField.placeholder}/>
             </div>
           {/if}
           <div class="space-y-2">
             <div class="flex items-center justify-between">
               <Label for="isRequired">Required</Label>
-              <Switch id="isRequired" bind:checked={selectedFormField.required}/>
+              <Switch id="isRequired" name="isRequired" bind:checked={selectedFormField.required}/>
             </div>
           </div>
-        {/if}
-      </TabsContent>
-      <TabsContent value="options" class="space-y-4 pt-4">
-
-        {#if selectedFormField}
-          {#if canHaveOptions(selectedFormField)}
-            {#if !!selectedFormField.options && selectedFormField.options.length > 0}
-              <EditFieldOptionList options={selectedFormField.options}></EditFieldOptionList>
+        </TabsContent>
+        <TabsContent value="options" class="space-y-4 pt-4">
+          {#if selectedFormField}
+            {#if canHaveOptions(selectedFormField)}
+              {#if !!selectedFormField.options && selectedFormField.options.length > 0}
+                <EditFieldOptionList options={selectedFormField.options}></EditFieldOptionList>
+              {/if}
+              <Button variant="outline" type="button"
+                      class="my-3 ml-4 mr-auto flex justify-around items-center hover:cursor-pointer">
+                <PlusIcon/>
+                Add Option
+              </Button>
+            {:else}
+              <p>This type cannot have options</p>
             {/if}
-            <Button variant="outline" type="button" class="my-3 ml-4 mr-auto flex justify-around items-center hover:cursor-pointer">
-              <PlusIcon/>
-              Add Option
-            </Button>
-          {:else}
-            <p>This type cannot have options</p>
           {/if}
-        {/if}
-      </TabsContent>
-      <TabsContent value="validation" class="space-y-4 pt-4">
-        Validation
-      </TabsContent>
-      <TabsContent value="interaction" class="space-y-4 pt-4">
-        Interaction
-      </TabsContent>
-    </Tabs>
-  </div>
+        </TabsContent>
+        <!--        <TabsContent value="validation" class="space-y-4 pt-4">-->
+        <!--          Validation-->
+        <!--        </TabsContent>-->
+        <!--        <TabsContent value="interaction" class="space-y-4 pt-4">-->
+        <!--          Interaction-->
+        <!--        </TabsContent>-->
+      </Tabs>
+      <div>
+        <Button type="submit" class="w-full cursor-pointer">
+          {#if pageState.state === 'idle'}Save{/if}
+          {#if pageState.state === 'loading'}Saving{/if}
+        </Button>
+      </div>
+    </form>
+  {/if}
 </div>
 
 <style>

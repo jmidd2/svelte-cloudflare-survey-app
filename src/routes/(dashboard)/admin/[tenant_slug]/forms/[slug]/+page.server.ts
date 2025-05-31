@@ -11,6 +11,7 @@ import { error, fail } from '@sveltejs/kit';
 import { type SQL, eq, inArray, sql } from 'drizzle-orm';
 import { v4 as uuid } from 'uuid';
 import type { Actions, PageServerLoad } from './$types';
+import { saveFieldSchema } from './schema';
 
 export const load: PageServerLoad = async function ({
   params,
@@ -37,6 +38,30 @@ export const load: PageServerLoad = async function ({
 };
 
 export const actions = {
+  'save-field': async ({ request }) => {
+    const formData = await request.formData();
+    const unsafeData = {
+      fieldId: formData.get('fieldId'),
+      label: formData.get('label'),
+      // placeholder: formData.get('placeholder') ?? undefined,
+      isRequired: formData.get('isRequired') ?? 'false',
+      type: formData.get('type'),
+      // options: formData.getAll('options') ?? undefined,
+    };
+    const placeholder = formData.get('placeholder');
+    if (placeholder) {
+      unsafeData.placeholder = placeholder;
+    }
+    const options = formData.getAll('options');
+    if (options && options.length > 0) {
+      unsafeData.options = options;
+    }
+    console.log(unsafeData);
+    const data = saveFieldSchema.parse(unsafeData);
+    console.log('saving field', data);
+
+    return data;
+  },
   addFormField: async ({ locals, request }) => {
     const form = await request.formData();
 

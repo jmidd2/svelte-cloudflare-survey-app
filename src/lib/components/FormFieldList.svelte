@@ -7,7 +7,7 @@ import {
   type SelectFormField,
 } from '$lib/server/db/schema.js';
 import { isHtmlFormField, isSelectFormField } from '$lib/utils';
-import { triggerPostMoveFlash } from '@atlaskit/pragmatic-drag-and-drop-flourish/trigger-post-move-flash';
+import { pageState } from '$stores/pageState.svelte';
 import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { reorderWithEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/reorder-with-edge';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
@@ -20,13 +20,17 @@ import type { ActionResult } from '@sveltejs/kit';
 type Props = {
   fields: SelectFormField[];
   selectedFormField: SelectFormField | null;
-  pageState: 'idle' | 'loading';
+  selectedFieldIndex: number;
 };
 let {
-  fields = $bindable(),
-  selectedFormField = $bindable(),
-  pageState = $bindable(),
+  fields = $bindable(), // shared
+  selectedFieldIndex = $bindable(), // shared
+  selectedFormField,
 }: Props = $props();
+
+// Local State
+
+// Shared State
 
 async function addFormField(field: InsertFormField) {
   let formData = new FormData();
@@ -97,19 +101,21 @@ async function handleDrop({
     if (!isHtmlFormField(source.data.elementType))
       throw new Error('not a HTML form tag');
 
-    const newField = await addFormField({
-      id: 'temp-preview-id',
-      formId: targetFormId,
-      type: source.data.elementType,
-      orderIndex: -1,
-      ...generateFormFieldData(source.data.elementType),
-    });
+    if (isHtmlFormField(source.data.elementType)) {
+      const newField = await addFormField({
+        id: 'temp-preview-id',
+        formId: targetFormId,
+        type: source.data.elementType,
+        orderIndex: -1,
+        ...generateFormFieldData(source.data.elementType),
+      });
 
-    newFieldId = newField.id;
+      newFieldId = newField.id;
 
-    indexOfSource = copyOfFields.length;
+      indexOfSource = copyOfFields.length;
 
-    copyOfFields = [...copyOfFields, newField];
+      copyOfFields = [...copyOfFields, newField];
+    }
   } else {
     // reordering existing items
     console.log('reordering');
@@ -129,23 +135,23 @@ async function handleDrop({
   });
 
   newFields = fMe.map((e, i) => {
-    e.orderIndex = i + 1;
-    return e;
+    return { ...e, orderIndex: i + 1 };
   });
 
-  pageState = 'loading';
+  pageState.state = 'loading';
   await saveSorted({
     sortedList: newFields,
     surveyId: copyOfFields[0].formId,
   });
   fields = newFields;
   if (newFieldId) {
-    const newFieldIndex = fields.findIndex(item => item.id === newFieldId);
-    if (newFieldIndex > 0) {
-      selectedFormField = fields[newFieldIndex];
-    }
+    selectedFieldIndex = fields.findIndex(item => item.id === newFieldId);
+  } else if (selectedFieldIndex > -1) {
+    selectedFieldIndex = fields.findIndex(
+      item => item.id === sourceData.fieldId
+    );
   }
-  pageState = 'idle';
+  pageState.state = 'idle';
 }
 
 $effect(() => {
@@ -159,7 +165,10 @@ $effect(() => {
 </script>
 
 <div class="grid grid-cols-1 gap-y-4 p-2">
-    {#each fields as field, index}
-        <FormField {index} selected={selectedFormField?.id === field.id} onclick={()=>{ if (selectedFormField?.id !== field.id) selectedFormField = field; console.log('form-field:', index)}} {field} saveSorted={async (removedId) => { await saveSorted({sortedList: fields, removedId, surveyId: fields[0].formId}) }}/>
+    {#each fields as field, index (field.id)}
+        <FormField {index}
+                   selected={selectedFormField?.id === field.id}
+                   onclick={()=>{ selectedFieldIndex = selectedFormField?.id === field.id ? -1 : index; }} {field}
+                   saveSorted={async (removedId) => { await saveSorted({sortedList: fields, removedId, surveyId: fields[0].formId}) }}/>
     {/each}
 </div>

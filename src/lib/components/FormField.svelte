@@ -23,6 +23,7 @@ import {
 } from '$lib/dnd';
 import type { SelectFormField } from '$lib/server/db/schema';
 import { genSlug } from '$lib/utils';
+import { pageState } from '$stores/pageState.svelte.js';
 import {
   attachClosestEdge,
   extractClosestEdge,
@@ -54,7 +55,6 @@ type Props = {
   onclick: () => void;
   index: number;
   selected: boolean;
-  selectedFormFieldDiv: HTMLDivElement | null;
 };
 let {
   field,
@@ -62,13 +62,17 @@ let {
   onclick: handleClick,
   index,
   selected = $bindable(false),
-  selectedFormFieldDiv = $bindable(),
 }: Props = $props();
 
+// Local state
 let element: HTMLDivElement | undefined;
 let dragHandle: HTMLDivElement | undefined;
-const idle: FieldState = { type: 'idle' };
-let state = $state(idle);
+const idleDragState: FieldState = { type: 'idle' };
+let dragState = $state(idleDragState);
+let value = $state(undefined);
+const elementId = genSlug(field);
+
+// Shared state
 
 $effect(() => {
   if (element === undefined || dragHandle === undefined) return;
@@ -87,15 +91,15 @@ $effect(() => {
             y: '8px',
           }),
           render({ container }) {
-            state = { type: 'preview', container };
+            dragState = { type: 'preview', container };
           },
         });
       },
       onDragStart() {
-        state = { type: 'is-dragging' };
+        dragState = { type: 'is-dragging' };
       },
       onDrop() {
-        state = idle;
+        dragState = idleDragState;
       },
     }),
 
@@ -125,7 +129,7 @@ $effect(() => {
       onDragEnter({ self }) {
         console.log('on drag enter');
         const closestEdge = extractClosestEdge(self.data);
-        state = { type: 'is-dragging-over', closestEdge };
+        dragState = { type: 'is-dragging-over', closestEdge };
       },
       onDrag({ self, location }) {
         const closestEdge = extractClosestEdge(self.data);
@@ -135,43 +139,31 @@ $effect(() => {
         // Only need to update state if nothing has changed.
         // Prevents re-rendering.
         if (
-          state.type !== 'is-dragging-over' ||
-          state.closestEdge !== closestEdge
+          dragState.type !== 'is-dragging-over' ||
+          dragState.closestEdge !== closestEdge
         ) {
-          state = { type: 'is-dragging-over', closestEdge };
+          dragState = { type: 'is-dragging-over', closestEdge };
         }
       },
       onDragLeave() {
-        state = idle;
+        dragState = idleDragState;
       },
       onDrop() {
-        state = idle;
+        dragState = idleDragState;
       },
     })
   );
-});
-
-let value = $state(null);
-const elementId = genSlug(field);
-
-let selectedDiv: HTMLDivElement | null = $state(null);
-// $inspect(selectedFormFieldDiv);
-$effect(() => {
-  if (!(selectedDiv && selected)) return;
-
-  selectedFormFieldDiv = selectedDiv;
 });
 </script>
 
 
 <div class={["relative  rounded-xl flex flex-col justify-between  border-3", selected && 'border-spark-primary', !selected && 'border-transparent']}
      onclick={handleClick}
-     bind:this={selectedDiv}
      role="button"
      bind:this={element}
      onkeydown={() => {}}
      tabindex={index + 2}
-     class:opacity-40={state.type === 'is-dragging'}
+     class:opacity-40={dragState.type === 'is-dragging'}
      data-field-id={field.id}>
     <div
             bind:this={dragHandle}
@@ -185,7 +177,7 @@ $effect(() => {
     <div class="p-4 flex flex-col border-x">
         {#if canHaveOptions(field)}
             {#if field.type === 'select'}
-                <Select type="single" bind:value id={elementId} name={elementId}>
+                <Select type="single" bind:value name={elementId}>
                     <SelectTrigger class="w-45">{value ?? 'Select an option'}</SelectTrigger>
                     <SelectContent>
 
@@ -228,9 +220,9 @@ $effect(() => {
             {/if}
         {:else}
             {#if field.type === 'textarea'}
-                <Textarea id={elementId} name={elementId}></Textarea>
+                <Textarea id={elementId} name={elementId} placeholder={field.placeholder}></Textarea>
             {:else}
-                <Input type={field.type} value="" placeholder={field.placeholder} id={elementId} name={elementId} />
+                <Input type={field.type} value={undefined} placeholder={field.placeholder} id={elementId} name={elementId} />
             {/if}
         {/if}
         <!--        <form>-->
@@ -261,18 +253,20 @@ $effect(() => {
     <div class="py-2 gap-x-2 px-4 text-right border border-t-transparent rounded-b-xl align-middle flex justify-end items-center">
 <!--        <Button>Save</Button>-->
         <form class="inline" method="post" action="?/deleteFormField" use:enhance={({ formElement, formData, action, cancel })=>{
-            return async ({result}) => {
+          pageState.state = 'loading';
+          return async ({result}) => {
                 if (result.type === 'redirect') {
+                    pageState.state = 'idle'
                     goto(result.location);
                 } else {
                     await applyAction(result);
                     console.log('action result', result)
                     if (result.type === 'success' && result.data && typeof result.data.id === "string") {
-
                         await saveSorted(result.data.id)
                         await invalidate('survey-fields:latest')
                     }
                 }
+                pageState.state = 'idle';
             }
         }}>
             <input type="hidden" name="fieldId" id="fieldId" value={field.id}>
@@ -301,12 +295,12 @@ $effect(() => {
             </Button>
         </form>
     </div>
-    {#if state.type === 'is-dragging-over' && state.closestEdge}
-        <DropIndicator edge={state.closestEdge} gap={'22px'}/>
+    {#if dragState.type === 'is-dragging-over' && dragState.closestEdge}
+        <DropIndicator edge={dragState.closestEdge} gap={'22px'}/>
     {/if}
 </div>
-{#if state.type === 'preview'}
-    <Portal target={state.container}>
+{#if dragState.type === 'preview'}
+    <Portal target={dragState.container}>
         <DragPreview {field}/>
     </Portal>
 {/if}

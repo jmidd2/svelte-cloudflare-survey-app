@@ -1,10 +1,8 @@
 <script lang="ts">
 import { formElementTags } from '$lib';
-import DragPreview from '$lib/components/DragPreview.svelte';
 import { Badge } from '$lib/components/ui/badge/index.js';
 import { getToolboxListFieldData, isToolboxListFieldData } from '$lib/dnd';
 import DropIndicator from '$lib/dnd/DropIndicator.svelte';
-import Portal from '$lib/dnd/Portal.svelte';
 import type { SelectFormField } from '$lib/server/db/schema';
 import {
   attachClosestEdge,
@@ -24,7 +22,19 @@ interface FieldState {
   closestEdge?: Edge | null;
 }
 
-let { selectedFormField = $bindable(), formField } = $props();
+type Props = {
+  selectedFieldIndex: number;
+  selectedFormField: SelectFormField | null;
+  formField: SelectFormField;
+  index: number;
+};
+
+let {
+  selectedFieldIndex = $bindable(),
+  selectedFormField,
+  formField,
+  index,
+}: Props = $props();
 
 const idleState: FieldState = $state({ type: 'idle' });
 const isDraggingState: FieldState = $state({ type: 'is-dragging' });
@@ -95,13 +105,15 @@ $effect(() => {
 });
 </script>
 
-<li bind:this={draggableElement} onclick={() => { selectedFormField = formField }}
-    class={["relative cursor-grab overflow-visible line-clamp-1 flex border rounded-lg p-1 text-xs items-center", {'border-spark-primary':selectedFormField?.id === formField.id || dragState.type === 'is-dragging'}]}>
+<li bind:this={draggableElement}>
+  <div class={["relative cursor-grab overflow-visible line-clamp-1 flex border rounded-lg p-1 text-xs items-center", {'border-spark-primary':selectedFormField?.id === formField.id || dragState.type === 'is-dragging'}]}
+       onclick={() => { if(dragState.type === 'idle') selectedFieldIndex = selectedFormField?.id === formField.id ? -1 : index; }}
+        role="button" tabindex={index+30} onkeydown={() => {}}>
   <GripVertical class="size-3"></GripVertical>
   <p class="truncate text-ellipsis flex-1 ml-1 mr-2">{formField.label}</p>
   <Badge class="text-[10px]" variant="secondary">{formElementTags[formField.type]}</Badge>
   {#if dragState.type === 'is-dragging-over' && dragState.closestEdge}
     <DropIndicator edge={dragState.closestEdge} gap={'10px'}/>
   {/if}
-<!--  <DropIndicator edge={'bottom'} gap={'10px'}/>-->
+  </div>
 </li>

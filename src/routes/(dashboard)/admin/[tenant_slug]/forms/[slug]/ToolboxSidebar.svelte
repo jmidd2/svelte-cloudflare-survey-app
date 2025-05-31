@@ -13,7 +13,6 @@ import {
   Calendar,
   Check,
   ChevronsLeftRightEllipsis,
-  GripVertical,
   Hash,
   type Icon as IconType,
   List,
@@ -27,11 +26,15 @@ import ToolboxFormEleList from './ToolboxFormEleList.svelte';
 
 type Props = {
   formFields: SelectFormField[];
-  selectedFormField: SelectFormField;
+  selectedFieldIndex: number;
+  selectedFormField: SelectFormField | null;
 };
 
-let { formFields = $bindable(), selectedFormField = $bindable() }: Props =
-  $props();
+let {
+  formFields = $bindable(),
+  selectedFieldIndex = $bindable(),
+  selectedFormField,
+}: Props = $props();
 const formElementIcons: Record<HtmlFormElements, typeof IconType> = {
   checkbox: ListTodo,
   date: Calendar,
@@ -74,7 +77,7 @@ for (const element of formElements) {
     <AccordionItem value="form-elements">
       <AccordionTrigger class="px-4 py-2 hover:cursor-pointer">Form Elements</AccordionTrigger>
       <AccordionContent class="px-4 pb-4 pt-1">
-        <ToolboxFormEleList bind:selectedFormField bind:formFields />
+        <ToolboxFormEleList bind:selectedFieldIndex bind:formFields {selectedFormField} />
       </AccordionContent>
     </AccordionItem>
   </Accordion>
