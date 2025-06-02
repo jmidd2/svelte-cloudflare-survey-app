@@ -1,10 +1,13 @@
 import Auth0, { type Auth0Profile } from '@auth/core/providers/auth0';
 import { SvelteKitAuth, type SvelteKitAuthConfig } from '@auth/sveltekit';
+import type { RequestEvent } from '@sveltejs/kit';
 import z from 'zod';
 
 const DEFAULT_MAX_AGE = 24 * 60 * 60; // 1 day
 
-export const { handle, signIn, signOut } = SvelteKitAuth(async req => {
+export async function newSvelteKitAuthConfig(
+  req: RequestEvent<Partial<Record<string, string>>, string | null>
+) {
   if (!req.platform) throw new Error('Unsupported platform');
 
   const {
@@ -54,13 +57,9 @@ export const { handle, signIn, signOut } = SvelteKitAuth(async req => {
           },
         },
         profile: profile => {
-          const { roles, tenant } = profile.user_metadata as {
-            roles: string[];
-            tenant: {
-              id: string;
-              name: string;
-            };
-          };
+          if (!profile.user_metadata.tenant) {
+            console.log('no tenant found');
+          }
 
           return {
             id: profile.sub,
@@ -68,8 +67,8 @@ export const { handle, signIn, signOut } = SvelteKitAuth(async req => {
             email: profile.email,
             image: profile.picture,
             // Map the custom properties
-            roles,
-            tenant,
+            roles: profile.user_metadata.roles,
+            tenant: profile.user_metadata.tenant,
           };
         },
       }),
@@ -100,4 +99,8 @@ export const { handle, signIn, signOut } = SvelteKitAuth(async req => {
       },
     },
   } satisfies SvelteKitAuthConfig;
-});
+}
+
+export const { handle, signIn, signOut } = SvelteKitAuth(
+  newSvelteKitAuthConfig
+);

@@ -1,7 +1,6 @@
 <script lang="ts">
 import '../app.css';
 import { page } from '$app/state';
-import Footer from '$lib/components/Footer.svelte';
 import Header from '$lib/components/Header.svelte';
 
 type Link = {
@@ -25,7 +24,9 @@ const links: Links = [
 if (data.session?.user) {
   links.push({
     name: 'Dashboard',
-    href: `/admin/${data.session.user.tenant.id}`,
+    href: !!data.session.user.tenant
+      ? `/admin/${data.session.user.tenant.id}`
+      : '/admin/join-tenant',
     compare: (path: string) => path.includes('/admin'),
   });
 }

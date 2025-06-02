@@ -1,9 +1,9 @@
 import { createDb } from '$lib/server/db';
-import type { Handle } from '@sveltejs/kit';
+import { type Handle, redirect } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 
 import { env } from '$env/dynamic/private';
-import { handle as authHandle } from '$lib/auth';
+import { handle as authenticationHandle } from '$lib/auth';
 import * as schema from '$lib/server/db/schema';
 
 // import { handle as AuthenticationHandle } from '$lib/auth';
@@ -22,7 +22,29 @@ import * as schema from '$lib/server/db/schema';
 //
 //
 // }
+const authorizationHandle: Handle = async ({ event, resolve }) => {
+  // Protect any routes under /authenticated
+  if (event.url.pathname.startsWith('/admin')) {
+    const session = await event.locals.auth();
 
+    if (event.url.pathname.startsWith('/admin/invite')) {
+      return resolve(event);
+    }
+
+    if (session && session.user.tenant === undefined) {
+      console.log('no tenant found for user', event);
+      throw redirect(303, '/join-tenant');
+    }
+
+    if (!session) {
+      // Redirect to the signin page
+      throw redirect(303, '/login');
+    }
+  }
+
+  // If the request is still here, just proceed as normally
+  return resolve(event);
+};
 const dbLocalsHandle: Handle = async function ({ event, resolve }) {
   event.locals.db = await createDb({
     d1Database: event.platform?.env?.DB,
@@ -30,8 +52,11 @@ const dbLocalsHandle: Handle = async function ({ event, resolve }) {
     schema,
   });
 
-  const response = await resolve(event);
-  return response;
+  return await resolve(event);
 };
 
-export const handle: Handle = sequence(authHandle, dbLocalsHandle);
+export const handle: Handle = sequence(
+  authenticationHandle,
+  authorizationHandle,
+  dbLocalsHandle
+);

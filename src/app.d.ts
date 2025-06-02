@@ -9,8 +9,8 @@ import type {
 } from '@cloudflare/workers-types';
 
 export interface AuthProfileUserMetadata {
-  roles: string[];
-  tenant: {
+  roles?: string[];
+  tenant?: {
     id: string;
     name: string;
   };
@@ -57,7 +57,13 @@ declare global {
 
 declare module '@auth/core/providers/auth0' {
   interface Auth0Profile {
-    user_metadata: AuthProfileUserMetadata;
+    user_metadata: {
+      roles: string[];
+      tenant: {
+        id: string;
+        name: string;
+      };
+    };
   }
 }
 
