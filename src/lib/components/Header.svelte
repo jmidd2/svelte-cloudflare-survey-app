@@ -1,6 +1,7 @@
 <script lang="ts">
-import type { Session } from '@auth/core/types';
-import { signIn, signOut } from '@auth/sveltekit/client';
+import { goto, invalidateAll } from '$app/navigation';
+import { page } from '$app/state';
+import { type Session, authClient } from '$lib/auth-client';
 import { type Snippet } from 'svelte';
 import { slide } from 'svelte/transition';
 
@@ -9,7 +10,7 @@ interface HeaderProps {
   children?: Snippet;
   navLinks: Snippet<[typeof closeMenus]>;
 }
-
+const { signOut } = authClient;
 const { session, navLinks }: HeaderProps = $props();
 
 let showProfileMenu = $state(false);
@@ -40,7 +41,6 @@ let windowInnerWidth: number = $state(0);
 const WINDOW_SM_BREAKPOINT = 640;
 
 const isSmallScreen = $derived(windowInnerWidth <= WINDOW_SM_BREAKPOINT);
-$inspect(isSmallScreen);
 
 function closeMenus() {
   showMobileNavMenu = false;
@@ -55,6 +55,21 @@ function handleFocusLoss({ relatedTarget, currentTarget }: FocusEvent) {
   )
     return;
   closeMenus();
+}
+
+function handleLogout() {
+  signOut({
+    fetchOptions: {
+      onSuccess(context) {
+        if (context.data.success) {
+          goto('/', {
+            invalidateAll: true,
+          });
+          // invalidateAll();
+        }
+      },
+    },
+  });
 }
 </script>
 <svelte:window bind:innerWidth={windowInnerWidth}></svelte:window>
@@ -162,7 +177,7 @@ function handleFocusLoss({ relatedTarget, currentTarget }: FocusEvent) {
                                        role="menuitem"
                                        tabindex="-1"
                                        id="user-menu-item-1">Settings</a>
-                                    <button onclick={async () => { showProfileMenu = false; signOutLoading = true; await signOut()}}
+                                    <button onclick={handleLogout}
                                             class="cursor-pointer w-full hover:bg-slate-200 text-left block px-4 py-2 text-sm text-gray-700"
                                             role="menuitem" tabindex="-1"
                                             id="user-menu-item-2">Sign out
@@ -181,10 +196,11 @@ function handleFocusLoss({ relatedTarget, currentTarget }: FocusEvent) {
                                           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
                             {:else}
-                                <button type="button" class="hover:cursor-pointer"
-                                        onclick={async () => {signInLoading = true; await signIn('auth0');}}>
+                              {#if !page.url.pathname.startsWith('/auth')}
+                                <a href="auth/login" class="hover:cursor-pointer">
                                     Sign In
-                                </button>
+                                </a>
+                                {/if}
                             {/if}
 
                         </div>

@@ -10,9 +10,9 @@ import * as schema from './schema';
 /**
  * Type for the Drizzle client
  */
-export type DrizzleClient = Awaited<ReturnType<typeof createDb>>;
+export type DrizzleClient = Awaited<ReturnType<typeof createDbClient>>;
 
-export async function createDb<T extends typeof import('./schema')>({
+export async function createDbClient<T extends typeof import('./schema')>({
   d1Database,
   dbUrl,
   schema,

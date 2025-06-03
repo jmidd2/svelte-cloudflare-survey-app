@@ -13,13 +13,7 @@ import { v4 as uuid } from 'uuid';
 import type { Actions, PageServerLoad } from './$types';
 import { saveFieldSchema } from './schema';
 
-export const load: PageServerLoad = async function ({
-  params,
-  locals,
-  parent,
-  depends,
-}) {
-  depends('survey-fields:latest');
+export const load = async function ({ params, locals, parent, depends }) {
   if (!params.survey_slug) throw new Error('slug is required');
 
   const { session, tenant, survey } = await parent();

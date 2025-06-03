@@ -5,6 +5,23 @@ import { reset, seed } from 'drizzle-seed';
 import { formElements } from '../src/lib';
 import { sampleFormFieldLabels } from '../src/lib/sample';
 
+/**
+ *
+ * NEW SEED
+ *
+ * INSERT INTO users (id, name, email, email_verified, role, banned, created_at, updated_at)
+ * VALUES ('first-user', 'Jon Middleton', 'jonathan.middleton@travisspark.com', true, 'admin', 0, (unixepoch()), (unixepoch()));
+ *
+ * INSERT INTO accounts (id, account_id, provider_id, user_id, created_at, updated_at)
+ * VALUES ('first-account','first-account', 'email-otp', 'first-user', (unixepoch()), (unixepoch()));
+ *
+ * INSERT INTO organizations (id, name, slug, created_at)
+ * VALUES ('phoenix-spark', 'Phoenix Spark', 'phoenix-spark', (unixepoch()));
+ *
+ * INSERT INTO members (id, organization_id, user_id, role, created_at)
+ * VALUES ('first-member', 'phoenix-spark', 'first-user', 'owner', (unixepoch()));
+ */
+
 async function main() {
   if (!process.env.DATABASE_URL) {
     throw new Error('DATABASE_URL is required');

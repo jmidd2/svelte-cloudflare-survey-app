@@ -1,6 +1,5 @@
 <script lang="ts">
-import { signOut } from '@auth/sveltekit/client';
-import { SignIn } from '@auth/sveltekit/components';
+import { authClient } from '$lib/auth-client';
 import type { PageProps } from './$types';
 
 const { data }: PageProps = $props();
@@ -12,14 +11,14 @@ const user = $derived(session?.user);
 
 {#if !(session && user)}
     <div>
-        <SignIn provider="auth0" signInPage="login"/>
+<!--        <SignIn provider="auth0" signInPage="login"/>-->
     </div>
 {/if}
 
 {#if session && user}
     <h1>Welcome, {user.name}!</h1>
     <div>
-        <button onclick={() => signOut()}>Sign Out</button>
+<!--        <button onclick={() => authClient.signIn()}>Sign Out</button>-->
     </div>
 
 {/if}

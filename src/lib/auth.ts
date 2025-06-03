@@ -1,106 +1,57 @@
-import Auth0, { type Auth0Profile } from '@auth/core/providers/auth0';
-import { SvelteKitAuth, type SvelteKitAuthConfig } from '@auth/sveltekit';
-import type { RequestEvent } from '@sveltejs/kit';
-import z from 'zod';
+import { betterAuth } from 'better-auth';
+import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { admin, emailOTP, organization } from 'better-auth/plugins';
+import { type DrizzleClient, createDbClient } from './server/db';
+import * as schema from './server/db/schema';
 
-const DEFAULT_MAX_AGE = 24 * 60 * 60; // 1 day
-
-export async function newSvelteKitAuthConfig(
-  req: RequestEvent<Partial<Record<string, string>>, string | null>
-) {
-  if (!req.platform) throw new Error('Unsupported platform');
-
-  const {
-    platform: { env },
-  } = req;
-
-  const authEnvSchema = z.object({
-    AUTH_AUTH0_ID: z.string(),
-    AUTH_AUTH0_SECRET: z.string(),
-    AUTH_AUTH0_ISSUER: z.string(),
-    AUTH_SECRET: z.string(),
-    AUTH_MAX_AGE: z.coerce.number(),
-  });
-
-  const {
-    AUTH_MAX_AGE,
-    AUTH_AUTH0_ISSUER,
-    AUTH_AUTH0_SECRET,
-    AUTH_SECRET,
-    AUTH_AUTH0_ID,
-  } = authEnvSchema.parse(env);
-
-  return {
-    secret: AUTH_SECRET,
-    trustHost: true,
-    debug: true,
-    jwt: {
-      maxAge: AUTH_MAX_AGE ?? DEFAULT_MAX_AGE,
+export function createAuth(db: DrizzleClient) {
+  return betterAuth({
+    database: drizzleAdapter(db, {
+      schema,
+      provider: 'sqlite',
+      usePlural: true,
+    }),
+    emailAndPassword: {
+      enabled: true,
     },
-    cookies: {
-      sessionToken: {
-        options: {
-          maxAge: AUTH_MAX_AGE ?? DEFAULT_MAX_AGE, // 1 day
-        },
-      },
-    },
-    providers: [
-      Auth0({
-        wellKnown: '',
-        clientId: AUTH_AUTH0_ID,
-        clientSecret: AUTH_AUTH0_SECRET,
-        issuer: AUTH_AUTH0_ISSUER,
-        authorization: {
-          url: 'https://dev-f7wd881wsk8er6ir.us.auth0.com/authorize',
-          params: {
-            scope: 'openid profile email',
-          },
-        },
-        profile: profile => {
-          if (!profile.user_metadata.tenant) {
-            console.log('no tenant found');
-          }
-
-          return {
-            id: profile.sub,
-            name: profile.name,
-            email: profile.email,
-            image: profile.picture,
-            // Map the custom properties
-            roles: profile.user_metadata.roles,
-            tenant: profile.user_metadata.tenant,
-          };
+    plugins: [
+      admin(),
+      emailOTP({
+        async sendVerificationOTP({ otp, email, type }) {
+          console.log(`TODO:send otp to ${email} for ${type} with OTP: ${otp}`);
         },
       }),
+      organization(),
     ],
-    callbacks: {
-      jwt: ({ token, user }) => {
-        if (!token.image && user?.image) {
-          token.image = user.image;
-        }
-
-        if (!token.roles && user?.roles) {
-          token.roles = user.roles;
-        }
-        if (!token.tenant && user?.tenant) {
-          token.tenant = user.tenant;
-        }
-
-        return { ...token };
-      },
-      session: ({ session, token }) => {
-        if (session && token) {
-          session.user.image = token.image;
-          session.user.roles = token.roles;
-          session.user.tenant = token.tenant;
-        }
-
-        return session;
-      },
-    },
-  } satisfies SvelteKitAuthConfig;
+  });
 }
 
-export const { handle, signIn, signOut } = SvelteKitAuth(
-  newSvelteKitAuthConfig
-);
+/** Required for BetterAuth CLI to generate the schema **/
+// export const auth = betterAuth({
+//   database: drizzleAdapter(
+//     await createDbClient({ dbUrl: 'file:local-tenant.db', schema }),
+//     {
+//       schema,
+//       provider: 'sqlite',
+//       usePlural: true,
+//     }
+//   ),
+//   emailAndPassword: {
+//     enabled: true,
+//     disableSignUp: false,
+//   },
+//   plugins: [
+//     admin({
+//       defaultRole: 'user',
+//     }),
+//     emailOTP({
+//       async sendVerificationOTP({ otp, email, type }) {
+//         console.log(`TODO:send otp to ${email} for ${type} with OTP: ${otp}`);
+//       },
+//     }),
+//     organization(),
+//   ],
+// });
+
+export type AuthProvider = ReturnType<typeof createAuth>;
+// export type Session = ReturnType<typeof createAuth>.$Infer.Session;

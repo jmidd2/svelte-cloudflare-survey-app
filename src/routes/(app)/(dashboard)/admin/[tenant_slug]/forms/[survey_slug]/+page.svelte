@@ -37,9 +37,15 @@ let isActive = $derived(survey.active);
 let errorMessage: null | string = $derived(
   formProp?.error ? formProp.message : null
 );
-const isAdmin = $derived(
-  data.session?.user ? data.session.user.roles.includes('admin') : false
-);
+const isAdmin = $derived.by(() => {
+  if (!data.session?.user.role) return false;
+
+  if (Array.isArray(data.session?.user.role))
+    return data.session.user.role.includes('admin');
+
+  return data.session?.user.role === 'admin';
+});
+
 let dropBox: HTMLDivElement | undefined;
 let dragState: 'idle' | 'is-dragged-over' = $state('idle');
 let tabValue = $state('general');
