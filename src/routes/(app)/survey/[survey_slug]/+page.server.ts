@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import {
+  type NewSubmissionData,
   type SelectFormField,
   type SelectFormFieldWithHash,
   type SelectFormWithFields,
@@ -165,7 +166,7 @@ function convertFieldValue(
 }
 
 export const load: PageServerLoad = async function ({ params, locals }) {
-  if (!params.slug) return error(400, { message: 'slug is required' });
+  if (!params.survey_slug) return error(400, { message: 'slug is required' });
 
   try {
     const survey = await getFormWithFields(locals.db, params.survey_slug);
@@ -200,15 +201,15 @@ export const actions = {
     getClientAddress,
   }) {
     try {
-      if (!params.id)
+      if (!params.survey_slug)
         return fail(400, {
           success: false,
           status: 400,
-          message: 'survey id is required',
+          message: 'survey slug is required',
         });
 
       const formData = await request.formData();
-      const survey = await getFormWithFields(locals.db, params.id);
+      const survey = await getFormWithFields(locals.db, params.survey_slug);
 
       // Process survey fields and identify required ones
       const { requiredFields, processedFields } = prepareFields(survey.fields);
@@ -231,24 +232,34 @@ export const actions = {
         });
       }
 
-      const data: SubmissionData[] = [];
+      const data: NewSubmissionData[] = [];
 
       for (const [k, v] of submittedFields) {
         console.log(k, v);
         if (v.type === 'checkbox') {
           data.push({
-            formFieldId: v.fieldId,
-            primitive: v.primitive,
-            fieldType: v.type,
-            values: v.values,
+            field: {
+              id: v.fieldId,
+              type: v.type,
+              primitive: v.primitive,
+            },
+            submitted: {
+              values: v.values,
+            },
           });
         } else {
           data.push({
-            formFieldId: v.fieldId,
-            fieldType: v.type,
-            primitive: v.primitive,
-            value:
-              v.value instanceof Date ? v.value.getTime().toString() : v.value,
+            field: {
+              id: v.fieldId,
+              type: v.type,
+              primitive: v.primitive,
+            },
+            submitted: {
+              value:
+                v.value instanceof Date
+                  ? v.value.getTime().toString()
+                  : v.value,
+            },
           });
         }
       }
@@ -261,7 +272,7 @@ export const actions = {
       await locals.db.insert(submissions).values({
         id: uuid(),
         data,
-        formId: params.id,
+        formId: survey.id,
         ipHash: hashSubmission(getClientAddress()),
         userAgentHash: hashSubmission(getClientUserAgent(request.headers)),
         createdAt: new Date(Date.now()),

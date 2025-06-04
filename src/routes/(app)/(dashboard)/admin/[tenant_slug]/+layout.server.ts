@@ -1,5 +1,4 @@
 import { constants } from 'node:http2';
-import { getTenantBySlug } from '$lib/server/db';
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 

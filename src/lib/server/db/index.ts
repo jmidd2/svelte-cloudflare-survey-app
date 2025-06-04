@@ -42,63 +42,16 @@ export async function createDbClient<T extends typeof import('./schema')>({
 }
 
 /**
- * Helper functions for working with the database
- */
-
-/**
- * Create a new tenant in the database
- */
-export async function createTenant(
-  db: DrizzleClient,
-  data: {
-    name: string;
-    slug: string;
-    planType?: string;
-  }
-) {
-  const id = crypto.randomUUID();
-  const now = Math.floor(Date.now() / 1000);
-
-  await db.insert(schema.tenants).values({
-    id,
-    name: data.name,
-    slug: data.slug,
-    createdAt: now,
-    updatedAt: now,
-    active: true,
-  });
-
-  return id;
-}
-
-/**
- * Get tenant by ID
- */
-export async function getTenantById(db: DrizzleClient, id: string) {
-  // return db.select().from(schema.tenants).where(eq(schema.tenants.id, id));
-  return db.query.tenants.findFirst({
-    where: eq(schema.tenants.id, id),
-  });
-}
-
-/**
- * Get tenant by slug
- */
-export async function getTenantBySlug(db: DrizzleClient, slug: string) {
-  // return db.select().from(schema.tenants).where(eq(schema.tenants.slug, slug));
-  return db.query.tenants.findFirst({
-    where: eq(schema.tenants.slug, slug),
-  });
-}
-
-/**
  * Get forms for a tenant
  */
-export async function getFormsByTenant(db: DrizzleClient, tenantId: string) {
+export async function getFormsByTenant(
+  db: DrizzleClient,
+  organizationId: string
+) {
   return db
     .select()
     .from(schema.forms)
-    .where(eq(schema.forms.tenantId, tenantId))
+    .where(eq(schema.forms.organizationId, organizationId))
     .orderBy(desc(schema.forms.createdAt));
 }
 

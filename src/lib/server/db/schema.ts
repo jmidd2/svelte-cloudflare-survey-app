@@ -141,34 +141,34 @@ const timestamps = {
 };
 
 // Tenants table - stores information about each tenant
-export const tenants = sqliteTable('tenants', {
-  id: text('id').primaryKey(),
-  name: text('name').notNull(),
-  slug: text('slug')
-    .generatedAlwaysAs(
-      (): SQL => sql`lower
-                (replace(
-      ${tenants.name},
-      ' ',
-      '-'
-      )
-      )`,
-      {
-        mode: 'virtual',
-      }
-    )
-    .notNull()
-    .unique(),
-  active: integer('active', { mode: 'boolean' }).notNull().default(true),
-  ...timestamps,
-});
+// export const tenants = sqliteTable('tenants', {
+//   id: text('id').primaryKey(),
+//   name: text('name').notNull(),
+//   slug: text('slug')
+//     .generatedAlwaysAs(
+//       (): SQL => sql`lower
+//                 (replace(
+//       ${tenants.name},
+//       ' ',
+//       '-'
+//       )
+//       )`,
+//       {
+//         mode: 'virtual',
+//       }
+//     )
+//     .notNull()
+//     .unique(),
+//   active: integer('active', { mode: 'boolean' }).notNull().default(true),
+//   ...timestamps,
+// });
 
 // Forms table - stores form definitions
 export const forms = sqliteTable('forms', {
   id: text('id').primaryKey(),
-  tenantId: text('tenant_id')
-    .notNull()
-    .references(() => tenants.id, { onDelete: 'cascade' }),
+  // tenantId: text('tenant_id')
+  //   .notNull()
+  //   .references(() => tenants.id, { onDelete: 'cascade' }),
   organizationId: text('organization_id')
     .notNull()
     .references(() => organizations.id, { onDelete: 'cascade' }),
@@ -214,6 +214,28 @@ export const formFields = sqliteTable('form_fields', {
   ...timestamps,
 });
 
+export type NewSubmissionData =
+  | {
+      field: {
+        id: string;
+        type: Extract<'checkbox', HtmlFormElements>;
+        primitive: 'string' | 'number' | 'boolean' | 'date';
+      };
+      submitted: {
+        values: Array<string | number>;
+      };
+    }
+  | {
+      field: {
+        id: string;
+        type: Exclude<HtmlFormElements, 'checkbox'>;
+        primitive: 'string' | 'number' | 'boolean' | 'date';
+      };
+      submitted: {
+        value: string | number | boolean;
+      };
+    };
+
 export type SubmissionData =
   | {
       formFieldId: string;
@@ -234,7 +256,7 @@ export const submissions = sqliteTable('submissions', {
   formId: text('form_id')
     .notNull()
     .references(() => forms.id, { onDelete: 'cascade' }),
-  data: text('data', { mode: 'json' }).$type<SubmissionData[]>().notNull(), // JSON string with form data
+  data: text('data', { mode: 'json' }).$type<NewSubmissionData[]>().notNull(), // JSON string with form data
   ipHash: text('ip_hash'), // Anonymized IP hash
   userAgentHash: text('user_agent_hash'), // Anonymized user agent hash
   createdAt: timestamps.createdAt,

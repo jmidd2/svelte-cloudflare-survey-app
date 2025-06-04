@@ -1,4 +1,4 @@
-import * as schema from '$lib/server/db/schema';
+import * as schema from '../src/lib/server/db/schema';
 import { createClient } from '@libsql/client';
 import { drizzle } from 'drizzle-orm/libsql';
 import { reset, seed } from 'drizzle-seed';
@@ -29,7 +29,7 @@ async function main() {
   const client = createClient({ url: process.env.DATABASE_URL });
   const db = drizzle(client, { schema });
 
-  const test = await db.$count(schema.tenants);
+  const test = await db.$count(schema.organizations);
 
   if (test > 0) await reset(db, schema);
 

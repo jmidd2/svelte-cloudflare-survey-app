@@ -31,7 +31,6 @@ CREATE TABLE `form_fields` (
 --> statement-breakpoint
 CREATE TABLE `forms` (
 	`id` text PRIMARY KEY NOT NULL,
-	`tenant_id` text NOT NULL,
 	`organization_id` text NOT NULL,
 	`title` text NOT NULL,
 	`description` text,
@@ -41,7 +40,6 @@ CREATE TABLE `forms` (
 	`settings` text,
 	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
 	`updated_at` integer DEFAULT (unixepoch()) NOT NULL,
-	FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`organization_id`) REFERENCES `organizations`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
@@ -103,22 +101,6 @@ CREATE TABLE `submissions` (
 	FOREIGN KEY (`form_id`) REFERENCES `forms`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
-CREATE TABLE `tenants` (
-	`id` text PRIMARY KEY NOT NULL,
-	`name` text NOT NULL,
-	`slug` text GENERATED ALWAYS AS (lower
-                (replace(
-      "name",
-      ' ',
-      '-'
-      )
-      )) VIRTUAL NOT NULL,
-	`active` integer DEFAULT true NOT NULL,
-	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
-	`updated_at` integer DEFAULT (unixepoch()) NOT NULL
-);
---> statement-breakpoint
-CREATE UNIQUE INDEX `tenants_slug_unique` ON `tenants` (`slug`);--> statement-breakpoint
 CREATE TABLE `users` (
 	`id` text PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,
