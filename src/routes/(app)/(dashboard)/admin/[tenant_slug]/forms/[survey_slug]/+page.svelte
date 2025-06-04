@@ -21,8 +21,10 @@ import { canHaveOptions } from '$lib/dnd';
 import type { SelectFormField } from '$lib/server/db/schema';
 import { isHtmlFormField } from '$lib/utils';
 import { pageState } from '$stores/pageState.svelte';
+import { SurveyManager, surveyManager } from '$stores/survey.svelte';
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { PlusIcon } from '@lucide/svelte';
+import { setContext } from 'svelte';
 import { slide } from 'svelte/transition';
 import type { PageProps } from './$types';
 import ToolboxSidebar from './ToolboxSidebar.svelte';
@@ -31,6 +33,13 @@ const { data, form: formProp }: PageProps = $props();
 
 // Local state
 const survey = $derived(data.survey);
+
+surveyManager.survey = data.survey;
+surveyManager.fields = data.fields;
+
+$inspect(surveyManager.selectedField);
+$inspect(surveyManager.selectedIndex);
+
 let lastUpdate = $derived(formProp?.lastUpdated ?? survey.updatedAt);
 let lastUpdateString = $derived(`${lastUpdate.toLocaleString()}`);
 let isActive = $derived(survey.active);
@@ -51,7 +60,7 @@ let dragState: 'idle' | 'is-dragged-over' = $state('idle');
 let tabValue = $state('general');
 
 // Shared State
-let formFields = $derived(data.fields);
+let formFields = $state(data.fields);
 let selectedFieldIndex: number = $state(-1);
 let selectedFormField: SelectFormField | null = $derived(
   selectedFieldIndex >= 0 ? formFields[selectedFieldIndex] : null
@@ -81,8 +90,9 @@ $effect(() => {
   });
 });
 $effect(() => {
+  if (!survey.selectedField) return;
   const selectedDiv = document.querySelector(
-    `[data-field-id="${selectedFormField?.id}"]`
+    `[data-field-id="${surveyManager.selectedField.id}"]`
   );
 
   if (!selectedDiv || formFields.length < 1) return;
@@ -144,7 +154,7 @@ function hasPlaceholder(field: SelectFormField) {
 {/if}
 
 <div class="flex flex-1 overflow-hidden">
-  <ToolboxSidebar bind:formFields bind:selectedFieldIndex {selectedFormField}/>
+  <ToolboxSidebar bind:formFields bind:selectedFieldIndex={surveyManager.selectedIndex} selectedFormField={surveyManager.selectedField}/>
   <div bind:this={dropBox}
        class={['flex flex-1 flex-col']}>
     <div class="flex-1 p-6 overflow-auto bg-muted/10">
@@ -171,11 +181,11 @@ function hasPlaceholder(field: SelectFormField) {
             {/if}
           </p>
         </div>
-        <FormFieldList bind:selectedFieldIndex {selectedFormField} bind:fields={formFields}/>
+        <FormFieldList />
       </div>
     </div>
   </div>
-  {#if !!selectedFormField}
+  {#if !!surveyManager.selectedField}
     <form use:enhance={({})=>{
       return async ({result}) => {
                 if (result.type === 'redirect') {
@@ -190,12 +200,12 @@ function hasPlaceholder(field: SelectFormField) {
     }} method="post" action="?/save-field"
           class="w-100 border-l bg-muted/20 p-4 overflow-y-auto grid grid-rows-[auto_1fr_auto]"
           transition:slide={{axis: 'x'}}>
-      <input type="hidden" id="fieldId" name="fieldId" bind:value={selectedFormField.id}>
+      <input type="hidden" id="fieldId" name="fieldId" bind:value={surveyManager.selectedField.id}>
       <h2 class="font-semibold mb-4">Properties</h2>
       <Tabs bind:value={tabValue}>
         <TabsList class="grid w-full grid-cols-2">
           <TabsTrigger value="general" class="hover:cursor-pointer">General</TabsTrigger>
-          <TabsTrigger value="options" disabled={!selectedFormField.options || selectedFormField.options.length === 0}
+          <TabsTrigger value="options" disabled={!surveyManager.selectedField.options || surveyManager.selectedField.options.length === 0}
                        class="hover:cursor-pointer">Options
           </TabsTrigger>
           <!--          <TabsTrigger value="validation" class="hover:cursor-pointer">Validation</TabsTrigger>-->
@@ -204,8 +214,8 @@ function hasPlaceholder(field: SelectFormField) {
         <TabsContent value="general" class="space-y-4 pt-4">
           <div class="space-y-2 ">
             <Label for="label">Type</Label>
-            <Select type="single" name="type" bind:value={selectedFormField.type}>
-              <SelectTrigger class="w-full">{formElementTags[selectedFormField.type]}</SelectTrigger>
+            <Select type="single" name="type" bind:value={surveyManager.selectedField.type}>
+              <SelectTrigger class="w-full">{formElementTags[surveyManager.selectedField.type]}</SelectTrigger>
               <SelectContent>
                 {#each formElements.sort((a,b)=>a.localeCompare(b)) as ele}
                 <SelectItem value={ele}>{formElementTags[ele]}</SelectItem>
@@ -215,28 +225,28 @@ function hasPlaceholder(field: SelectFormField) {
           </div>
           <div class="space-y-2 ">
             <Label for="label">Label</Label>
-            <Input id="label" name="label" class="" bind:value={selectedFormField.label}
-                   placeholder={selectedFormField.label}/>
+            <Input id="label" name="label" class="" bind:value={surveyManager.selectedField.label}
+                   placeholder={surveyManager.selectedField.label}/>
           </div>
-          {#if hasPlaceholder(selectedFormField)}
+          {#if hasPlaceholder(surveyManager.selectedField)}
             <div class="space-y-2">
               <Label for="placeholder">Placeholder</Label>
-              <Input id="placeholder" name="placeholder" bind:value={selectedFormField.placeholder}
-                     placeholder={selectedFormField.placeholder}/>
+              <Input id="placeholder" name="placeholder" bind:value={surveyManager.selectedField.placeholder}
+                     placeholder={surveyManager.selectedField.placeholder}/>
             </div>
           {/if}
           <div class="space-y-2">
             <div class="flex items-center justify-between">
               <Label for="isRequired">Required</Label>
-              <Switch id="isRequired" name="isRequired" bind:checked={selectedFormField.required}/>
+              <Switch id="isRequired" name="isRequired" bind:checked={surveyManager.selectedField.required}/>
             </div>
           </div>
         </TabsContent>
         <TabsContent value="options" class="space-y-4 pt-4">
-          {#if selectedFormField}
-            {#if canHaveOptions(selectedFormField)}
-              {#if !!selectedFormField.options && selectedFormField.options.length > 0}
-                <EditFieldOptionList options={selectedFormField.options}></EditFieldOptionList>
+          {#if surveyManager.selectedField}
+            {#if canHaveOptions(surveyManager.selectedField)}
+              {#if !!surveyManager.selectedField.options && surveyManager.selectedField.options.length > 0}
+                <EditFieldOptionList options={surveyManager.selectedField.options}></EditFieldOptionList>
               {/if}
               <Button variant="outline" type="button"
                       class="my-3 ml-4 mr-auto flex justify-around items-center hover:cursor-pointer">

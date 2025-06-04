@@ -18,6 +18,7 @@ export const load = async function ({ params, locals, parent, depends }) {
 
   const { session, tenant, survey } = await parent();
 
+  depends('survey-fields:latest');
   const fields = await getFormFields(locals.db, survey.id);
 
   return {
@@ -91,9 +92,10 @@ export const actions = {
 
     return result[0];
   },
-  deleteFormField: async ({ locals, request }) => {
+  deleteFormField: async ({ locals, request, params }) => {
     const formData = await request.formData();
     const fieldId = formData.get('fieldId');
+    const { survey_slug } = params;
 
     if (!fieldId)
       return fail(404, { error: true, message: 'field id is required' });
@@ -102,6 +104,48 @@ export const actions = {
       .delete(formFields)
       .where(eq(formFields.id, fieldId.toString()))
       .returning({ id: formFields.id });
+
+    // fix order
+    const survey = await getFormBySlug(locals.db, survey_slug);
+    if (!survey) throw fail(404, { error: true, message: 'survey not found' });
+    const fields = await getFormFields(locals.db, survey.id);
+
+    console.log(fields);
+
+    if (fields.length > 0) {
+      const sqlChunks: SQL[] = [];
+      const ids: string[] = [];
+      const timeSqlChunks: SQL[] = [];
+
+      sqlChunks.push(sql`(case`);
+      timeSqlChunks.push(sql`(case`);
+
+      for (const { id, orderIndex } of fields) {
+        sqlChunks.push(
+          sql`when
+            ${formFields.id}
+            =
+            ${id}
+            then
+            ${orderIndex}`
+        );
+        timeSqlChunks.push(
+          sql`when ${formFields.id} = ${id} then (unixepoch())`
+        );
+        ids.push(id);
+      }
+
+      sqlChunks.push(sql`end )`);
+      timeSqlChunks.push(sql`end)`);
+
+      const finalSql: SQL = sql.join(sqlChunks, sql.raw(' '));
+      const finalTimeSql: SQL = sql.join(timeSqlChunks, sql.raw(' '));
+
+      await locals.db
+        .update(formFields)
+        .set({ orderIndex: finalSql, updatedAt: finalTimeSql })
+        .where(inArray(formFields.id, ids));
+    }
 
     return { success: true, id: deletedIds[0].id };
   },
@@ -158,7 +202,7 @@ export const actions = {
           sql`when ${formFields.id} = ${input.id} then ${input.orderIndex}`
         );
         timeSqlChunks.push(
-          sql`when ${formFields.id} = ${input.id} then ${Date.now()}`
+          sql`when ${formFields.id} = ${input.id} then (unixepoch())`
         );
         ids.push(input.id);
       }

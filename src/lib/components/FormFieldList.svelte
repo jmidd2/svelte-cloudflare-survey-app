@@ -1,13 +1,10 @@
 <script lang="ts">
-import { deserialize } from '$app/forms';
 import FormField from '$lib/components/FormField.svelte';
 import { generateFormFieldData, isFieldData, saveSorted } from '$lib/dnd';
-import {
-  type InsertFormField,
-  type SelectFormField,
-} from '$lib/server/db/schema.js';
-import { isHtmlFormField, isSelectFormField } from '$lib/utils';
+import { type SelectFormField } from '$lib/server/db/schema.js';
+import { isHtmlFormField } from '$lib/utils';
 import { pageState } from '$stores/pageState.svelte';
+import { surveyManager } from '$stores/survey.svelte';
 import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { reorderWithEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/reorder-with-edge';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
@@ -15,55 +12,6 @@ import type {
   BaseEventPayload,
   ElementDragType,
 } from '@atlaskit/pragmatic-drag-and-drop/types';
-import type { ActionResult } from '@sveltejs/kit';
-
-type Props = {
-  fields: SelectFormField[];
-  selectedFormField: SelectFormField | null;
-  selectedFieldIndex: number;
-};
-let {
-  fields = $bindable(), // shared
-  selectedFieldIndex = $bindable(), // shared
-  selectedFormField,
-}: Props = $props();
-
-// Local State
-
-// Shared State
-
-async function addFormField(field: InsertFormField) {
-  let formData = new FormData();
-  for (const [key, value] of Object.entries(field)) {
-    if (typeof value === 'string' || typeof value === 'number') {
-      formData.set(key, value.toString());
-    } else if (value instanceof Date) {
-      formData.set(key, value.getTime().toString());
-    } else if (key === 'options') {
-      formData.set(
-        key,
-        new Blob([JSON.stringify(field[key])], { type: 'application/json' })
-      );
-    }
-  }
-
-  const response = await fetch('?/addFormField', {
-    method: 'POST',
-    body: formData,
-    headers: {
-      'x-svelte-action': 'true',
-    },
-  });
-
-  const result: ActionResult<{ data: SelectFormField }, { message: string }> =
-    deserialize(await response.text());
-
-  if (result.type === 'success' && isSelectFormField(result.data)) {
-    return result.data;
-  }
-
-  throw new Error('a valid form field was not created');
-}
 
 async function handleDrop({
   location,
@@ -83,14 +31,16 @@ async function handleDrop({
   const closestEdgeOfTarget = extractClosestEdge(targetData);
 
   let indexOfSource = -1;
-  let indexOfTarget = fields.findIndex(task => task.id === targetData.fieldId);
+  let indexOfTarget = surveyManager.fields.findIndex(
+    task => task.id === targetData.fieldId
+  );
   let newFieldId: string | undefined;
 
   if (indexOfTarget < 0) {
     return;
   }
 
-  let copyOfFields = $state.snapshot(fields);
+  let copyOfFields = $state.snapshot(surveyManager.fields);
   let newFields: SelectFormField[];
 
   if (source.data.fieldId === 'preview') {
@@ -102,7 +52,7 @@ async function handleDrop({
       throw new Error('not a HTML form tag');
 
     if (isHtmlFormField(source.data.elementType)) {
-      const newField = await addFormField({
+      const newField = await surveyManager.addFormField({
         id: 'temp-preview-id',
         formId: targetFormId,
         type: source.data.elementType,
@@ -119,7 +69,9 @@ async function handleDrop({
   } else {
     // reordering existing items
     console.log('reordering');
-    indexOfSource = fields.findIndex(task => task.id === sourceData.fieldId);
+    indexOfSource = surveyManager.fields.findIndex(
+      task => task.id === sourceData.fieldId
+    );
 
     if (indexOfSource < 0) {
       return;
@@ -143,11 +95,13 @@ async function handleDrop({
     sortedList: newFields,
     surveyId: copyOfFields[0].formId,
   });
-  fields = newFields;
+  surveyManager.fields = newFields;
   if (newFieldId) {
-    selectedFieldIndex = fields.findIndex(item => item.id === newFieldId);
-  } else if (selectedFieldIndex > -1) {
-    selectedFieldIndex = fields.findIndex(
+    surveyManager.selectedIndex = surveyManager.fields.findIndex(
+      item => item.id === newFieldId
+    );
+  } else if (surveyManager.selectedIndex > -1) {
+    surveyManager.selectedIndex = surveyManager.fields.findIndex(
       item => item.id === sourceData.fieldId
     );
   }
@@ -165,10 +119,9 @@ $effect(() => {
 </script>
 
 <div class="grid grid-cols-1 gap-y-4 p-2">
-    {#each fields as field, index (field.id)}
+    {#each surveyManager.fields as field, index (field.id)}
         <FormField {index}
-                   selected={selectedFormField?.id === field.id}
-                   onclick={()=>{ selectedFieldIndex = selectedFormField?.id === field.id ? -1 : index; }} {field}
-                   saveSorted={async (removedId) => { await saveSorted({sortedList: fields, removedId, surveyId: fields[0].formId}) }}/>
+                   selected={surveyManager.selectedField?.id === field.id}
+                   onclick={()=>{ surveyManager.selectedIndex = surveyManager.selectedField?.id === field.id ? -1 : index; }} {field} />
     {/each}
 </div>
