@@ -4,6 +4,8 @@ import { sampleFormFieldLabels } from '$lib/sample';
 import type { SelectFormField } from '$lib/server/db/schema';
 import type { HtmlFormElements, SaveSortedFnArgs } from '$lib/types';
 import type { ActionResult } from '@sveltejs/kit';
+import { v4 as uuid } from 'uuid';
+
 const tlFieldDataKey = Symbol('toolbox-list-field');
 
 export type ToolboxListFieldData = {
@@ -112,9 +114,7 @@ export function canHaveOptions(element: SelectFormField) {
   );
 }
 
-export function generateFormFieldData(
-  type: HtmlFormElements
-): Pick<SelectFormField, 'label' | 'placeholder' | 'required' | 'options'> {
+export function generateFormFieldData(type: HtmlFormElements) {
   const label =
     sampleFormFieldLabels[
       Math.floor(Math.random() * sampleFormFieldLabels.length)
@@ -128,12 +128,14 @@ export function generateFormFieldData(
 
   const fieldData: Pick<
     SelectFormField,
-    'label' | 'placeholder' | 'required' | 'options'
+    'id' | 'label' | 'placeholder' | 'required' | 'options' | 'type'
   > = {
+    id: uuid(),
     label,
     placeholder: label,
     required: false,
     options: null,
+    type,
   };
 
   switch (type) {
