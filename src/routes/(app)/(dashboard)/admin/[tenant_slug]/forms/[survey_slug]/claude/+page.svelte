@@ -1,4 +1,5 @@
 <script lang="ts">
+import { applyAction, enhance } from '$app/forms';
 import { formElementTags, formElements } from '$lib';
 import EditFieldOptionList from '$lib/components/EditFieldOptionList.svelte';
 import { Button } from '$lib/components/ui/button';
@@ -14,9 +15,11 @@ import { Switch } from '$lib/components/ui/switch';
 import { Tabs, TabsList, TabsTrigger } from '$lib/components/ui/tabs';
 import { TabsContent } from '$lib/components/ui/tabs/index.js';
 import { canHaveOptions } from '$lib/dnd';
+import type { SelectFormField } from '$lib/server/db/schema';
 import { SurveyEditor, setSurveyEditor } from '$stores/survey-editor.svelte';
 import { PlusIcon } from '@lucide/svelte';
 import { slide } from 'svelte/transition';
+import { z } from 'zod/v4';
 import type { PageProps } from './$types';
 import FormFieldList from './FormFieldList.svelte';
 import ToolboxSidebar from './ToolboxSidebar.svelte';
@@ -45,26 +48,15 @@ function hasPlaceholder(field: typeof selectedField) {
   return field && !canHaveOptions(field) && field.type !== 'range';
 }
 
-// Handle save
-async function handleSave(event: Event) {
-  event.preventDefault();
-  if (!selectedField) return;
+function parseFormData(formData: FormData) {
+  const schema = z.object({
+    type: z.enum(formElements),
+    label: z.string(),
+    placeholder: z.string().optional(),
+    required: z.stringbool(),
+  });
 
-  const form = event.target as HTMLFormElement;
-  const formData = new FormData(form);
-
-  const updates = {
-    type: formData.get('type') as any,
-    label: formData.get('label')?.toString() || '',
-    placeholder: formData.get('placeholder')?.toString() || undefined,
-    required: formData.get('required') === 'on',
-  };
-
-  const result = await editor.saveField(selectedField.id, updates);
-
-  if (result.success && editor.selectedIndex >= 0) {
-    editor.updateField(editor.selectedIndex, updates);
-  }
+  return schema.safeParse(Object.fromEntries(formData.entries()));
 }
 </script>
 
@@ -100,9 +92,35 @@ async function handleSave(event: Event) {
 
     {#if selectedField}
         <form
-                onsubmit={handleSave}
-                class="w-100 border-l bg-muted/20 p-4 overflow-y-auto grid grid-rows-[auto_1fr_auto]"
-                transition:slide={{ axis: 'x' }}
+            class="w-100 border-l bg-muted/20 p-4 overflow-y-auto grid grid-rows-[auto_1fr_auto]"
+            transition:slide={{ axis: 'x' }}
+            use:enhance={({formData, cancel}) => {
+              let previousState: Partial<SelectFormField> | null = null;
+
+              if (editor.selectedIndex >= 0) {
+                // Backup current state
+                previousState = { ...editor.selectedField };
+
+                // Apply optimistic update
+                const updates = parseFormData(formData);
+                if (updates.error) {
+                  cancel();
+                  return;
+                }
+
+                editor.updateField(updates.data);
+              }
+
+              return async ({ result }) => {
+                if (result.type === 'failure' && previousState) {
+                  // Revert on failure
+                  editor.updateField(previousState);
+                  console.error('There was an error saving the field.', result.data);
+                }
+
+                await applyAction(result);
+              };
+            }}
         >
             <input type="hidden" name="fieldId" value={selectedField.id}>
             <h2 class="font-semibold mb-4">Properties</h2>

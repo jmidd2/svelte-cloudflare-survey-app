@@ -45,9 +45,12 @@ export class SurveyEditor {
   }
 
   // Field management
-  updateField(index: number, updates: Partial<SelectFormField>) {
-    if (this.fields[index]) {
-      this.fields[index] = { ...this.fields[index], ...updates };
+  updateField(updates: Partial<SelectFormField>) {
+    if (this.fields[this.selectedIndex]) {
+      this.fields[this.selectedIndex] = {
+        ...this.fields[this.selectedIndex],
+        ...updates,
+      };
     }
   }
 

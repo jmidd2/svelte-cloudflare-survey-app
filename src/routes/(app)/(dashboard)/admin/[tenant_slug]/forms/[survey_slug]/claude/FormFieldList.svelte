@@ -1,16 +1,22 @@
 <script lang="ts">
-import { generateFormFieldData, isFieldData } from '$lib/dnd';
+import {
+  type FieldData,
+  type ToolboxListFieldData,
+  generateFormFieldData,
+  isFieldData,
+  isNewFieldData,
+} from '$lib/dnd';
 import type { SelectFormField } from '$lib/server/db/schema.js';
 import { isHtmlFormField } from '$lib/utils';
 import { getSurveyEditor } from '$stores/survey-editor.svelte';
 import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
+import type { Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/types';
 import { reorderWithEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/reorder-with-edge';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import type {
   BaseEventPayload,
   ElementDragType,
 } from '@atlaskit/pragmatic-drag-and-drop/types';
-import { v4 as uuid } from 'uuid';
 import FormField from './FormField.svelte';
 
 // Get editor from context
@@ -32,78 +38,66 @@ async function handleDrop({
   const sourceData = source.data;
   const targetData = target.data;
 
-  if (!(isFieldData(sourceData) && isFieldData(targetData))) return;
+  if (
+    !(
+      (isFieldData(sourceData) || isNewFieldData(sourceData)) &&
+      isFieldData(targetData)
+    )
+  )
+    return;
 
   const closestEdgeOfTarget = extractClosestEdge(targetData);
-  const indexOfTarget = fields.findIndex(
-    task => task.id === targetData.fieldId
-  );
+  const indexOfTarget = findFieldIndex(targetData.fieldId);
 
   if (indexOfTarget < 0) return;
 
-  let reorderedFields: SelectFormField[];
-
-  // Adding new field from toolbox
-  if (
-    sourceData.fieldId === 'preview' &&
-    isHtmlFormField(sourceData.elementType)
-  ) {
-    try {
-      await editor.addField(
-        sourceData.elementType,
-        closestEdgeOfTarget,
-        indexOfTarget
-      );
-    } catch (e) {
-      console.error(e);
-    }
-    // const fieldData = generateFormFieldData(sourceData.elementType);
-    //
-    // const newFieldId = uuid();
-    // // Add field via editor
-    // const result = await editor.addField({
-    //   type: sourceData.elementType,
-    //   orderIndex: -1,
-    //   ...fieldData,
-    //   id: newFieldId,
-    // });
-
-    // add with at end with bad orderIndex
-
-    // reorder
-
-    // save
-
-    // if (!result?.success) {
-    //   console.error('Failed to add field:', result?.error);
-    // }
+  if (isNewFieldData(sourceData)) {
+    await handleNewFieldDrop(sourceData, closestEdgeOfTarget, indexOfTarget);
   } else {
-    // Reordering existing fields
-    const indexOfSource = fields.findIndex(
-      task => task.id === sourceData.fieldId
-    );
-    if (indexOfSource < 0) return;
-
-    reorderedFields = reorderWithEdge({
-      closestEdgeOfTarget,
-      axis: 'vertical',
-      list: fields,
-      startIndex: indexOfSource,
-      indexOfTarget,
-    }).map((field, i) => ({ ...field, orderIndex: i + 1 }));
-
-    // Update local state immediately
-    await editor.saveReorder(reorderedFields);
-
-    // Submit to server
-    // await editor.reorderFieldsOnServer(reorderedFields);
+    await handleFieldReorder(sourceData, closestEdgeOfTarget, indexOfTarget);
   }
+}
+
+function findFieldIndex(fieldId: string): number {
+  return fields.findIndex(field => field.id === fieldId);
+}
+
+async function handleNewFieldDrop(
+  sourceData: SelectFormField,
+  closestEdgeOfTarget: Edge | null,
+  indexOfTarget: number
+): Promise<void> {
+  try {
+    await editor.addField(sourceData.type, closestEdgeOfTarget, indexOfTarget);
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+async function handleFieldReorder(
+  sourceData: FieldData,
+  closestEdgeOfTarget: Edge | null,
+  indexOfTarget: number
+): Promise<void> {
+  const indexOfSource = findFieldIndex(sourceData.fieldId);
+  if (indexOfSource < 0) return;
+
+  const reorderedFields = reorderWithEdge({
+    closestEdgeOfTarget,
+    axis: 'vertical',
+    list: fields,
+    startIndex: indexOfSource,
+    indexOfTarget,
+  }).map((field, i) => ({ ...field, orderIndex: i + 1 }));
+
+  await editor.saveReorder(reorderedFields);
 }
 
 // Set up drag monitor
 $effect(() => {
   return monitorForElements({
-    canMonitor: ({ source }) => isFieldData(source.data),
+    canMonitor: ({ source }) =>
+      isFieldData(source.data) || isNewFieldData(source.data),
     onDrop: handleDrop,
   });
 });

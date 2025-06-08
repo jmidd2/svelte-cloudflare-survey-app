@@ -2,9 +2,10 @@ import tailwindcss from '@tailwindcss/vite';
 import { svelteTesting } from '@testing-library/svelte/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
+import TurboConsole from 'unplugin-turbo-console/vite'
 
 export default defineConfig({
-	plugins: [tailwindcss(), sveltekit()],
+	plugins: [TurboConsole(), tailwindcss(), sveltekit()],
 	server: {
 		watch: {
 			ignored: '**/*.md'

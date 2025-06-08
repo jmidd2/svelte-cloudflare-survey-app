@@ -2,7 +2,8 @@
 import { formElementTags, formElements } from '$lib';
 import FormField from '$lib/components/FormField.svelte';
 import Portal from '$lib/dnd/Portal.svelte';
-import { getFieldData } from '$lib/dnd/utils';
+import { getNewFieldData, isNewFieldData } from '$lib/dnd/utils';
+import type { SelectFormField } from '$lib/server/db/schema';
 import type { HtmlFormElements } from '$lib/types';
 import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
@@ -20,12 +21,12 @@ let dragElement: HTMLLIElement | undefined;
 let elementState: 'idle' | 'is-dragging' | 'preview' | 'is-dragging-over' =
   $state('idle');
 
-const previewData = $state({
+const previewData: SelectFormField = $state({
   id: 'preview',
   createdAt: new Date(Date.now()),
   updatedAt: new Date(Date.now()),
   formId: 'preview-form-id',
-  type: formElements[0],
+  type: elementType,
   label: 'This is a label',
   required: false,
   placeholder: 'placeholder',
@@ -41,16 +42,15 @@ $effect(() => {
     element: dragElement,
     onGenerateDragPreview: ({ nativeSetDragImage, location, source }) => {
       if (!dragElement) return;
-      previewData.type = source.data.elementType;
-      previewData.placeholder =
-        formElementTags[source.data.elementType as HtmlFormElements];
-      previewData.label =
-        formElementTags[source.data.elementType as HtmlFormElements];
+      if (!isNewFieldData(source.data)) return;
+      previewData.type = source.data.type;
+      previewData.placeholder = formElementTags[source.data.type];
+      previewData.label = formElementTags[source.data.type];
 
       if (
-        source.data.elementType === 'radio' ||
-        source.data.elementType === 'select' ||
-        source.data.elementType === 'checkbox'
+        source.data.type === 'radio' ||
+        source.data.type === 'select' ||
+        source.data.type === 'checkbox'
       ) {
         previewData.options = [
           { label: 'Option 1', val: 'val-1' },
@@ -72,10 +72,7 @@ $effect(() => {
         },
       });
     },
-    getInitialData: () => ({
-      elementType,
-      ...getFieldData(previewData),
-    }),
+    getInitialData: () => getNewFieldData(previewData),
     onDragStart: () => {
       elementState = 'is-dragging';
     },

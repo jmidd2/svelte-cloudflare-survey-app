@@ -47,6 +47,24 @@ export function isFieldData(
   return data[fieldDataKey] === true;
 }
 
+const newFieldDataKey = Symbol('new-field');
+export type NewFieldData = SelectFormField & {
+  [newFieldDataKey]: true;
+};
+export function getNewFieldData(field: SelectFormField): NewFieldData {
+  return {
+    [newFieldDataKey]: true,
+    ...field,
+  };
+}
+
+export function isNewFieldData(
+  data: Record<string | symbol, unknown>
+): data is NewFieldData {
+  console.log('is new field data', data[newFieldDataKey] === true);
+  return data[newFieldDataKey] === true;
+}
+
 export async function saveSorted({
   sortedList,
   surveyId,
