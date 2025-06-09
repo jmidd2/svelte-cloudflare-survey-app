@@ -75,6 +75,7 @@
     "better-auth": "^1.2.8",
     "drizzle-orm": "^0.44.2",
     "drizzle-zod": "^0.8.2",
+    "runed": "^0.28.0",
     "uuid": "^11.1.0",
     "zod": "^3.25.56"
   },

@@ -1,10 +1,8 @@
-import type { DrizzleD1Database } from 'drizzle-orm/d1';
-import type { LibSQLDatabase } from 'drizzle-orm/libsql';
-// import type * as schema from './schema';
-
 import type { D1Database } from '@cloudflare/workers-types';
 import type { Client } from '@libsql/client';
 import { type SQL, and, asc, desc, eq } from 'drizzle-orm';
+import type { DrizzleD1Database } from 'drizzle-orm/d1';
+import type { LibSQLDatabase } from 'drizzle-orm/libsql';
 import * as schema from './schema';
 
 /**
@@ -72,7 +70,7 @@ export async function createForm(
 
   await db.insert(schema.forms).values({
     id,
-    tenantId: data.tenantId,
+    organizationId: data.tenantId,
     title: data.title,
     description: data.description,
     createdBy: data.createdBy,
@@ -98,7 +96,7 @@ export async function getFormBySlug(
 
   // Add tenant filter if provided (for admin access)
   if (tenantId) {
-    filters.push(eq(schema.forms.tenantId, tenantId));
+    filters.push(eq(schema.forms.organizationId, tenantId));
   }
 
   const query = db
@@ -239,7 +237,10 @@ export async function deleteForm(
     .select()
     .from(schema.forms)
     .where(
-      and(eq(schema.forms.id, formId), eq(schema.forms.tenantId, tenantId))
+      and(
+        eq(schema.forms.id, formId),
+        eq(schema.forms.organizationId, tenantId)
+      )
     )
     .get();
 

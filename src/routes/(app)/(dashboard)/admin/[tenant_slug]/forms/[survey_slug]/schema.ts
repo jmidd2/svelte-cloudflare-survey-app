@@ -1,4 +1,4 @@
-import { formElements } from '$lib';
+import { ALL_FIELD_TYPES } from '$lib/utils';
 import { z } from 'zod/v4';
 
 export const saveFieldSchema = z.object({
@@ -7,7 +7,7 @@ export const saveFieldSchema = z.object({
   placeholder: z.string().optional(),
   isRequired: z.stringbool().optional(),
   options: z.array(z.string()).optional(),
-  type: z.enum(formElements),
+  type: z.enum(ALL_FIELD_TYPES),
 });
 
 export type SaveFieldSchema = typeof saveFieldSchema;

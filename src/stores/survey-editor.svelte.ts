@@ -1,12 +1,8 @@
 // src/lib/components/survey-editor/survey-editor.svelte.ts
 import { invalidate } from '$app/navigation';
-import { generateFormFieldData } from '$lib/dnd';
-import type {
-  InsertFormField,
-  SelectForm,
-  SelectFormField,
-} from '$lib/server/db/schema';
-import type { HtmlFormElements } from '$lib/types';
+import { generatePreviewFieldData } from '$lib/dnd';
+import type { SelectForm, SelectFormField } from '$lib/server/db/schema';
+import type { FormFieldType } from '$lib/types';
 import type { Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/types';
 import { reorderWithEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/reorder-with-edge';
 import { getContext, setContext } from 'svelte';
@@ -143,7 +139,7 @@ export class SurveyEditor {
   }
 
   async addField(
-    elementType: HtmlFormElements,
+    elementType: FormFieldType,
     closestEdgeOfTarget: Edge | null,
     indexOfTarget: number
   ) {
@@ -151,7 +147,7 @@ export class SurveyEditor {
 
     this.isLoading = true;
 
-    const fieldData = generateFormFieldData(elementType);
+    const fieldData = generatePreviewFieldData(elementType, this.survey.id);
 
     const formData = new FormData();
     formData.append('formId', this.survey.id);
@@ -203,7 +199,11 @@ export class SurveyEditor {
     }
   }
 
-  async reorderFieldsOnServer(orderedFields: SelectFormField[]) {}
+  async reorderFieldsOnServer(orderedFields: SelectFormField[]) {
+    throw new Error(
+      `reorderFieldsOnServer not implemented, args: ${orderedFields}`
+    );
+  }
 }
 
 const SURVEY_EDITOR_KEY = Symbol('survey-editor');

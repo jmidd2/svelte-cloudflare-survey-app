@@ -2,7 +2,7 @@ import * as schema from '../src/lib/server/db/schema';
 import { createClient } from '@libsql/client';
 import { drizzle } from 'drizzle-orm/libsql';
 import { reset, seed } from 'drizzle-seed';
-import { formElements } from '../src/lib';
+import {ALL_FIELD_TYPES} from '../src/lib/utils';
 import { sampleFormFieldLabels } from '../src/lib/sample';
 
 /**
@@ -49,7 +49,7 @@ async function main() {
     columns: {
       id: f.uuid(),
       type: f.valuesFromArray({
-        values: formElements,
+        values: ALL_FIELD_TYPES,
       }),
       label: f.valuesFromArray({ values: sampleFormFieldLabels }),
       placeholder: f.valuesFromArray({ values: sampleFormFieldLabels }),

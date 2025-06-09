@@ -1,13 +1,6 @@
 <script lang="ts">
-import {
-  type FieldData,
-  type ToolboxListFieldData,
-  generateFormFieldData,
-  isFieldData,
-  isNewFieldData,
-} from '$lib/dnd';
+import { type FieldData, isFieldData, isNewFieldData } from '$lib/dnd';
 import type { SelectFormField } from '$lib/server/db/schema.js';
-import { isHtmlFormField } from '$lib/utils';
 import { getSurveyEditor } from '$stores/survey-editor.svelte';
 import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import type { Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/types';
@@ -17,7 +10,7 @@ import type {
   BaseEventPayload,
   ElementDragType,
 } from '@atlaskit/pragmatic-drag-and-drop/types';
-import FormField from './FormField.svelte';
+import FormFieldItem from './FormFieldItem.svelte';
 
 // Get editor from context
 const editor = getSurveyEditor();
@@ -105,10 +98,9 @@ $effect(() => {
 
 <div class="grid grid-cols-1 gap-y-4 p-2">
     {#each fields as field, index (field.id)}
-        <FormField
+        <FormFieldItem
                 {field}
                 {index}
-                selected={selectedIndex === index}
         />
     {/each}
 </div>

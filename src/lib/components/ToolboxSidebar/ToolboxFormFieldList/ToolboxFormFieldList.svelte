@@ -4,15 +4,13 @@ import { getSurveyEditor } from '$stores/survey-editor.svelte';
 import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { reorderWithEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/reorder-with-edge';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import ToolboxFormEleListItem from './ToolboxFormEleListItem.svelte';
+import ToolboxFormFieldListItem from './ToolboxFormFieldListItem.svelte';
 
 // Get editor from context
 const editor = getSurveyEditor();
 
 // Reactive references
 const fields = $derived(editor.fields);
-
-let dragState: 'idle' | 'is-dragged-over' = $state('idle');
 
 $effect(() => {
   return monitorForElements({
@@ -54,15 +52,15 @@ $effect(() => {
       }).map((field, i) => ({ ...field, orderIndex: i + 1 }));
 
       // Update via editor
-      editor.saveReorder(reorderedFields);
-      await editor.reorderFieldsOnServer(reorderedFields);
+      await editor.saveReorder(reorderedFields);
+      // await editor.reorderFieldsOnServer(reorderedFields);
     },
   });
 });
 </script>
 
-<ul class={["space-y-2 pt-5", {'bg-red-500': dragState === 'is-dragged-over'}]}>
+<ul class="space-y-2 pt-5">
     {#each fields as formField, index}
-        <ToolboxFormEleListItem {formField} {index} />
+        <ToolboxFormFieldListItem {formField} {index} />
     {/each}
 </ul>

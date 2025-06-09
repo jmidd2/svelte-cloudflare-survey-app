@@ -1,6 +1,5 @@
 import { getFormBySlug } from '$lib/server/db';
 import { error } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
 
 export const load = async function ({ locals, params }) {
   if (!params.survey_slug) console.error(400, 'survey id is required');

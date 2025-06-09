@@ -1,13 +1,10 @@
-import type { HtmlFormElements } from '$lib/types';
-import type { Invitation } from 'better-auth/plugins/organization';
+import type { FormFieldType } from '$lib/types';
+import { ALL_FIELD_TYPES } from '$lib/utils';
 import { type InferSelectModel, type SQL, relations, sql } from 'drizzle-orm';
-// src/lib/db/schema.ts
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod/v4';
-import { formElements } from '../../index';
 
-// export * from './auth-schema';
 export type UserRoles = 'admin' | 'user';
 export type MemberRoles = 'owner' | 'admin' | 'member';
 
@@ -140,29 +137,6 @@ const timestamps = {
     .default(sql`(unixepoch())`),
 };
 
-// Tenants table - stores information about each tenant
-// export const tenants = sqliteTable('tenants', {
-//   id: text('id').primaryKey(),
-//   name: text('name').notNull(),
-//   slug: text('slug')
-//     .generatedAlwaysAs(
-//       (): SQL => sql`lower
-//                 (replace(
-//       ${tenants.name},
-//       ' ',
-//       '-'
-//       )
-//       )`,
-//       {
-//         mode: 'virtual',
-//       }
-//     )
-//     .notNull()
-//     .unique(),
-//   active: integer('active', { mode: 'boolean' }).notNull().default(true),
-//   ...timestamps,
-// });
-
 // Forms table - stores form definitions
 export const forms = sqliteTable('forms', {
   id: text('id').primaryKey(),
@@ -203,7 +177,7 @@ export const formFields = sqliteTable('form_fields', {
   formId: text('form_id')
     .notNull()
     .references(() => forms.id, { onDelete: 'cascade' }),
-  type: text('type').notNull().$type<HtmlFormElements>(), // 'text', 'textarea', 'select', 'radio', 'checkbox', etc.
+  type: text('type').notNull().$type<FormFieldType>(), // 'text', 'textarea', 'select', 'radio', 'checkbox', etc.
   label: text('label').notNull(),
   placeholder: text('placeholder'),
   required: integer('required', { mode: 'boolean' }).notNull().default(false),
@@ -218,7 +192,7 @@ export type NewSubmissionData =
   | {
       field: {
         id: string;
-        type: Extract<'checkbox', HtmlFormElements>;
+        type: Extract<'checkbox', FormFieldType>;
         primitive: 'string' | 'number' | 'boolean' | 'date';
       };
       submitted: {
@@ -228,7 +202,7 @@ export type NewSubmissionData =
   | {
       field: {
         id: string;
-        type: Exclude<HtmlFormElements, 'checkbox'>;
+        type: Exclude<FormFieldType, 'checkbox'>;
         primitive: 'string' | 'number' | 'boolean' | 'date';
       };
       submitted: {
@@ -239,13 +213,13 @@ export type NewSubmissionData =
 export type SubmissionData =
   | {
       formFieldId: string;
-      fieldType: Extract<'checkbox', HtmlFormElements>;
+      fieldType: Extract<'checkbox', FormFieldType>;
       primitive: 'string' | 'number' | 'boolean' | 'date';
       values: Array<string | number>;
     }
   | {
       formFieldId: string;
-      fieldType: Exclude<HtmlFormElements, 'checkbox'>;
+      fieldType: Exclude<FormFieldType, 'checkbox'>;
       primitive: 'string' | 'number' | 'boolean' | 'date';
       value: string | number | boolean;
     };
@@ -321,10 +295,10 @@ export type SelectForm = InferSelectModel<typeof forms>;
 export type SelectFormWithFields = SelectForm & { fields: SelectFormField[] };
 
 export const formFieldInsertSchema = createInsertSchema(formFields, {
-  type: z.custom<HtmlFormElements>(val => {
+  type: z.custom<FormFieldType>(val => {
     if (typeof val !== 'string') {
       return false;
     }
-    return formElements.includes(val as HtmlFormElements);
+    return ALL_FIELD_TYPES.includes(val as FormFieldType);
   }),
 });

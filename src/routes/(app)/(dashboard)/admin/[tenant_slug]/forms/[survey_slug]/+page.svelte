@@ -1,10 +1,8 @@
 <script lang="ts">
 import { applyAction, enhance } from '$app/forms';
-import { goto, invalidate } from '$app/navigation';
-import { navigating } from '$app/state';
-import { formElementTags, formElements } from '$lib';
 import EditFieldOptionList from '$lib/components/EditFieldOptionList.svelte';
-import FormFieldList from '$lib/components/FormFieldList.svelte';
+import { FormFieldList } from '$lib/components/FormFieldList';
+import { ToolboxSidebar } from '$lib/components/ToolboxSidebar';
 import { Button } from '$lib/components/ui/button';
 import { Input } from '$lib/components/ui/input';
 import { Label } from '$lib/components/ui/label';
@@ -15,266 +13,187 @@ import {
   SelectTrigger,
 } from '$lib/components/ui/select/index.js';
 import { Switch } from '$lib/components/ui/switch';
-import { Tabs, TabsList, TabsTrigger } from '$lib/components/ui/tabs';
-import { TabsContent } from '$lib/components/ui/tabs/index.js';
-import { canHaveOptions } from '$lib/dnd';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '$lib/components/ui/tabs';
 import type { SelectFormField } from '$lib/server/db/schema';
-import { isHtmlFormField } from '$lib/utils';
-import { pageState } from '$stores/pageState.svelte';
-import { SurveyManager, surveyManager } from '$stores/survey.svelte';
-import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import {
+  ALL_FIELD_TYPES,
+  FIELD_LABELS,
+  fieldHasOptions,
+  fieldSupportsPlaceholder,
+} from '$lib/utils';
+import { SurveyEditor, setSurveyEditor } from '$stores/survey-editor.svelte';
 import { PlusIcon } from '@lucide/svelte';
-import { setContext } from 'svelte';
 import { slide } from 'svelte/transition';
+import { z } from 'zod/v4';
 import type { PageProps } from './$types';
-import ToolboxSidebar from './ToolboxSidebar.svelte';
 
 const { data, form: formProp }: PageProps = $props();
 
-// Local state
-const survey = $derived(data.survey);
+// Create the survey editor instance
+const editor = new SurveyEditor(data.survey, data.fields);
+setSurveyEditor(editor);
 
-surveyManager.survey = data.survey;
-surveyManager.fields = data.fields;
-
-$inspect(surveyManager.selectedField);
-$inspect(surveyManager.selectedIndex);
-
-let lastUpdate = $derived(formProp?.lastUpdated ?? survey.updatedAt);
-let lastUpdateString = $derived(`${lastUpdate.toLocaleString()}`);
-let isActive = $derived(survey.active);
-let errorMessage: null | string = $derived(
-  formProp?.error ? formProp.message : null
-);
-const isAdmin = $derived.by(() => {
-  if (!data.session?.user.role) return false;
-
-  if (Array.isArray(data.session?.user.role))
-    return data.session.user.role.includes('admin');
-
-  return data.session?.user.role === 'admin';
+// Update editor data when server data changes
+$effect(() => {
+  editor.fields = [...data.fields];
+  editor.survey = data.survey;
 });
 
-let dropBox: HTMLDivElement | undefined;
-let dragState: 'idle' | 'is-dragged-over' = $state('idle');
 let tabValue = $state('general');
 
-// Shared State
-let formFields = $state(data.fields);
-let selectedFieldIndex: number = $state(-1);
-let selectedFormField: SelectFormField | null = $derived(
-  selectedFieldIndex >= 0 ? formFields[selectedFieldIndex] : null
-);
+// Reactive values from the editor
+const selectedField = $derived(editor.selectedField);
+const isLoading = $derived(editor.isLoading);
 
-let showSavedAlert = $state(false);
-
-$effect(() => {
-  if (!dropBox) return;
-
-  dropTargetForElements({
-    element: dropBox,
-    onDragEnter: ({ source }) => {
-      if (!source.data.elementType) return;
-      dragState = 'is-dragged-over';
-    },
-    onDragLeave: () => {
-      dragState = 'idle';
-    },
-    onDrop: ({ source }) => {
-      dragState = 'idle';
-      if (
-        !(source.data.elementType && isHtmlFormField(source.data.elementType))
-      )
-        return;
-    },
+function parseFormData(formData: FormData) {
+  const schema = z.object({
+    type: z.enum(ALL_FIELD_TYPES),
+    label: z.string(),
+    placeholder: z.string().optional(),
+    required: z.stringbool(),
   });
-});
-$effect(() => {
-  if (!survey.selectedField) return;
-  const selectedDiv = document.querySelector(
-    `[data-field-id="${surveyManager.selectedField.id}"]`
-  );
 
-  if (!selectedDiv || formFields.length < 1) return;
-
-  if (
-    tabValue === 'options' &&
-    (!selectedFormField?.options ||
-      (selectedFormField.options && selectedFormField?.options.length === 0))
-  )
-    tabValue = 'general';
-
-  selectedDiv.scrollIntoView({ block: 'center', behavior: 'smooth' });
-});
-
-function hasPlaceholder(field: SelectFormField) {
-  return !canHaveOptions(field) && field.type !== 'range';
+  return schema.safeParse(Object.fromEntries(formData.entries()));
 }
 </script>
-<div class="border-b pb-2 mb-2 hidden">
-  <h1 class="flex flex-col text-2xl mb-2">{survey.title} <span class="text-sm">Survey #{survey.id}</span></h1>
-  <p>{survey.description}</p>
-</div>
-<div class="items-center hidden">
-  Last Update:
-  {#if pageState.state === 'loading'}
-    saving
-    <svg class="ml-1 size-5 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
-         viewBox="0 0 24 24">
-      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-      <path class="opacity-75" fill="currentColor"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-    </svg>
-  {:else}
-    {lastUpdateString}
-    {#if showSavedAlert}
-      Saved!
-    {/if}
-  {/if}
-</div>
-<div class="border-b hidden">
-  <h2>Settings</h2>
-  <div class="flex gap-2 items-center">
-    <label for="active">Active: </label>
-    <input type="checkbox"
-           bind:checked={isActive}
-           name="active" id="active"
-           disabled={!isAdmin}/></div>
-  <div>
-    {#if survey.settings}
-      {#each Object.entries(survey.settings) as [key, val], index}
-        <p>{key}: {val}</p>
-      {/each}
-    {/if}
-  </div>
-</div>
-
-{#if pageState.state === 'idle' && errorMessage}
-  <p class="bg-red-500 text-white p-3">{errorMessage}</p>
-{/if}
-
 <div class="flex flex-1 overflow-hidden">
-  <ToolboxSidebar bind:formFields bind:selectedFieldIndex={surveyManager.selectedIndex} selectedFormField={surveyManager.selectedField}/>
-  <div bind:this={dropBox}
-       class={['flex flex-1 flex-col']}>
+  <div class="w-64 border-r border-spark-secondary-600 flex flex-col h-full">
+    <ToolboxSidebar/>
+  </div>
+  <div class="flex flex-1 flex-col">
     <div class="flex-1 p-6 overflow-auto bg-muted/10">
       <div class="max-w-4xl mx-auto p-6 rounded-lg shadow-sm border">
         <div class="mb-3">
-          <!-- Add edit button next to title to open dialog with title and description, maybe settings -->
-          <h1 class="flex flex-col text-2xl mb-2">{survey.title} <span
-              class="text-sm text-muted-foreground">Survey #{survey.id}</span></h1>
-          <p>{survey.description}</p>
-          <p class="text-muted-foreground text-sm">Last Update:
-            {#if pageState.state === 'loading'}
-              saving
-              <svg class="ml-1 size-5 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
+          <h1 class="flex flex-col text-2xl mb-2">
+            {editor.survey?.title}
+            <span class="text-sm text-muted-foreground">
+              Survey #{editor.survey?.id}
+            </span>
+          </h1>
+          <p>{editor.survey?.description}</p>
+          <p class="text-muted-foreground text-sm">
+            Last Update: {editor.survey ? new Date(editor.survey.updatedAt).toLocaleString() : ''}
+            {#if isLoading}
+              <svg class="ml-1 size-5 animate-spin inline" xmlns="http://www.w3.org/2000/svg" fill="none"
                    viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor"
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-            {:else}
-              {lastUpdateString}
-              {#if showSavedAlert}
-                Saved!
-              {/if}
             {/if}
           </p>
         </div>
-        <FormFieldList />
+        <FormFieldList/>
       </div>
     </div>
   </div>
-  {#if !!surveyManager.selectedField}
-    <form use:enhance={({})=>{
-      return async ({result}) => {
-                if (result.type === 'redirect') {
-                    pageState.state = 'idle'
-                    goto(result.location);
-                } else {
-                    await applyAction(result);
-                    console.log('action result', result)
+  {#if selectedField}
+    <form
+        class="w-100 border-l bg-muted/20 p-4 overflow-y-auto grid grid-rows-[auto_1fr_auto]"
+        transition:slide={{ axis: 'x' }}
+        method="post"
+        action="/?save-field"
+        use:enhance={({formData, cancel}) => {
+              let previousState: Partial<SelectFormField> | null = null;
+
+              if (editor.selectedIndex >= 0) {
+                // Backup current state
+                previousState = { ...editor.selectedField };
+
+                // Apply optimistic update
+                const updates = parseFormData(formData);
+                if (updates.error) {
+                  cancel();
+                  return;
                 }
-                pageState.state = 'idle';
-            }
-    }} method="post" action="?/save-field"
-          class="w-100 border-l bg-muted/20 p-4 overflow-y-auto grid grid-rows-[auto_1fr_auto]"
-          transition:slide={{axis: 'x'}}>
-      <input type="hidden" id="fieldId" name="fieldId" bind:value={surveyManager.selectedField.id}>
+
+                editor.updateField(updates.data);
+              }
+
+              return async ({ result }) => {
+                if (result.type === 'failure' && previousState) {
+                  // Revert on failure
+                  editor.updateField(previousState);
+                  console.error('There was an error saving the field.', result.data);
+                }
+
+                await applyAction(result);
+              };
+            }}
+    >
+      <input type="hidden" name="fieldId" value={selectedField.id}>
       <h2 class="font-semibold mb-4">Properties</h2>
       <Tabs bind:value={tabValue}>
         <TabsList class="grid w-full grid-cols-2">
-          <TabsTrigger value="general" class="hover:cursor-pointer">General</TabsTrigger>
-          <TabsTrigger value="options" disabled={!surveyManager.selectedField.options || surveyManager.selectedField.options.length === 0}
-                       class="hover:cursor-pointer">Options
+          <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger
+              value="options"
+              disabled={!selectedField.options || selectedField.options.length === 0}
+          >
+            Options
           </TabsTrigger>
-          <!--          <TabsTrigger value="validation" class="hover:cursor-pointer">Validation</TabsTrigger>-->
-          <!--          <TabsTrigger value="interaction" class="hover:cursor-pointer">Interaction</TabsTrigger>-->
         </TabsList>
         <TabsContent value="general" class="space-y-4 pt-4">
-          <div class="space-y-2 ">
-            <Label for="label">Type</Label>
-            <Select type="single" name="type" bind:value={surveyManager.selectedField.type}>
-              <SelectTrigger class="w-full">{formElementTags[surveyManager.selectedField.type]}</SelectTrigger>
+          <div class="space-y-2">
+            <Label for="type">Type</Label>
+            <Select type="single" name="type" bind:value={selectedField.type}>
+              <SelectTrigger class="w-full">{FIELD_LABELS[selectedField.type]}</SelectTrigger>
               <SelectContent>
-                {#each formElements.sort((a,b)=>a.localeCompare(b)) as ele}
-                <SelectItem value={ele}>{formElementTags[ele]}</SelectItem>
-                  {/each}
+                {#each Object.entries(FIELD_LABELS) as [k, v]}
+                  <SelectItem value={k}>{v}</SelectItem>
+                {/each}
               </SelectContent>
             </Select>
           </div>
-          <div class="space-y-2 ">
+          <div class="space-y-2">
             <Label for="label">Label</Label>
-            <Input id="label" name="label" class="" bind:value={surveyManager.selectedField.label}
-                   placeholder={surveyManager.selectedField.label}/>
+            <Input
+                id="label"
+                name="label"
+                bind:value={selectedField.label}
+            />
           </div>
-          {#if hasPlaceholder(surveyManager.selectedField)}
+          {#if fieldSupportsPlaceholder(selectedField.type)}
             <div class="space-y-2">
               <Label for="placeholder">Placeholder</Label>
-              <Input id="placeholder" name="placeholder" bind:value={surveyManager.selectedField.placeholder}
-                     placeholder={surveyManager.selectedField.placeholder}/>
+              <Input
+                  id="placeholder"
+                  name="placeholder"
+                  bind:value={selectedField.placeholder}
+              />
             </div>
           {/if}
           <div class="space-y-2">
             <div class="flex items-center justify-between">
-              <Label for="isRequired">Required</Label>
-              <Switch id="isRequired" name="isRequired" bind:checked={surveyManager.selectedField.required}/>
+              <Label for="required">Required</Label>
+              <Switch
+                  id="required"
+                  name="required"
+                  bind:checked={selectedField.required}
+              />
             </div>
           </div>
         </TabsContent>
         <TabsContent value="options" class="space-y-4 pt-4">
-          {#if surveyManager.selectedField}
-            {#if canHaveOptions(surveyManager.selectedField)}
-              {#if !!surveyManager.selectedField.options && surveyManager.selectedField.options.length > 0}
-                <EditFieldOptionList options={surveyManager.selectedField.options}></EditFieldOptionList>
-              {/if}
-              <Button variant="outline" type="button"
-                      class="my-3 ml-4 mr-auto flex justify-around items-center hover:cursor-pointer">
-                <PlusIcon/>
-                Add Option
-              </Button>
-            {:else}
-              <p>This type cannot have options</p>
-            {/if}
+          {#if fieldHasOptions(selectedField)}
+            <EditFieldOptionList options={selectedField.options}/>
+            <Button variant="outline" type="button">
+              <PlusIcon/>
+              Add Option
+            </Button>
           {/if}
         </TabsContent>
-        <!--        <TabsContent value="validation" class="space-y-4 pt-4">-->
-        <!--          Validation-->
-        <!--        </TabsContent>-->
-        <!--        <TabsContent value="interaction" class="space-y-4 pt-4">-->
-        <!--          Interaction-->
-        <!--        </TabsContent>-->
       </Tabs>
       <div>
-        <Button type="submit" class="w-full cursor-pointer">
-          {#if pageState.state === 'idle'}Save{/if}
-          {#if pageState.state === 'loading'}Saving{/if}
+        <Button type="submit" class="w-full" disabled={isLoading}>
+          {isLoading ? 'Saving...' : 'Save'}
         </Button>
       </div>
     </form>
   {/if}
 </div>
-
-<style>
-
-</style>
