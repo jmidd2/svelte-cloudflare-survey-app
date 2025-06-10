@@ -1,7 +1,7 @@
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
 
-import type { DefaultSession } from '@auth/core/types';
+import type { AuthProvider } from '$lib/auth';
 import type {
   AnalyticsEngineDataset,
   D1Database,
@@ -9,8 +9,8 @@ import type {
 } from '@cloudflare/workers-types';
 
 export interface AuthProfileUserMetadata {
-  roles: string[];
-  tenant: {
+  roles?: string[];
+  tenant?: {
     id: string;
     name: string;
   };
@@ -21,7 +21,7 @@ declare global {
     // interface Error {}
     // interface PageState {}
     interface Locals {
-      auth: import('@auth/sveltekit').Session;
+      auth: AuthProvider;
       db:
         | (import('drizzle-orm/libsql').LibSQLDatabase<
             typeof import('$lib/server/db/schema')
@@ -29,10 +29,6 @@ declare global {
         | (import('drizzle-orm/d1').DrizzleD1Database<
             typeof import('$lib/server/db/schema')
           > & { $client: D1Database });
-    }
-
-    interface PageData {
-      session: import('@auth/sveltekit').Session | null;
     }
 
     interface Platform {
@@ -52,25 +48,5 @@ declare global {
         waitUntil(promise: Promise<any>): void;
       };
     }
-  }
-}
-
-declare module '@auth/core/providers/auth0' {
-  interface Auth0Profile {
-    user_metadata: AuthProfileUserMetadata;
-  }
-}
-
-declare module '@auth/core/types' {
-  interface User extends AuthProfileUserMetadata {}
-
-  interface Session {
-    user: AuthProfileUserMetadata & DefaultSession['user'];
-  }
-}
-
-declare module '@auth/core/jwt' {
-  interface JWT extends AuthProfileUserMetadata {
-    image: string | null;
   }
 }

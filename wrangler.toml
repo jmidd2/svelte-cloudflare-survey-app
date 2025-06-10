@@ -4,6 +4,9 @@ compatibility_date = "2025-01-15"
 compatibility_flags = ["nodejs_compat"]
 workers_dev = true
 
+[observability.logs]
+enabled = true
+
 [assets]
 directory = "./public/"
 binding = "ASSETS"
@@ -14,10 +17,11 @@ binding = "ASSETS"
 
 # Environment variables visible to client and server code
 [vars]
-ENVIRONMENT = "development"
-APP_URL = "http://localhost:8788"
+#ENVIRONMENT = "development"
+#APP_URL = "http://localhost:8788"
 # Replace with your Auth0 domain
 AUTH_AUTH0_ISSUER = "https://dev-f7wd881wsk8er6ir.us.auth0.com"
+AUTH_MAX_AGE=86400
 
 # Optional: Separate database for tenant management (if using multi-database approach)
 [[d1_databases]]
@@ -29,26 +33,31 @@ migrations_dir = "./db/migrations"
 # Analytics Engine Configuration
 [[analytics_engine_datasets]]
 binding = "ANALYTICS" # This is how you'll reference it in your code
+dataset = "analytics"
 
 # KV Namespace for caching (optional but recommended)
 [[kv_namespaces]]
 binding = "CACHE"
 id = "2843031524a84ca2b6d879c17ca94a5e"
 
+
 # Development environment specific settings
-[env.dev]
-# Development-specific variables
-vars = { ENVIRONMENT = "development", APP_URL = "http://localhost:8788", DATABASE_URL = "" }
-
-# Production environment specific settings
-[env.production]
-# Production-specific variables
-vars = { ENVIRONMENT = "production", APP_URL = "https://yourdomain.com", DATABASE_URL = "" }
-
-# Staging environment specific settings
-[env.staging]
-# Staging-specific variables
-vars = { ENVIRONMENT = "staging", APP_URL = "https://staging.yourdomain.com", DATABASE_URL = "" }
+#[env.dev]
+## Development-specific variables
+##vars = { ENVIRONMENT = "development", APP_URL = "http://localhost:8788", DATABASE_URL = "" }
+#vars = { ENVIRONMENT = "development" }
+#
+## Production environment specific settings
+#[env.production]
+## Production-specific variables
+##vars = { ENVIRONMENT = "production", APP_URL = "https://yourdomain.com", DATABASE_URL = "" }
+#vars = { ENVIRONMENT = "production" }
+#
+## Staging environment specific settings
+#[env.staging]
+## Staging-specific variables
+##vars = { ENVIRONMENT = "staging", APP_URL = "https://staging.yourdomain.com", DATABASE_URL = "" }
+#vars = { ENVIRONMENT = "staging" }
 
 
 # Secrets: Set these using 'wrangler secret put <NAME>'

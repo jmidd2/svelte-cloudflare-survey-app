@@ -1,37 +1,29 @@
-import { createDb } from '$lib/server/db';
-import type { Handle } from '@sveltejs/kit';
-import { sequence } from '@sveltejs/kit/hooks';
-
 import { env } from '$env/dynamic/private';
-import { handle as authHandle } from '$lib/auth';
+import { createAuth } from '$lib/auth';
+import { createDbClient } from '$lib/server/db';
 import * as schema from '$lib/server/db/schema';
+import { type Handle, redirect } from '@sveltejs/kit';
+import { svelteKitHandler } from 'better-auth/svelte-kit';
 
-// import { handle as AuthenticationHandle } from '$lib/auth';
-// import type {Handle} from "@sveltejs/kit";
-// import {SvelteKitAuth} from "@auth/sveltekit";
-// import Auth0 from "@auth/core/providers/auth0";
-
-// export const handle: Handle = function({event:{platform}}) {
-//     const {handle} = SvelteKitAuth({
-//         trustHost: false,
-//         providers: [Auth0({
-//             clientId: platform?.env?.AUTH0_CLIENT_ID,
-//             clientSecret: platform?.env?.AUTH0_CLIENT_SECRET,
-//         })]
-//     })
-//
-//
-// }
-
-const dbLocalsHandle: Handle = async function ({ event, resolve }) {
-  event.locals.db = await createDb({
+export const handle: Handle = async function ({ event, resolve }) {
+  event.locals.db = await createDbClient({
     d1Database: event.platform?.env?.DB,
     dbUrl: env.DATABASE_URL,
     schema,
   });
 
-  const response = await resolve(event);
-  return response;
-};
+  event.locals.auth = createAuth(event.locals.db);
+  if (event.url.pathname.startsWith('/admin')) {
+    const session = await event.locals.auth.api.getSession({
+      headers: event.request.headers,
+    });
+    console.log('hook session----', session);
 
-export const handle: Handle = sequence(authHandle, dbLocalsHandle);
+    if (!session) {
+      // Redirect to the signin page
+      throw redirect(303, '/auth/login');
+    }
+  }
+
+  return svelteKitHandler({ event, resolve, auth: event.locals.auth });
+};

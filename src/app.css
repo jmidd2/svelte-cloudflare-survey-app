@@ -87,7 +87,7 @@
 .dark {
   --background: var(--color-spark-bg-dark);
   --foreground: oklch(0.98 0.005 42);
-  --card: var(--color-spark-bg-medium);
+  --card: oklch(0.3 0.02 264.153);
   --card-foreground: oklch(0.985 0 0);
   --popover: var(--color-spark-bg-medium);
   --popover-foreground: oklch(0.985 0 0);
