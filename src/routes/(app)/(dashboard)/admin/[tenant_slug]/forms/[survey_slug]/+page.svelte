@@ -27,7 +27,9 @@ import {
 } from '$lib/utils';
 import { SurveyEditor, setSurveyEditor } from '$stores/survey-editor.svelte';
 import { CheckCheckIcon, PlusIcon } from '@lucide/svelte';
+import { getContext } from 'svelte';
 import { slide } from 'svelte/transition';
+import { getBreadcrumbContext } from '../../../breadcrumbContext.svelte';
 import type { PageProps } from './$types';
 import { saveFieldSchema } from './schema';
 
@@ -36,7 +38,16 @@ const { data, form: formProp }: PageProps = $props();
 // Create the survey editor instance
 const editor = new SurveyEditor(data.survey, data.fields);
 setSurveyEditor(editor);
-
+const breadcrumbStatus = getBreadcrumbContext();
+$inspect(breadcrumbStatus);
+$effect(() => {
+  if (!breadcrumbStatus) return;
+  if (editor.isLoading !== null) breadcrumbStatus.isLoading = editor.isLoading;
+});
+$effect(() => {
+  if (!breadcrumbStatus) return;
+  breadcrumbStatus.isSaved = editor.isSaved;
+});
 // Update editor data when server data changes
 $effect(() => {
   editor.fields = [...data.fields];
@@ -83,22 +94,6 @@ $inspect(editor.isSaved);
             <p>
             Last Update: {editor.survey ? new Date(editor.survey.updatedAt).toLocaleString() : ''}
             </p>
-            <div class="flex gap-2 items-center justify-center text-green-600">
-              {#if editor.isLoading}
-                <div class="text-accent-foreground">
-                <svg class="ml-1 size-4 animate-spin inline" xmlns="http://www.w3.org/2000/svg" fill="none"
-                     viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                </div>
-              {/if}
-              {#if editor.isSaved}
-              <CheckCheckIcon class="size-5"></CheckCheckIcon>
-              Saved!
-                {/if}
-            </div>
           </div>
         </div>
         <FormFieldList/>
