@@ -32,13 +32,9 @@ setBreadcrumbContext(status);
 <div class="border-b border-b-muted px-4 py-3 flex items-center gap-2 text-muted-foreground">
   <Breadcrumb>
     <BreadcrumbList>
-      <BreadcrumbItem>
-        <BreadcrumbLink href="/">Home</BreadcrumbLink>
-      </BreadcrumbItem>
       {#if tenant}
         {#if survey}
           {@const tenantHref = `/admin/${tenant.slug}`}
-          <BreadcrumbSeparator/>
           <BreadcrumbItem>
             <BreadcrumbLink href={tenantHref}>{tenant.name}</BreadcrumbLink>
           </BreadcrumbItem>

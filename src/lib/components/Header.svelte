@@ -1,6 +1,7 @@
 <script lang="ts">
 import { goto, invalidateAll } from '$app/navigation';
 import { page } from '$app/state';
+import logo from '$lib/assets/survey-logo.png';
 import { type Session, authClient } from '$lib/auth-client';
 import { type Snippet } from 'svelte';
 import { slide } from 'svelte/transition';
@@ -75,7 +76,7 @@ function handleLogout() {
 <svelte:window bind:innerWidth={windowInnerWidth}></svelte:window>
 <header class="bg-spark-primary p-4">
     <nav class="">
-        <div class="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
+        <div class="px-2 sm:px-6 lg:px-8">
             <div class="relative flex h-16 items-center justify-between">
                 <div class="absolute inset-y-0 left-0 flex items-center sm:hidden">
                     <!-- Mobile menu button-->
@@ -109,8 +110,8 @@ function handleLogout() {
                 </div>
                 <div class="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
                     <div class="flex shrink-0 items-center">
-                        <img class="h-8 w-auto"
-                             src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=blue&shade=400"
+                        <img class="size-10 drop-shadow w-auto"
+                             src={logo}
                              alt="Your Company">
                     </div>
                     <div class="hidden sm:ml-6 sm:block">
