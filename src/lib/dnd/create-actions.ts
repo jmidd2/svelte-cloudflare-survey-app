@@ -1,13 +1,16 @@
+import { DRAG_CONSTANTS } from '$lib/utils';
 import {
   attachClosestEdge,
   extractClosestEdge,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import type { Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/types';
+import type { GetOffsetFn } from '@atlaskit/pragmatic-drag-and-drop/dist/types/public-utils/element/custom-native-drag-preview/types.d';
 import {
   type ElementDragPayload,
   draggable,
   dropTargetForElements,
 } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { centerUnderPointer } from '@atlaskit/pragmatic-drag-and-drop/element/center-under-pointer';
 import { pointerOutsideOfPreview } from '@atlaskit/pragmatic-drag-and-drop/element/pointer-outside-of-preview';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 
@@ -19,6 +22,7 @@ export interface DragConfig<T = Record<string | symbol, unknown>> {
     container: HTMLElement;
     source?: ElementDragPayload;
   }) => void;
+  previewPosition?: 'center' | 'start';
 }
 
 export interface DropConfig<T = Record<string | symbol, unknown>> {
@@ -42,9 +46,19 @@ export function createDraggable<T extends Record<string | symbol, unknown>>(
       getInitialData: config.getData,
       onGenerateDragPreview: config.onGenerateDragPreview
         ? ({ nativeSetDragImage, source }) => {
+            let getOffset: GetOffsetFn;
+            if (config.previewPosition === 'start') {
+              getOffset = pointerOutsideOfPreview(
+                DRAG_CONSTANTS.PREVIEW_OFFSET
+              );
+            } else if (config.previewPosition === 'center') {
+              getOffset = centerUnderPointer;
+            } else {
+              getOffset = () => ({ x: 0, y: 0 });
+            }
             setCustomNativeDragPreview({
               nativeSetDragImage,
-              getOffset: pointerOutsideOfPreview({ x: '16px', y: '8px' }),
+              getOffset,
               render: ({ container }) =>
                 config.onGenerateDragPreview?.({ container, source }),
             });

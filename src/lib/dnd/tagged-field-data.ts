@@ -48,3 +48,18 @@ export type NewFieldData = ReturnType<
 export const getNewFieldData = (field: SelectFormField) =>
   newFieldData.create(field);
 export const isNewFieldData = newFieldData.isTagged;
+
+// Selected Item Options Data
+const selectedItemOptData =
+  createTaggedDataFactory<NonNullable<SelectFormField['options']>[number]>(
+    'selected-item-opt'
+  );
+export type SelectedItemOptData = ReturnType<
+  typeof selectedItemOptData.create<
+    NonNullable<SelectFormField['options']>[number]
+  >
+>;
+export const getSelectedItemOptData = (
+  option: NonNullable<SelectFormField['options']>[number]
+) => selectedItemOptData.create(option);
+export const isSelectedItemOptData = selectedItemOptData.isTagged;

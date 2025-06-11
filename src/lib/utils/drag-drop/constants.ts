@@ -1,5 +1,5 @@
 export const DRAG_CONSTANTS = {
-  PREVIEW_OFFSET: { x: '16px', y: '8px' },
+  PREVIEW_OFFSET: { x: '0px', y: '0px' },
   DROP_INDICATOR_GAPS: {
     SMALL: '10px',
     MEDIUM: '22px',

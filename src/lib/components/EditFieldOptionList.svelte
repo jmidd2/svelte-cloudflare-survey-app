@@ -1,7 +1,10 @@
 <script lang="ts">
 import EditFieldOption from '$lib/components/EditFieldOption.svelte';
+import { isSelectedItemOptData, isToolboxListFieldData } from '$lib/dnd';
 import DragHandle from '$lib/dnd/DragHandle.svelte';
 import type { SelectFormField } from '$lib/server/db/schema';
+import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
+import { reorderWithEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/reorder-with-edge';
 import {
   dropTargetForElements,
   monitorForElements,
@@ -9,23 +12,50 @@ import {
 type Props = {
   options: SelectFormField['options'];
 };
-const { options } = $props();
+let { options = $bindable() }: Props = $props();
 
 let element: HTMLUListElement;
-function isOptionData(data: unknown) {
-  return true;
-}
 
 $effect(() => {
   return monitorForElements({
     canMonitor({ source }) {
-      return isOptionData(source.data);
+      return isSelectedItemOptData(source.data);
     },
     onDrop: function ({ location, source }) {
-      console.log('fieldoptions-dropped location');
-      console.table(location);
-      console.log('fieldoptions-dropped location');
-      console.table(source);
+      if (!options) return;
+      const target = location.current.dropTargets[0];
+      if (!target) return;
+
+      const sourceData = source.data;
+      const targetData = target.data;
+
+      if (
+        !(
+          isSelectedItemOptData(sourceData) || isSelectedItemOptData(targetData)
+        )
+      )
+        return;
+
+      console.log(sourceData, targetData);
+
+      const closestEdgeOfTarget = extractClosestEdge(targetData);
+
+      const indexOfSource = options.findIndex(
+        item => item.id === sourceData.id
+      );
+      const indexOfTarget = options.findIndex(
+        item => item.id === targetData.id
+      );
+
+      if (indexOfSource < 0 || indexOfTarget < 0) return;
+
+      options = reorderWithEdge({
+        closestEdgeOfTarget,
+        axis: 'vertical',
+        list: options,
+        startIndex: indexOfSource,
+        indexOfTarget,
+      });
     },
   });
 });
@@ -40,10 +70,14 @@ $effect(() => {
     onDrop: () => {},
   });
 });
+
+function handleDelete(index: number) {
+  options.splice(index, 1);
+}
 </script>
 
-<ul bind:this={element} class="flex flex-col gap-2">
+<ul bind:this={element} class="flex flex-col gap-y-3">
     {#each options as opt, index}
-        <EditFieldOption option={opt} {index}></EditFieldOption>
+        <EditFieldOption option={opt} {index} {handleDelete}></EditFieldOption>
     {/each}
 </ul>

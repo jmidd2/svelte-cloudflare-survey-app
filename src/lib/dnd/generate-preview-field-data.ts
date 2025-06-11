@@ -13,9 +13,9 @@ export function generatePreviewFieldData(
     ];
 
   const options = [
-    { label: 'value 1', val: 'val-1' },
-    { label: 'value 2', val: 'val-2' },
-    { label: 'value 3', val: 'val-3' },
+    { id: uuid(), label: 'value 1', val: 'val-1' },
+    { id: uuid(), label: 'value 2', val: 'val-2' },
+    { id: uuid(), label: 'value 3', val: 'val-3' },
   ];
 
   const fieldData: SelectFormField = {

@@ -1,11 +1,13 @@
 <script lang="ts">
+import { cn } from '$lib/utils';
 import type { Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/types';
 
 type Props = {
   edge: Edge;
   gap: string;
+  class?: string;
 };
-let { edge, gap }: Props = $props();
+let { edge, gap, class: className }: Props = $props();
 
 type Orientation = 'horizontal' | 'vertical';
 
@@ -42,5 +44,5 @@ const offsetToAlignTerminalWithLine = (strokeSize - terminalSize) / 2;
             --terminal-radius: ${terminalSize / 2}px;
             --negative-terminal-size: -${terminalSize}px;
             --offset-terminal: ${offsetToAlignTerminalWithLine}px;`}
-        class={`absolute z-10 bg-spark-primary pointer-events-none before:content-[''] before:w-(--terminal-size) before:h-(--terminal-size) box-border before:absolute before:border-(length:--line-thickness) before:border-solid before:bg-spark-primary before:border-spark-primary before:rounded-full ${orientationStyles[edgeToOrientationMap[edge]]} ${[edgeStyles[edge]]}`}
+        class={cn(`absolute z-10 bg-spark-primary pointer-events-none before:content-[''] before:w-(--terminal-size) before:h-(--terminal-size) box-border before:absolute before:border-(length:--line-thickness) before:border-solid before:bg-spark-primary before:border-spark-primary before:rounded-full ${orientationStyles[edgeToOrientationMap[edge]]} ${[edgeStyles[edge]]}`, className)}
 ></div>

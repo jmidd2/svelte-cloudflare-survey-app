@@ -40,9 +40,9 @@ async function createFormFields(db: ReturnType<typeof drizzle>, formId: string, 
     required: Math.random() > 0.5,
     options: ['radio', 'select', 'checkbox'].includes(fieldType)
       ? [
-        {label: 'value 1', val: 'val-1'},
-        {label: 'value 2', val: 'val-2'},
-        {label: 'value 3', val: 'val-3'},
+        { id: uuidv4(), label: 'value 1', val: 'val-1'},
+        { id: uuidv4(), label: 'value 2', val: 'val-2'},
+        { id: uuidv4(), label: 'value 3', val: 'val-3'},
       ]
       : null,
     orderIndex,

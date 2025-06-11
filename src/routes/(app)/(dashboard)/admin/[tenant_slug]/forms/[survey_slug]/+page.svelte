@@ -97,7 +97,7 @@ function parseFormData(formData: FormData) {
         class="w-100 border-l bg-muted/20 p-4 overflow-y-auto grid grid-rows-[auto_1fr_auto]"
         transition:slide={{ axis: 'x' }}
         method="post"
-        action="/?save-field"
+        action="?/save-field"
         use:enhance={({formData, cancel}) => {
               let previousState: Partial<SelectFormField> | null = null;
 
@@ -181,8 +181,8 @@ function parseFormData(formData: FormData) {
         </TabsContent>
         <TabsContent value="options" class="space-y-4 pt-4">
           {#if fieldHasOptions(selectedField)}
-            <EditFieldOptionList options={selectedField.options}/>
-            <Button variant="outline" type="button">
+            <EditFieldOptionList bind:options={selectedField.options}/>
+            <Button variant="outline" type="button" onclick={() => { selectedField.options.push({ id: crypto.randomUUID(), val: 'string', label: 'string' }); }}>
               <PlusIcon/>
               Add Option
             </Button>

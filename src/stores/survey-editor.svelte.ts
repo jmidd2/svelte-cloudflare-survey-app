@@ -50,15 +50,10 @@ export class SurveyEditor {
     }
   }
 
-  removeField(index: number) {
-    this.fields = this.fields.filter((_, i) => i !== index);
+  removeField(fieldId: string) {
+    this.fields = this.fields.filter(({ id }) => id !== fieldId);
 
-    // Adjust selection
-    if (this.selectedIndex === index) {
-      this.selectedIndex = -1;
-    } else if (this.selectedIndex > index) {
-      this.selectedIndex--;
-    }
+    this.selectedIndex = -1;
   }
 
   async saveReorder(newFields: SelectFormField[]) {
@@ -121,7 +116,7 @@ export class SurveyEditor {
     if (index < 0) return;
 
     // Optimistic update
-    this.removeField(index);
+    this.removeField(fieldId);
 
     const formData = new FormData();
     formData.append('fieldId', fieldId);

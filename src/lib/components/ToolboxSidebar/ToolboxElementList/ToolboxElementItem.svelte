@@ -65,6 +65,7 @@ const { createDraggable } = createActions({
   },
   getData: () => getNewFieldData(previewData),
   canDrop: () => false,
+  previewPosition: 'center',
 });
 
 function attachDraggable(): Attachment {

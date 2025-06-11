@@ -1,6 +1,14 @@
 <script lang="ts">
 import { Button } from '$lib/components/ui/button';
 import { Input } from '$lib/components/ui/input';
+import {
+  DropIndicator,
+  FieldStateManager,
+  Portal,
+  createActions,
+  getSelectedItemOptData,
+  isSelectedItemOptData,
+} from '$lib/dnd';
 import DragHandle from '$lib/dnd/DragHandle.svelte';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import {
@@ -8,77 +16,85 @@ import {
   dropTargetForElements,
 } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { MinusCircle } from '@lucide/svelte';
+import type { Attachment } from 'svelte/attachments';
 
 type Props = {
-  option: { val: string; label: string };
+  option: { id: string; val: string; label: string };
   index: number;
+  handleDelete: (index: number) => void;
 };
 
-const { option: opt, index }: Props = $props();
+const { option: opt, index, handleDelete }: Props = $props();
 
-let element: HTMLLIElement;
+const dragStateManager = new FieldStateManager();
+let dragState = $state(dragStateManager.currentState);
 
-$effect(() => {
-  if (!element) return;
-
-  return combine(
-    draggable({
-      element,
-      getInitialData() {
-        // return getTaskData(task)
-        return { id: Symbol() };
-      },
-      onGenerateDragPreview({ nativeSetDragImage }) {
-        // setCustomNativeDragPreview({
-        //     nativeSetDragImage,
-        //     getOffset: pointerOutsideOfPreview({
-        //         x: '16px',
-        //         y: '8px',
-        //     }),
-        //     render({ container }) {
-        //         state = { type: 'preview', container };
-        //     },
-        // });
-      },
-      onDragStart() {},
-      onDrop() {},
-    }),
-
-    dropTargetForElements({
-      element,
-      canDrop({ source }) {
-        return true;
-      },
-      getData({ input }) {
-        return input;
-      },
-      getIsSticky() {
-        return true;
-      },
-      onDragEnter({ self }) {
-        console.log('on drag enter');
-      },
-      onDrag({ self, location }) {
-        console.log('location');
-        console.table(location);
-      },
-      onDragLeave() {},
-      onDrop() {},
-    })
-  );
+const { createDraggable, createDropTargetForElements } = createActions({
+  canDrop: data => isSelectedItemOptData(data),
+  getData: () => getSelectedItemOptData(opt),
+  onDragEnter: edge => {
+    dragStateManager.updateEdge(edge);
+  },
+  onDrag: edge => {
+    if (dragState !== 'draggingOver' || dragStateManager.closestEdge !== edge) {
+      dragStateManager.updateEdge(edge);
+    }
+  },
+  onDragLeave: () => {
+    dragStateManager.cancel();
+  },
+  onDrop: () => {
+    if (dragStateManager.isIdle) return;
+    dragStateManager.drop();
+  },
+  onDragStart: () => {
+    dragStateManager.startDrag();
+  },
+  onGenerateDragPreview: ({ container }) => {
+    dragStateManager.generatePreview(container);
+  },
+  previewPosition: 'start',
 });
+
+function attachDraggable(): Attachment {
+  return element => createDraggable(element);
+}
+function attachDropTarget(): Attachment {
+  return element => createDropTargetForElements(element);
+}
 </script>
 
-<li bind:this={element} class="items-center grid grid-cols-[20px_1fr_40px] gap-2 align-middle">
-    <div class="">
+<li {@attach attachDropTarget()} class="relative items-center grid grid-cols-[20px_1fr_40px] gap-x-2 align-middle">
+    <div class="hover:cursor-grab" {@attach attachDraggable()}>
         <DragHandle size={15}></DragHandle>
     </div>
     <div class="">
         <Input class="w-full" id="options" name="options" type="text"
                value={opt.label}/>
     </div>
-    <Button variant="outline-destructive" size="icon" type="button" class="hover:cursor-pointer group ml-auto mr-3"><span
+    <Button variant="outline-destructive" size="icon" type="button" class="hover:cursor-pointer group ml-auto mr-3" onclick={() => { handleDelete(index); }}><span
             class="sr-only">Delete Option</span>
         <MinusCircle/>
     </Button>
+  {#if dragStateManager.isDraggingOver && dragStateManager.closestEdge}
+    <DropIndicator class="col-span-3" edge={dragStateManager.closestEdge} gap="12px" />
+  {/if}
 </li>
+
+{#if dragStateManager.isPreview}
+  <Portal target={dragStateManager.container}>
+    <div class="w-64 items-center grid grid-cols-[20px_1fr_40px] gap-2 align-middle">
+      <div class="">
+        <DragHandle size={15}></DragHandle>
+      </div>
+      <div class="">
+        <Input class="w-full" id="options" name="options" type="text"
+               value={opt.label}/>
+      </div>
+      <Button variant="outline-destructive" size="icon" type="button" class="hover:cursor-pointer group ml-auto mr-3" onclick={() => { handleDelete(index); }}><span
+          class="sr-only">Delete Option</span>
+        <MinusCircle/>
+      </Button>
+    </div>
+  </Portal>
+  {/if}
