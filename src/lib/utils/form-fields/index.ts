@@ -1,4 +1,5 @@
-import type {SelectFormField} from '$lib/server/db/schema';
+import type { SelectFormField } from '$lib/server/db/schema';
+import { FORM_FIELD_TYPES, type FormFieldType } from '$lib/types.d';
 import {
   Calendar,
   Check,
@@ -8,16 +9,16 @@ import {
   List,
   ListTodo,
   Mail,
+  PanelTopOpen,
   Phone,
   Text,
   TextCursorInput,
 } from '@lucide/svelte';
-import {FORM_FIELD_TYPES, type FormFieldType} from "$lib/types.d";
 
 /**
  * Generate a slug from field label and ID
  */
-export function genSlug({label, id}: SelectFormField): string {
+export function genSlug({ label, id }: SelectFormField): string {
   return `${label.toLowerCase().replaceAll(' ', '-')}-${id}`;
 }
 
@@ -82,7 +83,7 @@ export const FIELD_DATA: Record<
   },
   [FORM_FIELD_TYPES.SELECT]: {
     label: 'Select',
-    icon: List,
+    icon: PanelTopOpen,
     type: 'select',
   },
   [FORM_FIELD_TYPES.YES_NO]: {

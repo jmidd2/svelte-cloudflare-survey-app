@@ -49,9 +49,9 @@ const { createDraggable } = createActions({
       source.data.type === 'checkbox'
     ) {
       previewData.options = [
-        { label: 'Option 1', val: 'val-1' },
-        { label: 'Option 2', val: 'val-2' },
-        { label: 'Option 3', val: 'val-3' },
+        { id: crypto.randomUUID(), label: 'Option 1', val: 'val-1' },
+        { id: crypto.randomUUID(), label: 'Option 2', val: 'val-2' },
+        { id: crypto.randomUUID(), label: 'Option 3', val: 'val-3' },
       ];
     }
     fieldStateManager.generatePreview(container);
@@ -75,7 +75,7 @@ function attachDraggable(): Attachment {
 <li
     {@attach attachDraggable()}
     class={['border flex items-center p-2 rounded-md cursor-grab hover:bg-accent', {'bg-background': !fieldStateManager.isIdle, 'border-transparent border-solid': fieldStateManager.isIdle}]}>
-    <Icon class="h-4 w-4 mr-2" />
+    <Icon class="size-5 mr-2" />
     <span>{label}</span></li>
 {#if fieldStateManager.isPreview}
     <Portal target={fieldStateManager.container}>

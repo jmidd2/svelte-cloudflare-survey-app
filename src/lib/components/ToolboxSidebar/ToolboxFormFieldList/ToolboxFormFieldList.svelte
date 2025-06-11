@@ -59,7 +59,7 @@ $effect(() => {
 });
 </script>
 
-<ul class="space-y-2 pt-5">
+<ul class="space-y-2 py-2">
     {#each fields as formField, index}
         <ToolboxFormFieldListItem {formField} {index} />
     {/each}

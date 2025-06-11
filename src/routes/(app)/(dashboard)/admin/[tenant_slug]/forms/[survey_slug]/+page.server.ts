@@ -5,17 +5,15 @@ import {
 } from '$lib/server/db';
 import {
   type InsertFormField,
-  type SelectFormField,
   formFieldInsertSchema,
   formFields,
   forms,
 } from '$lib/server/db/schema';
 import { isHtmlFormField } from '$lib/utils';
+import { saveFieldSchema } from '$lib/validation-schema';
 import { error, fail } from '@sveltejs/kit';
 import { type SQL, and, asc, eq, gte, inArray, sql } from 'drizzle-orm';
-import { z } from 'zod/v4';
 import type { Actions, PageServerLoad } from './$types';
-import { saveFieldSchema } from './schema';
 
 export const load: PageServerLoad = async function ({
   params,
