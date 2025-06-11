@@ -12,7 +12,9 @@ export class SurveyEditor {
   survey = $state<SelectForm>();
   fields = $state<SelectFormField[]>([]);
   selectedIndex = $state(-1);
-  isLoading = $state(false);
+  private performingAsyncAction = $state<boolean | null>(null);
+  isSaved = $state(false);
+  error = $state<string | null>(null);
 
   // Derived state
   selectedField = $derived(
@@ -22,6 +24,57 @@ export class SurveyEditor {
   constructor(survey: SelectForm, fields: SelectFormField[]) {
     this.survey = survey;
     this.fields = fields;
+
+    $effect(() => {
+      if (this.performingAsyncAction === null) return;
+      const clearIsSaved = () => {
+        this.isSaved = false;
+      };
+      let timeout: NodeJS.Timeout;
+      if (!this.error && this.isSaved && !this.performingAsyncAction) {
+        timeout = setTimeout(clearIsSaved, 1000);
+      }
+
+      return () => {
+        if (timeout) clearTimeout(timeout);
+      };
+    });
+
+    $effect(() => {
+      if (this.performingAsyncAction !== null) {
+        if (!(this.error || this.performingAsyncAction)) {
+          this.isSaved = true;
+        }
+      }
+    });
+  }
+
+  private async withLoading<T>(
+    operation: () => Promise<T>,
+    delay = 1000
+  ): Promise<T> {
+    this.performingAsyncAction = true;
+    try {
+      return await operation();
+    } finally {
+      setTimeout(() => {
+        this.performingAsyncAction = false;
+      }, delay);
+    }
+  }
+
+  set loading(isLoading: boolean) {
+    if (isLoading) {
+      this.performingAsyncAction = isLoading;
+    } else {
+      setTimeout(() => {
+        this.performingAsyncAction = isLoading;
+      }, 1000);
+    }
+  }
+
+  get isLoading() {
+    return this.performingAsyncAction;
   }
 
   // Selection methods
@@ -57,80 +110,84 @@ export class SurveyEditor {
   }
 
   async saveReorder(newFields: SelectFormField[]) {
-    if (!this.survey) return;
-    const selectedId = this.selectedField?.id;
-    this.fields = newFields;
+    return this.withLoading(async () => {
+      if (!this.survey) return;
+      const selectedId = this.selectedField?.id;
+      this.fields = newFields;
 
-    // Maintain selection after reorder
-    if (selectedId) {
-      this.selectedIndex = newFields.findIndex(f => f.id === selectedId);
-    }
+      // Maintain selection after reorder
+      if (selectedId) {
+        this.selectedIndex = newFields.findIndex(f => f.id === selectedId);
+      }
 
-    const formData = new FormData();
-    formData.append('formId', this.survey.id);
-    formData.append('sortedData', JSON.stringify(this.fields));
+      const formData = new FormData();
+      formData.append('formId', this.survey.id);
+      formData.append('sortedData', JSON.stringify(this.fields));
 
-    try {
-      await fetch('?/reorder', {
-        method: 'POST',
-        body: formData,
-      });
-    } catch (error) {
-      console.error('Failed to reorder fields:', error);
-    }
+      try {
+        await fetch('?/reorder', {
+          method: 'POST',
+          body: formData,
+        });
+      } catch (error) {
+        console.error('Failed to reorder fields:', error);
+        this.error = String(error);
+      }
+    });
   }
 
   // Server operations
   async saveField(fieldId: string, updates: Partial<SelectFormField>) {
-    this.isLoading = true;
-
-    const formData = new FormData();
-    formData.append('fieldId', fieldId);
-    for (const [key, value] of Object.entries(updates)) {
-      if (value !== undefined && value !== null) {
-        formData.append(key, String(value));
-      }
-    }
-
-    try {
-      const response = await fetch('?/saveField', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (response.ok) {
-        await invalidate('survey-fields:latest');
-        return { success: true };
+    return this.withLoading(async () => {
+      const formData = new FormData();
+      formData.append('fieldId', fieldId);
+      for (const [key, value] of Object.entries(updates)) {
+        if (value !== undefined && value !== null) {
+          formData.append(key, String(value));
+        }
       }
 
-      return { success: false, error: 'Failed to save field' };
-    } catch (error) {
-      return { success: false, error: String(error) };
-    } finally {
-      this.isLoading = false;
-    }
+      try {
+        const response = await fetch('?/saveField', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (response.ok) {
+          await invalidate('survey-fields:latest');
+          return { success: true };
+        }
+
+        return { success: false, error: 'Failed to save field' };
+      } catch (error) {
+        return { success: false, error: String(error) };
+      }
+    });
   }
 
   async deleteField(fieldId: string) {
-    const index = this.fields.findIndex(f => f.id === fieldId);
-    if (index < 0) return;
+    return this.withLoading(async () => {
+      const index = this.fields.findIndex(f => f.id === fieldId);
+      if (index < 0) return;
 
-    // Optimistic update
-    this.removeField(fieldId);
+      // Optimistic update
+      this.removeField(fieldId);
 
-    const formData = new FormData();
-    formData.append('fieldId', fieldId);
+      const formData = new FormData();
+      formData.append('fieldId', fieldId);
 
-    try {
-      await fetch('?/deleteFormField', {
-        method: 'POST',
-        body: formData,
-      });
-      await invalidate('survey-fields:latest');
-    } catch (error) {
-      // Revert on error - would need to store previous state
-      console.error('Failed to delete field:', error);
-    }
+      try {
+        await fetch('?/deleteFormField', {
+          method: 'POST',
+          body: formData,
+        });
+        await invalidate('survey-fields:latest');
+      } catch (error) {
+        // Revert on error - would need to store previous state
+        console.error('Failed to delete field:', error);
+        this.error = String(error);
+      }
+    });
   }
 
   async addField(
@@ -138,60 +195,61 @@ export class SurveyEditor {
     closestEdgeOfTarget: Edge | null,
     indexOfTarget: number
   ) {
-    if (!this.survey) return;
+    return this.withLoading(async () => {
+      if (!this.survey) return;
 
-    this.isLoading = true;
+      const fieldData = generatePreviewFieldData(elementType, this.survey.id);
 
-    const fieldData = generatePreviewFieldData(elementType, this.survey.id);
+      const formData = new FormData();
+      formData.append('formId', this.survey.id);
 
-    const formData = new FormData();
-    formData.append('formId', this.survey.id);
-
-    this.fields = reorderWithEdge({
-      closestEdgeOfTarget,
-      axis: 'vertical',
-      list: [...this.fields, fieldData],
-      startIndex: this.fields.length,
-      indexOfTarget,
-    }).map((f, i) => {
-      if (f.id === fieldData.id) {
-        this.selectedIndex = i;
-        formData.set('orderIndex', String(i + 1));
-      }
-      return { ...f, orderIndex: i + 1 };
-    });
-
-    for (const [key, value] of Object.entries(fieldData)) {
-      if (value !== undefined && value !== null) {
-        if (key === 'options' && Array.isArray(value)) {
-          formData.append(key, JSON.stringify(value));
-        } else {
-          formData.append(key, String(value));
+      this.fields = reorderWithEdge({
+        closestEdgeOfTarget,
+        axis: 'vertical',
+        list: [...this.fields, fieldData],
+        startIndex: this.fields.length,
+        indexOfTarget,
+      }).map((f, i) => {
+        if (f.id === fieldData.id) {
+          this.selectedIndex = i;
+          formData.set('orderIndex', String(i + 1));
         }
-      }
-    }
-
-    // const addedFieldIndex = this.fields.findIndex(f => f.id === fieldData.id);
-    // if (addedFieldIndex < 0) throw new Error('added field not found');
-    //
-    // this.selectedIndex = addedFieldIndex;
-    // formData.set('orderIndex', String(this.fields[addedFieldIndex].orderIndex));
-
-    try {
-      const response = await fetch('?/addFormField', {
-        method: 'POST',
-        body: formData,
+        return { ...f, orderIndex: i + 1 };
       });
 
-      if (response.ok) {
-        await invalidate('survey-fields:latest');
-        // return { success: true };
+      for (const [key, value] of Object.entries(fieldData)) {
+        if (value !== undefined && value !== null) {
+          if (key === 'options' && Array.isArray(value)) {
+            formData.append(key, JSON.stringify(value));
+          } else {
+            formData.append(key, String(value));
+          }
+        }
       }
 
-      // return { success: false, error: 'Failed to add field' };
-    } finally {
-      this.isLoading = false;
-    }
+      // const addedFieldIndex = this.fields.findIndex(f => f.id === fieldData.id);
+      // if (addedFieldIndex < 0) throw new Error('added field not found');
+      //
+      // this.selectedIndex = addedFieldIndex;
+      // formData.set('orderIndex', String(this.fields[addedFieldIndex].orderIndex));
+
+      try {
+        const response = await fetch('?/addFormField', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (response.ok) {
+          await invalidate('survey-fields:latest');
+          // return { success: true };
+        }
+
+        // return { success: false, error: 'Failed to add field' };
+      } catch (e) {
+        console.error('Failed to add field:', e);
+        this.error = String(e);
+      }
+    });
   }
 
   async reorderFieldsOnServer(orderedFields: SelectFormField[]) {

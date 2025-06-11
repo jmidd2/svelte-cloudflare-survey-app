@@ -21,16 +21,15 @@ import {
 } from '$lib/components/ui/tabs';
 import type { SelectFormField } from '$lib/server/db/schema';
 import {
-  ALL_FIELD_TYPES,
   FIELD_LABELS,
   fieldHasOptions,
   fieldSupportsPlaceholder,
 } from '$lib/utils';
 import { SurveyEditor, setSurveyEditor } from '$stores/survey-editor.svelte';
-import { PlusIcon } from '@lucide/svelte';
+import { CheckCheckIcon, PlusIcon } from '@lucide/svelte';
 import { slide } from 'svelte/transition';
-import { z } from 'zod/v4';
 import type { PageProps } from './$types';
+import { saveFieldSchema } from './schema';
 
 const { data, form: formProp }: PageProps = $props();
 
@@ -51,15 +50,19 @@ const selectedField = $derived(editor.selectedField);
 const isLoading = $derived(editor.isLoading);
 
 function parseFormData(formData: FormData) {
-  const schema = z.object({
-    type: z.enum(ALL_FIELD_TYPES),
-    label: z.string(),
-    placeholder: z.string().optional(),
-    required: z.stringbool(),
+  return saveFieldSchema.safeParse({
+    ...Object.fromEntries(formData.entries()),
+    options: JSON.parse(formData.get('options')?.toString() ?? '[]'),
   });
-
-  return schema.safeParse(Object.fromEntries(formData.entries()));
 }
+
+let areAllValid = $derived.by(() => {
+  const allValues = selectedField?.options?.map(opt => opt.val) ?? [];
+
+  return new Set(allValues).size === allValues.length;
+});
+
+$inspect(editor.isSaved);
 </script>
 <div class="flex flex-1 overflow-hidden">
   <div class="w-64 border-r border-spark-secondary-600 flex flex-col h-full">
@@ -76,17 +79,27 @@ function parseFormData(formData: FormData) {
             </span>
           </h1>
           <p>{editor.survey?.description}</p>
-          <p class="text-muted-foreground text-sm">
+          <div class="text-muted-foreground text-sm flex items-center gap-2 my-1">
+            <p>
             Last Update: {editor.survey ? new Date(editor.survey.updatedAt).toLocaleString() : ''}
-            {#if isLoading}
-              <svg class="ml-1 size-5 animate-spin inline" xmlns="http://www.w3.org/2000/svg" fill="none"
-                   viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-            {/if}
-          </p>
+            </p>
+            <div class="flex gap-2 items-center justify-center text-green-600">
+              {#if editor.isLoading}
+                <div class="text-accent-foreground">
+                <svg class="ml-1 size-4 animate-spin inline" xmlns="http://www.w3.org/2000/svg" fill="none"
+                     viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                </div>
+              {/if}
+              {#if editor.isSaved}
+              <CheckCheckIcon class="size-5"></CheckCheckIcon>
+              Saved!
+                {/if}
+            </div>
+          </div>
         </div>
         <FormFieldList/>
       </div>
@@ -99,20 +112,33 @@ function parseFormData(formData: FormData) {
         method="post"
         action="?/save-field"
         use:enhance={({formData, cancel}) => {
+            editor.loading = true;
               let previousState: Partial<SelectFormField> | null = null;
 
-              if (editor.selectedIndex >= 0) {
+              if (editor.selectedField) {
                 // Backup current state
                 previousState = { ...editor.selectedField };
+
+                formData.set('fieldId', editor.selectedField.id);
+                formData.set('type', editor.selectedField.type);
+                formData.set('label', editor.selectedField.label);
+                formData.set('required', editor.selectedField.required ? 'on' : 'off' );
+                formData.set('options', JSON.stringify(editor.selectedField.options ?? []));
+                if (editor.selectedField.placeholder && editor.selectedField.placeholder.length > 0)
+                  formData.set('placeholder', editor.selectedField.placeholder);
 
                 // Apply optimistic update
                 const updates = parseFormData(formData);
                 if (updates.error) {
+                  console.error('There was an error parsing the form data.', updates.error);
                   cancel();
+                  editor.loading = false;
                   return;
                 }
-
+                console.log('optimistic update', updates.data);
                 editor.updateField(updates.data);
+
+                formData.set('test', 'test');
               }
 
               return async ({ result }) => {
@@ -123,6 +149,7 @@ function parseFormData(formData: FormData) {
                 }
 
                 await applyAction(result);
+                editor.loading = false;
               };
             }}
     >
@@ -181,7 +208,7 @@ function parseFormData(formData: FormData) {
         </TabsContent>
         <TabsContent value="options" class="space-y-4 pt-4">
           {#if fieldHasOptions(selectedField)}
-            <EditFieldOptionList bind:options={selectedField.options}/>
+            <EditFieldOptionList {areAllValid} bind:options={selectedField.options}/>
             <Button variant="outline" type="button" onclick={() => { selectedField.options.push({ id: crypto.randomUUID(), val: 'string', label: 'string' }); }}>
               <PlusIcon/>
               Add Option
@@ -190,8 +217,15 @@ function parseFormData(formData: FormData) {
         </TabsContent>
       </Tabs>
       <div>
-        <Button type="submit" class="w-full" disabled={isLoading}>
-          {isLoading ? 'Saving...' : 'Save'}
+        <Button type="submit" class="w-full" disabled={isLoading || !areAllValid}>
+          {#if editor.isSaved}
+            Saved!
+            {:else if isLoading}
+            Saving
+            {:else}
+            Save
+            {/if}
+          <!--{isLoading ? 'Saving...' : 'Save'}-->
         </Button>
       </div>
     </form>

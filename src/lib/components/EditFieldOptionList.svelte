@@ -1,7 +1,6 @@
 <script lang="ts">
 import EditFieldOption from '$lib/components/EditFieldOption.svelte';
-import { isSelectedItemOptData, isToolboxListFieldData } from '$lib/dnd';
-import DragHandle from '$lib/dnd/DragHandle.svelte';
+import { isSelectedItemOptData } from '$lib/dnd';
 import type { SelectFormField } from '$lib/server/db/schema';
 import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { reorderWithEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/reorder-with-edge';
@@ -9,10 +8,12 @@ import {
   dropTargetForElements,
   monitorForElements,
 } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+
 type Props = {
   options: SelectFormField['options'];
+  areAllValid: boolean;
 };
-let { options = $bindable() }: Props = $props();
+let { options = $bindable(), areAllValid }: Props = $props();
 
 let element: HTMLUListElement;
 
@@ -72,12 +73,18 @@ $effect(() => {
 });
 
 function handleDelete(index: number) {
-  options.splice(index, 1);
+  options?.splice(index, 1);
 }
 </script>
 
+{#if options && options.length > 0}
 <ul bind:this={element} class="flex flex-col gap-y-3">
     {#each options as opt, index}
-        <EditFieldOption option={opt} {index} {handleDelete}></EditFieldOption>
+      {@const currentValues = options.filter(o=>o.id !== opt.id).map(o => o.val)}
+        <EditFieldOption option={opt} {index} isValid={!currentValues.includes(opt.val)} {handleDelete}></EditFieldOption>
     {/each}
 </ul>
+{/if}
+{#if !areAllValid}
+  <p class="text-red-400">All options must be unique</p>
+{/if}

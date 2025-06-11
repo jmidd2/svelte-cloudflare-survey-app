@@ -13,7 +13,9 @@ import {
 import { isHtmlFormField } from '$lib/utils';
 import { error, fail } from '@sveltejs/kit';
 import { type SQL, and, asc, eq, gte, inArray, sql } from 'drizzle-orm';
+import { z } from 'zod/v4';
 import type { Actions, PageServerLoad } from './$types';
+import { saveFieldSchema } from './schema';
 
 export const load: PageServerLoad = async function ({
   params,
@@ -46,25 +48,17 @@ export const load: PageServerLoad = async function ({
 export const actions: Actions = {
   'save-field': async ({ request, locals }) => {
     const formData = await request.formData();
-    const fieldId = formData.get('fieldId')?.toString();
 
-    if (!fieldId) {
-      return fail(400, { message: 'Field ID is required' });
-    }
-
-    const updates: Partial<SelectFormField> = {
-      type: formData.get('type')?.toString() as SelectFormField['type'],
-      label: formData.get('label')?.toString() || '',
-      placeholder: formData.get('placeholder')?.toString() || undefined,
-      required: formData.get('required') === 'on',
-      updatedAt: new Date(),
-    };
+    const parsed = saveFieldSchema.parse({
+      ...Object.fromEntries(formData.entries()),
+      options: JSON.parse(formData.get('options')?.toString() ?? '[]'),
+    });
 
     try {
       const [updatedField] = await locals.db
         .update(formFields)
-        .set(updates)
-        .where(eq(formFields.id, fieldId))
+        .set(parsed)
+        .where(eq(formFields.id, parsed.fieldId))
         .returning();
 
       return {

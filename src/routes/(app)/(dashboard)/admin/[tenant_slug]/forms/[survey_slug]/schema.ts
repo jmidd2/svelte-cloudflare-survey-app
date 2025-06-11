@@ -1,13 +1,16 @@
-import { ALL_FIELD_TYPES } from '$lib/utils';
+import { FORM_FIELD_TYPES } from '$lib/types.d';
 import { z } from 'zod/v4';
 
 export const saveFieldSchema = z.object({
-  fieldId: z.guid(),
-  label: z.string().min(1),
+  fieldId: z.uuidv4(),
+  type: z.enum(FORM_FIELD_TYPES),
+  label: z.string().optional(),
   placeholder: z.string().optional(),
-  isRequired: z.stringbool().optional(),
-  options: z.array(z.string()).optional(),
-  type: z.enum(ALL_FIELD_TYPES),
+  required: z.stringbool().optional(),
+  options: z
+    .array(z.object({ id: z.uuidv4(), val: z.string(), label: z.string() }))
+    .optional()
+    .nullable(),
 });
 
 export type SaveFieldSchema = typeof saveFieldSchema;

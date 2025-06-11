@@ -10,11 +10,6 @@ import {
   isSelectedItemOptData,
 } from '$lib/dnd';
 import DragHandle from '$lib/dnd/DragHandle.svelte';
-import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
-import {
-  draggable,
-  dropTargetForElements,
-} from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { MinusCircle } from '@lucide/svelte';
 import type { Attachment } from 'svelte/attachments';
 
@@ -22,9 +17,15 @@ type Props = {
   option: { id: string; val: string; label: string };
   index: number;
   handleDelete: (index: number) => void;
+  isValid: boolean;
 };
 
-const { option: opt, index, handleDelete }: Props = $props();
+let {
+  option: opt,
+  index,
+  handleDelete,
+  isValid: globalIsValid,
+}: Props = $props();
 
 const dragStateManager = new FieldStateManager();
 let dragState = $state(dragStateManager.currentState);
@@ -62,15 +63,38 @@ function attachDraggable(): Attachment {
 function attachDropTarget(): Attachment {
   return element => createDropTargetForElements(element);
 }
+
+let isValid = $derived(globalIsValid);
+function handleInput(
+  e: Event & {
+    currentTarget: EventTarget & HTMLInputElement;
+  }
+) {
+  const newVal = encodeURIComponent(
+    e.currentTarget.value.trim().replaceAll(' ', '-').toLocaleLowerCase()
+  );
+
+  // if (!validateOptions(newVal, opt.id)) {
+  //   isValid = false;
+  //   return;
+  // }
+  //
+  // isValid = true;
+  opt.val = newVal;
+}
 </script>
 
 <li {@attach attachDropTarget()} class="relative items-center grid grid-cols-[20px_1fr_40px] gap-x-2 align-middle">
-    <div class="hover:cursor-grab" {@attach attachDraggable()}>
+  {#if import.meta.env.DEV}
+    <span class="text-xs text-muted-foreground col-span-2 col-start-2 mb-1.5">{decodeURIComponent(opt.val)}</span>
+  {/if}
+  <div class="hover:cursor-grab" {@attach attachDraggable()}>
         <DragHandle size={15}></DragHandle>
     </div>
     <div class="">
-        <Input class="w-full" id="options" name="options" type="text"
-               value={opt.label}/>
+        <Input aria-invalid={!isValid} class="w-full" id="options" name="options" type="text"
+               oninput={handleInput}
+               bind:value={opt.label}/>
     </div>
     <Button variant="outline-destructive" size="icon" type="button" class="hover:cursor-pointer group ml-auto mr-3" onclick={() => { handleDelete(index); }}><span
             class="sr-only">Delete Option</span>
