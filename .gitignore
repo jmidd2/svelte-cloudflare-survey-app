@@ -29,3 +29,5 @@ vite.config.ts.timestamp-*
 *.vars
 
 public/**
+# Sentry Config File
+.env.sentry-build-plugin

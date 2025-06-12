@@ -1,3 +1,5 @@
+import {sequence} from '@sveltejs/kit/hooks';
+import * as Sentry from '@sentry/sveltekit';
 import { env } from '$env/dynamic/private';
 import { createAuth } from '$lib/auth';
 import { createDbClient } from '$lib/server/db';
@@ -6,7 +8,12 @@ import { createEmailService } from '$lib/server/email';
 import { type Handle, redirect } from '@sveltejs/kit';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
 
-export const handle: Handle = async function ({ event, resolve }) {
+Sentry.init({
+    dsn: "https://eb437cf4593e94a12bdd9873e5638929@o4508418462121984.ingest.us.sentry.io/4509486996127744",
+    tracesSampleRate: 1
+})
+
+export const handle: Handle = sequence(Sentry.sentryHandle(), async function ({ event, resolve }) {
   event.locals.db = await createDbClient({
     d1Database: event.platform?.env?.DB,
     dbUrl: env.DATABASE_URL,
@@ -62,4 +69,5 @@ export const handle: Handle = async function ({ event, resolve }) {
   }
 
   return svelteKitHandler({ event, resolve, auth: event.locals.auth });
-};
+});
+export const handleError = Sentry.handleErrorWithSentry();
