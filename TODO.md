@@ -2,7 +2,7 @@
 
 - [x] Remove references to `tenant` table
 - [ ] Redesign main nav
-- [ ] Setup sending emails
+- [x] Setup sending emails
 
 - Dashboard
     - [x] Fix properties sidebar for survey elements
