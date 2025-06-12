@@ -2,6 +2,7 @@
 // for information about these interfaces
 
 import type { AuthProvider } from '$lib/auth';
+import type { EmailService } from '$lib/server/email';
 import type {
   AnalyticsEngineDataset,
   D1Database,
@@ -22,6 +23,7 @@ declare global {
     // interface PageState {}
     interface Locals {
       auth: AuthProvider;
+      mailService: EmailService;
       db:
         | (import('drizzle-orm/libsql').LibSQLDatabase<
             typeof import('$lib/server/db/schema')
@@ -42,6 +44,8 @@ declare global {
         AUTH_AUTH0_AUTHORIZATION: string;
         AUTH_SECRET: string;
         AUTH_MAX_AGE: string;
+        RESEND_API_KEY: string;
+        EMAIL_FROM: string;
       };
       context: {
         // biome-ignore lint/suspicious/noExplicitAny: <explanation>
