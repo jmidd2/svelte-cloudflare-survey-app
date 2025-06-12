@@ -3,6 +3,8 @@ import { goto, invalidateAll } from '$app/navigation';
 import { page } from '$app/state';
 import logo from '$lib/assets/survey-logo.png';
 import { type Session, authClient } from '$lib/auth-client';
+import { Avatar } from '$lib/components/ui/avatar';
+import { AvatarFallback } from '$lib/components/ui/avatar/index.js';
 import { type Snippet } from 'svelte';
 import { slide } from 'svelte/transition';
 
@@ -18,6 +20,12 @@ let showProfileMenu = $state(false);
 let showMobileNavMenu = $state(false);
 
 const user = $derived(session?.user);
+const userInitials = $derived.by(() => {
+  if (!user) return '';
+  if (user.name) return user.name.toLocaleUpperCase().slice(0, 2);
+
+  return user.email.split('@')[0].toLocaleUpperCase().slice(0, 2);
+});
 
 let signInLoading = $derived(false);
 
@@ -142,15 +150,18 @@ function handleLogout() {
                                               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
                                 {:else}
-                                    <button type="button" onclick={() => showProfileMenu = !showProfileMenu}
-                                            class="relative flex rounded-full bg-spark-primary cursor-pointer text-sm focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-hidden"
-                                            id="user-menu-button" aria-expanded="false" aria-haspopup="true">
-                                        <span class="absolute -inset-1.5"></span>
-                                        <span class="sr-only">Open user menu</span>
-                                        <img class="size-8 rounded-full"
-                                             src={userImage}
-                                             alt="">
-                                    </button>
+                                  <Avatar class="select-none cursor-pointer" onclick={() => showProfileMenu = !showProfileMenu}>
+                                    <AvatarFallback>{userInitials}</AvatarFallback>
+                                  </Avatar>
+<!--                                    <button type="button" onclick={() => showProfileMenu = !showProfileMenu}-->
+<!--                                            class="relative flex rounded-full bg-spark-primary cursor-pointer text-sm focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-hidden"-->
+<!--                                            id="user-menu-button" aria-expanded="false" aria-haspopup="true">-->
+<!--                                        <span class="absolute -inset-1.5"></span>-->
+<!--                                        <span class="sr-only">Open user menu</span>-->
+<!--                                        <img class="size-8 rounded-full"-->
+<!--                                             src={userImage}-->
+<!--                                             alt="">-->
+<!--                                    </button>-->
                                 {/if}
                             </div>
 

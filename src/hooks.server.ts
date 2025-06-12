@@ -29,15 +29,35 @@ export const handle: Handle = async function ({ event, resolve }) {
   }
 
   event.locals.auth = createAuth(event.locals.db, event.locals.mailService);
-  if (event.url.pathname.startsWith('/admin')) {
-    const session = await event.locals.auth.api.getSession({
-      headers: event.request.headers,
-    });
-    console.log('hook session----', session);
 
+  // Check session for all authenticated routes
+  const session = await event.locals.auth.api.getSession({
+    headers: event.request.headers,
+  });
+
+  // Admin route protection
+  if (event.url.pathname.startsWith('/admin')) {
     if (!session) {
-      // Redirect to the signin page
       throw redirect(303, '/auth/login');
+    }
+  }
+
+  // Check if user needs to complete profile (has session but no name)
+  if (session?.user && !session.user.name) {
+    // Define routes that don't require profile completion
+    const allowedRoutes = [
+      '/profile/complete',
+      '/auth/logout',
+      '/api/', // Allow API routes
+    ];
+
+    const isAllowedRoute = allowedRoutes.some(route =>
+      event.url.pathname.startsWith(route)
+    );
+
+    // If not on an allowed route, redirect to profile completion
+    if (!isAllowedRoute) {
+      throw redirect(303, '/profile/complete');
     }
   }
 
