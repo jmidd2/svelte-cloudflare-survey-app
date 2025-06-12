@@ -1,30 +1,31 @@
 # TODO
+
 - [x] Remove references to `tenant` table
 - [ ] Redesign main nav
-- [ ] Setup sending emails
+- [x] Setup sending emails
 
 - Dashboard
-  - [ ] Fix properties sidebar for survey elements
-    - Add adding options for selects, radios, and checkboxes
-    - Current binding is non-reactive
-    - Need to persist changes
-  - [ ] Add `Dashboard` to breadcrumb
-  - [ ] Add editing survey title and description
-  - [ ] Add viewing survey results
-    - Add Exporting Results
-  - [ ] Clean up User dashboard
-    - Showing thier orgs
-  - [ ] Add sharing survey
-    - QR Code Generation
-    - Copy/Paste Email
-  - [ ] Add editing org details
-  - [ ] Add editing user profile
+    - [x] Fix properties sidebar for survey elements
+        - Add adding options for selects, radios, and checkboxes
+        - Current binding is non-reactive
+        - Need to persist changes
+    - [ ] Add sharing survey
+        - QR Code Generation
+        - Copy/Paste Email
+    - [ ] Add viewing survey results
+        - Add Exporting Results
+    - [ ] ~~Add `Dashboard` to breadcrumb~~
+    - [ ] Add editing survey title and description
+    - [ ] Clean up User dashboard
+        - Showing thier orgs
+    - [ ] Add editing org details
+    - [ ] Add editing user profile
 - Taking Survey
-  - [x] Fix route
-  - [ ] Clean up design
+    - [x] Fix route
+    - [ ] Clean up design
 - Site Admin
-  - [ ] Add site admin controls
-    - List Users
-    - Ban Users
-    - Modify Orgs
-    - Modify Survey Info (Not the fields on the survey)
+    - [ ] Add site admin controls
+        - List Users
+        - Ban Users
+        - Modify Orgs
+        - Modify Survey Info (Not the fields on the survey)
