@@ -62,7 +62,7 @@ $inspect(form);
 
               if (result.type === 'success') {
                 status = { type: 'success', message: 'Profile saved successfully!'}
-                setTimeout(() => { goto('/app/profile'); }, 2000);
+                setTimeout(() => { goto('/'); }, 2000);
               }
 
               loading = false;

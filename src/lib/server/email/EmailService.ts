@@ -1,5 +1,3 @@
-import { Resend } from 'resend';
-
 export type EmailTemplate = {
   subject: string;
   html: string;
@@ -42,14 +40,49 @@ type EmailTypes =
   | 'email-verification'
   | 'forget-password'
   | 'sign-in';
+export const RESEND_ERROR_CODES_BY_KEY = {
+  missing_required_field: 422,
+  invalid_idempotency_key: 400,
+  invalid_idempotent_request: 409,
+  concurrent_idempotent_requests: 409,
+  invalid_access: 422,
+  invalid_parameter: 422,
+  invalid_region: 422,
+  rate_limit_exceeded: 429,
+  missing_api_key: 401,
+  invalid_api_Key: 403,
+  invalid_from_address: 403,
+  validation_error: 403,
+  not_found: 404,
+  method_not_allowed: 405,
+  application_error: 500,
+  internal_server_error: 500,
+} as const;
+
+export type RESEND_ERROR_CODE_KEY = keyof typeof RESEND_ERROR_CODES_BY_KEY;
+export interface ErrorResponse {
+  message: string;
+  name: RESEND_ERROR_CODE_KEY;
+}
+export interface CreateEmailResponseSuccess {
+  /** The ID of the newly created email. */
+  id: string;
+}
+
+export interface CreateEmailResponse {
+  data: CreateEmailResponseSuccess | null;
+  error: ErrorResponse | null;
+}
 
 export class EmailService {
-  private resend: Resend;
+  // private resend: Resend;
   private readonly defaultFrom: string;
   private readonly isDisabled: boolean;
+  private readonly apiKey: string;
 
   constructor(apiKey: string, defaultFrom: string, isDisabled = false) {
-    this.resend = new Resend(apiKey);
+    // this.resend = new Resend(apiKey);
+    this.apiKey = apiKey;
     this.defaultFrom = defaultFrom;
     this.isDisabled = isDisabled;
     if (isDisabled) console.log('📧 Email sending disabled');
@@ -167,6 +200,75 @@ export class EmailService {
     }
   }
 
+  private async sendRequest({
+    from,
+    to,
+    subject,
+    html,
+  }: {
+    from: string;
+    to: string | string[];
+    subject: string;
+    html: string;
+  }): Promise<CreateEmailResponse> {
+    try {
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify({
+          from,
+          to,
+          subject,
+          html,
+        }),
+      });
+
+      if (!response.ok) {
+        try {
+          const rawError = await response.text();
+          return { data: null, error: JSON.parse(rawError) };
+        } catch (err) {
+          if (err instanceof SyntaxError) {
+            return {
+              data: null,
+              error: {
+                name: 'application_error',
+                message:
+                  'Internal server error. We are unable to process your request right now, please try again later.',
+              },
+            };
+          }
+
+          const error: ErrorResponse = {
+            message: response.statusText,
+            name: 'application_error',
+          };
+
+          if (err instanceof Error) {
+            return { data: null, error: { ...error, message: err.message } };
+          }
+
+          return { data: null, error };
+        }
+      }
+
+      const data = await response.json();
+      return { data, error: null };
+    } catch (error) {
+      console.error('Uncaught error when sending email:', error);
+      return {
+        data: null,
+        error: {
+          name: 'application_error',
+          message: 'Unable to fetch data. The request could not be resolved.',
+        },
+      };
+    }
+  }
+
   /**
    * Send a generic email
    */
@@ -195,7 +297,13 @@ export class EmailService {
     }
 
     try {
-      const { data, error } = await this.resend.emails.send({
+      // const { data, error } = await this.resend.emails.send({
+      //   from: options.from || this.defaultFrom,
+      //   to,
+      //   subject,
+      //   html,
+      // });
+      const { data, error } = await this.sendRequest({
         from: options.from || this.defaultFrom,
         to,
         subject,
