@@ -8,13 +8,20 @@ import TurboConsole from 'unplugin-turbo-console/vite'
 export default defineConfig({
 	plugins: [sentrySvelteKit({
         sourceMapsUploadOptions: {
+					telemetry: false,
             org: "jmidd-dev",
-            project: "feedback-app"
+            project: "feedback-app",
+					authToken: process.env.SENTRY_AUTH_TOKEN,
         }
     }), TurboConsole(), tailwindcss(), sveltekit()],
 	server: {
 		watch: {
 			ignored: '**/*.md'
+		}
+	},
+	build:{
+		rollupOptions:{
+			external:['react', '@react-email']
 		}
 	},
 	test: {
