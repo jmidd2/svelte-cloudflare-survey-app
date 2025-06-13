@@ -2575,10 +2575,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@sentry/cli-darwin@npm:2.46.0":
+  version: 2.46.0
+  resolution: "@sentry/cli-darwin@npm:2.46.0"
+  conditions: os=darwin
+  languageName: node
+  linkType: hard
+
 "@sentry/cli-linux-arm64@npm:2.42.2":
   version: 2.42.2
   resolution: "@sentry/cli-linux-arm64@npm:2.42.2"
   conditions: (os=linux | os=freebsd) & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@sentry/cli-linux-arm64@npm:2.46.0":
+  version: 2.46.0
+  resolution: "@sentry/cli-linux-arm64@npm:2.46.0"
+  conditions: (os=linux | os=freebsd | os=android) & cpu=arm64
   languageName: node
   linkType: hard
 
@@ -2589,10 +2603,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@sentry/cli-linux-arm@npm:2.46.0":
+  version: 2.46.0
+  resolution: "@sentry/cli-linux-arm@npm:2.46.0"
+  conditions: (os=linux | os=freebsd | os=android) & cpu=arm
+  languageName: node
+  linkType: hard
+
 "@sentry/cli-linux-i686@npm:2.42.2":
   version: 2.42.2
   resolution: "@sentry/cli-linux-i686@npm:2.42.2"
   conditions: (os=linux | os=freebsd) & (cpu=x86 | cpu=ia32)
+  languageName: node
+  linkType: hard
+
+"@sentry/cli-linux-i686@npm:2.46.0":
+  version: 2.46.0
+  resolution: "@sentry/cli-linux-i686@npm:2.46.0"
+  conditions: (os=linux | os=freebsd | os=android) & (cpu=x86 | cpu=ia32)
   languageName: node
   linkType: hard
 
@@ -2603,6 +2631,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@sentry/cli-linux-x64@npm:2.46.0":
+  version: 2.46.0
+  resolution: "@sentry/cli-linux-x64@npm:2.46.0"
+  conditions: (os=linux | os=freebsd | os=android) & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@sentry/cli-win32-arm64@npm:2.46.0":
+  version: 2.46.0
+  resolution: "@sentry/cli-win32-arm64@npm:2.46.0"
+  conditions: os=win32 & cpu=arm64
+  languageName: node
+  linkType: hard
+
 "@sentry/cli-win32-i686@npm:2.42.2":
   version: 2.42.2
   resolution: "@sentry/cli-win32-i686@npm:2.42.2"
@@ -2610,9 +2652,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@sentry/cli-win32-i686@npm:2.46.0":
+  version: 2.46.0
+  resolution: "@sentry/cli-win32-i686@npm:2.46.0"
+  conditions: os=win32 & (cpu=x86 | cpu=ia32)
+  languageName: node
+  linkType: hard
+
 "@sentry/cli-win32-x64@npm:2.42.2":
   version: 2.42.2
   resolution: "@sentry/cli-win32-x64@npm:2.42.2"
+  conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@sentry/cli-win32-x64@npm:2.46.0":
+  version: 2.46.0
+  resolution: "@sentry/cli-win32-x64@npm:2.46.0"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
@@ -2651,6 +2707,46 @@ __metadata:
   bin:
     sentry-cli: bin/sentry-cli
   checksum: 10c0/286910a194a386b9f21ef9e6dc171cbba35f1db09cb3bd53f19724ccf08b0819fb1c35e7fd2e7844da24a28428ca94ff3be7ae85f14056d6e6fc0193976d3815
+  languageName: node
+  linkType: hard
+
+"@sentry/cli@npm:^2.46.0":
+  version: 2.46.0
+  resolution: "@sentry/cli@npm:2.46.0"
+  dependencies:
+    "@sentry/cli-darwin": "npm:2.46.0"
+    "@sentry/cli-linux-arm": "npm:2.46.0"
+    "@sentry/cli-linux-arm64": "npm:2.46.0"
+    "@sentry/cli-linux-i686": "npm:2.46.0"
+    "@sentry/cli-linux-x64": "npm:2.46.0"
+    "@sentry/cli-win32-arm64": "npm:2.46.0"
+    "@sentry/cli-win32-i686": "npm:2.46.0"
+    "@sentry/cli-win32-x64": "npm:2.46.0"
+    https-proxy-agent: "npm:^5.0.0"
+    node-fetch: "npm:^2.6.7"
+    progress: "npm:^2.0.3"
+    proxy-from-env: "npm:^1.1.0"
+    which: "npm:^2.0.2"
+  dependenciesMeta:
+    "@sentry/cli-darwin":
+      optional: true
+    "@sentry/cli-linux-arm":
+      optional: true
+    "@sentry/cli-linux-arm64":
+      optional: true
+    "@sentry/cli-linux-i686":
+      optional: true
+    "@sentry/cli-linux-x64":
+      optional: true
+    "@sentry/cli-win32-arm64":
+      optional: true
+    "@sentry/cli-win32-i686":
+      optional: true
+    "@sentry/cli-win32-x64":
+      optional: true
+  bin:
+    sentry-cli: bin/sentry-cli
+  checksum: 10c0/9fd4157bf8b30afb7683bb5b436b052de77d7aa8f9fa99f438f663d4b43df18acb19a0096df5501219ffb44b5e9dbaed29826a2f49e6bc0f613e052dd4019b4b
   languageName: node
   linkType: hard
 
@@ -3571,6 +3667,7 @@ __metadata:
     "@libsql/client": "npm:^0.15.9"
     "@lucide/svelte": "npm:^0.514.0"
     "@playwright/test": "npm:^1.53.0"
+    "@sentry/cli": "npm:^2.46.0"
     "@sentry/cloudflare": "npm:^9.28.1"
     "@sentry/sveltekit": "npm:^9.28.1"
     "@sveltejs/adapter-auto": "npm:^6.0.1"
