@@ -1,5 +1,6 @@
 import type { D1Database } from '@cloudflare/workers-types';
 import type { Client } from '@libsql/client';
+import { instrumentD1WithSentry } from '@sentry/cloudflare';
 import { type SQL, and, asc, desc, eq } from 'drizzle-orm';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 import type { LibSQLDatabase } from 'drizzle-orm/libsql';
@@ -33,7 +34,10 @@ export async function createDbClient<T extends typeof import('./schema')>({
   if (d1Database) {
     const { drizzle } = await import('drizzle-orm/d1');
 
-    return drizzle(d1Database, { schema, logger: true });
+    return drizzle(instrumentD1WithSentry(d1Database), {
+      schema,
+      logger: true,
+    });
   }
 
   throw new Error('Unable to create Db');

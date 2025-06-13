@@ -1,13 +1,13 @@
 <script lang="ts">
-	import type { HTMLLiAttributes } from "svelte/elements";
-	import { cn, type WithElementRef } from "$lib/utils";
+import type { HTMLLiAttributes } from 'svelte/elements';
+import { cn, type WithElementRef } from '$lib/utils';
 
-	let {
-		ref = $bindable(null),
-		class: className,
-		children,
-		...restProps
-	}: WithElementRef<HTMLLiAttributes> = $props();
+let {
+  ref = $bindable(null),
+  class: className,
+  children,
+  ...restProps
+}: WithElementRef<HTMLLiAttributes> = $props();
 </script>
 
 <li

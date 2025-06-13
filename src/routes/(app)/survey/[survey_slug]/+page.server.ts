@@ -10,6 +10,7 @@ import {
   submissions,
 } from '$lib/server/db/schema';
 import { genSlug } from '$lib/utils';
+import * as Sentry from '@sentry/sveltekit';
 import { type Actions, type ServerLoadEvent, error, fail } from '@sveltejs/kit';
 import { asc, eq } from 'drizzle-orm';
 import { v4 as uuid } from 'uuid';
@@ -186,6 +187,7 @@ export const load: PageServerLoad = async function ({ params, locals }) {
     };
   } catch (e) {
     console.error(e);
+    Sentry.captureException(e);
     if (e instanceof Error) {
       return error(404, { message: 'survey not found' });
     }
