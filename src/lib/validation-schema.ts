@@ -20,3 +20,11 @@ export const formSchema = z.object({
 });
 
 export type FormSchema = typeof formSchema;
+
+export const editFormSchema = z.object({
+  formId: z.uuidv4(),
+  title: z.string().min(2).max(50),
+  description: z.string().min(2).max(255),
+});
+
+export type EditFormSchema = typeof editFormSchema;

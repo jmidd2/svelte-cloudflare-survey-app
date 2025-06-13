@@ -19,6 +19,12 @@ export interface AuthProfileUserMetadata {
 
 declare global {
   namespace App {
+    namespace SuperForms {
+      type Message = {
+        type: 'success' | 'error';
+        message: string;
+      };
+    }
     // interface Error {}
     // interface PageState {}
     interface Locals {

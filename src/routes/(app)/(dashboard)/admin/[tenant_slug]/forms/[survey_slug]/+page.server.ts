@@ -10,9 +10,11 @@ import {
   forms,
 } from '$lib/server/db/schema';
 import { isHtmlFormField } from '$lib/utils';
-import { saveFieldSchema } from '$lib/validation-schema';
+import { editFormSchema, saveFieldSchema } from '$lib/validation-schema';
 import { error, fail } from '@sveltejs/kit';
 import { type SQL, and, asc, eq, gte, inArray, sql } from 'drizzle-orm';
+import { message, superValidate } from 'sveltekit-superforms';
+import { zod4 } from 'sveltekit-superforms/adapters';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async function ({
@@ -40,10 +42,43 @@ export const load: PageServerLoad = async function ({
     survey,
     fields,
     tenant,
+    editForm: await superValidate(zod4(editFormSchema)),
   };
 };
 
 export const actions: Actions = {
+  edit: async event => {
+    const editForm = await superValidate(event, zod4(editFormSchema), {
+      id: 'editForm',
+    });
+    if (!editForm.valid)
+      return message(editForm, { type: 'error', text: 'Invalid form' });
+
+    const { formId, title, description } = editForm.data;
+
+    try {
+      await event.locals.db
+        .update(forms)
+        .set({
+          title,
+          description,
+        })
+        .where(eq(forms.id, formId));
+
+      return {
+        editForm,
+      };
+    } catch (e) {
+      console.error('There was an error updating the form: ', formId, e);
+      return message(
+        editForm,
+        { type: 'error', text: 'There was an error updating the form' },
+        {
+          status: 500,
+        }
+      );
+    }
+  },
   'save-field': async ({ request, locals }) => {
     const formData = await request.formData();
 
