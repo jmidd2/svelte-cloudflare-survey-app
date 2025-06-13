@@ -8,7 +8,7 @@ export const load: PageServerLoad = async ({ locals, request }) => {
 
   // If no session or user already has a name, redirect
   if (!session?.user || session.user.name) {
-    throw redirect(303, '/');
+    redirect(303, '/');
   }
 
   return {
