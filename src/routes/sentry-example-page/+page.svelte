@@ -4,34 +4,34 @@ Feel free to delete this file and the entire sentry route.
 -->
 
 <script>
-  import * as Sentry from '@sentry/sveltekit';
-  import { onMount } from 'svelte';
-  
-  // Svelte Runes (requires Svelte 5)
-  // let hasSentError = $state(false);
-  let hasSentError = false;
-  let isConnected = true;
+import * as Sentry from '@sentry/sveltekit';
+import { onMount } from 'svelte';
 
-  onMount(async () => {
-    const result = await Sentry.diagnoseSdkConnectivity();
-    isConnected = result !== 'sentry-unreachable';
-  });
+// Svelte Runes (requires Svelte 5)
+// let hasSentError = $state(false);
+let hasSentError = false;
+let isConnected = true;
 
-  function getSentryData() {
-    Sentry.startSpan(
-      {
-        name: 'Example Frontend Span',
-        op: 'test'
-      },
-      async () => {
-        const res = await fetch('/sentry-example-page');
-        if (!res.ok) {
-          hasSentError = true;
-          throw new Error('Sentry Example Frontend Error');
-        }
+onMount(async () => {
+  const result = await Sentry.diagnoseSdkConnectivity();
+  isConnected = result !== 'sentry-unreachable';
+});
+
+function getSentryData() {
+  Sentry.startSpan(
+    {
+      name: 'Example Frontend Span',
+      op: 'test',
+    },
+    async () => {
+      const res = await fetch('/sentry-example-page');
+      if (!res.ok) {
+        hasSentError = true;
+        throw new Error('Sentry Example Frontend Error');
       }
-    );
-  }
+    }
+  );
+}
 </script>
 
 <title>sentry-example-page</title>

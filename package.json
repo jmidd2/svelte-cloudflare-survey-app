@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
-    "preview": "yarn run build && wrangler dev --no-bundle",
+    "preview": "yarn run build && wrangler dev",
     "prepare": "svelte-kit sync || echo ''",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
@@ -73,6 +73,7 @@
     "@atlaskit/pragmatic-drag-and-drop-flourish": "^2.0.3",
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.1.0",
     "@libsql/client": "^0.15.9",
+    "@sentry/cloudflare": "^9.28.1",
     "@sentry/sveltekit": "^9.28.1",
     "better-auth": "^1.2.9",
     "drizzle-orm": "^0.44.2",

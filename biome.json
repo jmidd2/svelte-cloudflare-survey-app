@@ -67,9 +67,7 @@
         "useNumberToFixedDigitsArgument": "error"
       }
     },
-    "ignore": [
-      "dist"
-    ]
+    "ignore": ["dist"]
   },
   "javascript": {
     "formatter": {
@@ -86,12 +84,10 @@
   },
   "overrides": [
     {
-      "include": [
-        "*.svelte"
-      ],
+      "include": ["*.svelte"],
       "linter": {
         "rules": {
-          "correctness": {"noUnusedVariables": "off" },
+          "correctness": { "noUnusedVariables": "off" },
           "style": {
             "useConst": "off",
             "useImportType": "off"
@@ -100,9 +96,7 @@
       }
     },
     {
-      "include": [
-        "**/*.{ts,tsx}"
-      ],
+      "include": ["**/*.{ts,tsx}"],
       "linter": {
         "rules": {
           "complexity": {},

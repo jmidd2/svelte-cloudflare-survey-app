@@ -3,26 +3,39 @@ import { createAuth } from '$lib/auth';
 import { createDbClient } from '$lib/server/db';
 import * as schema from '$lib/server/db/schema';
 import { createEmailService } from '$lib/server/email';
-import {
-  handleErrorWithSentry,
-  initCloudflareSentryHandle,
-  sentryHandle,
-} from '@sentry/sveltekit';
+import * as Sentry from '@sentry/cloudflare';
+import { handleErrorWithSentry } from '@sentry/sveltekit';
 import { type Handle, redirect } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
 
 export const handle: Handle = sequence(
-  initCloudflareSentryHandle({
-    enabled: env.NODE_ENV === 'production',
-    debug: false,
-    dsn: 'https://eb437cf4593e94a12bdd9873e5638929@o4508418462121984.ingest.us.sentry.io/4509486996127744',
-    tracesSampleRate: 1,
-    _experiments: {
-      enableLogs: true,
-    },
-  }),
-  sentryHandle(),
+  ({ event, resolve }) => {
+    if (!event.platform) throw new Error('platform not found');
+
+    return Sentry.wrapRequestHandler(
+      {
+        options: {
+          dsn: 'https://eb437cf4593e94a12bdd9873e5638929@o4508418462121984.ingest.us.sentry.io/4509486996127744',
+          tracesSampleRate: 1.0,
+          _experiments: {
+            enableLogs: true,
+          },
+          environment: process.env.NODE_ENV || 'production',
+        },
+        request: event.request,
+        context: event.platform.context,
+      },
+      () => resolve(event)
+    );
+  },
+  // initCloudflareSentryHandle({
+  //   enabled: env.NODE_ENV === 'production',
+  //   debug: false,
+  //   dsn: 'https://eb437cf4593e94a12bdd9873e5638929@o4508418462121984.ingest.us.sentry.io/4509486996127744',
+  //   tracesSampleRate: 1,
+  // }),
+  // sentryHandle(),
   async function ({ event, resolve }) {
     event.locals.db = await createDbClient({
       d1Database: event.platform?.env?.DB,
