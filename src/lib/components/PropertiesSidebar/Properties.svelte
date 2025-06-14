@@ -27,6 +27,8 @@ import {
 import { saveFieldSchema } from '$lib/validation-schema';
 import { getSurveyEditor } from '$stores/survey-editor.svelte';
 import { PlusIcon, XIcon } from '@lucide/svelte';
+import { toast } from 'svelte-sonner';
+import { z } from 'zod/v4';
 
 const editor = getSurveyEditor();
 const selectedField = $derived(editor.selectedField);
@@ -71,13 +73,13 @@ function parseFormData(formData: FormData) {
                 if (updates.error) {
                   console.error('There was an error parsing the form data.', updates.error);
                   cancel();
+                  editor.error = z.prettifyError(updates.error);
                   editor.loading = false;
+                  setTimeout(() => { toast.error(editor.error?? 'There was a problem.'); }, 1000);
                   return;
                 }
                 console.log('optimistic update', updates.data);
                 editor.updateField(updates.data);
-
-                formData.set('test', 'test');
               }
 
               return async ({ result }) => {
@@ -85,6 +87,10 @@ function parseFormData(formData: FormData) {
                   // Revert on failure
                   editor.updateField(previousState);
                   console.error('There was an error saving the field.', result.data);
+                  if (result.data?.message && typeof result.data.message === 'string' && result.data.message.length > 0)
+                    editor.error = result.data.message
+                  else editor.error = 'There was an error saving the field.';
+                  setTimeout(() => { toast.error(editor.error?? 'There was a problem.'); }, 1000);
                 }
 
                 await applyAction(result);

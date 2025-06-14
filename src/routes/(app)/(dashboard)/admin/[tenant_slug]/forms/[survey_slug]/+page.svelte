@@ -20,6 +20,7 @@ import {
 } from '$lib/components/ui/form';
 import { Input } from '$lib/components/ui/input';
 import { Textarea } from '$lib/components/ui/textarea';
+import { surveyDialogManager } from '$lib/stores/SurveyDialog.svelte.js';
 import { editFormSchema } from '$lib/validation-schema';
 import { SurveyEditor, setSurveyEditor } from '$stores/survey-editor.svelte';
 import { PencilIcon, SettingsIcon, ShareIcon } from '@lucide/svelte';
@@ -54,38 +55,6 @@ $effect(() => {
   editor.survey = data.survey;
 });
 
-let showEditDialog = $state(false);
-let showSettingsDialog = $state(false);
-let showShareDialog = $state(false);
-let activeDialog = $state<'edit' | 'settings' | 'share' | null>(null);
-
-function openDialog(dialog: 'edit' | 'settings' | 'share') {
-  if (!activeDialog) {
-    switch (dialog) {
-      case 'edit':
-        showEditDialog = true;
-        break;
-      case 'settings':
-        showSettingsDialog = true;
-        break;
-      case 'share':
-        showShareDialog = true;
-        break;
-      default:
-        break;
-    }
-
-    activeDialog = dialog;
-  }
-}
-
-function closeDialog() {
-  showEditDialog = false;
-  showSettingsDialog = false;
-  showShareDialog = false;
-  activeDialog = null;
-}
-
 const editForm = superForm(data.editForm, {
   id: 'editForm',
   resetForm: false,
@@ -97,10 +66,18 @@ const editForm = superForm(data.editForm, {
   onSubmit: () => {
     breadcrumbStatus.isLoading = true;
   },
-  onUpdated: ({ form: { valid, message } }) => {
+  onResult: ({ result: { type, status }, cancel }) => {
+    if (type === 'redirect' && status === 303) {
+      breadcrumbStatus.isLoading = false;
+      breadcrumbStatus.isSaved = true;
+      surveyDialogManager.closeDialog();
+    }
+    console.log('onResult', type, status);
+  },
+  onUpdated: ({ form: { valid, message, data } }) => {
     breadcrumbStatus.isLoading = false;
     if (valid) {
-      showEditDialog = false;
+      surveyDialogManager.closeDialog();
       breadcrumbStatus.isSaved = true;
     }
 
@@ -144,15 +121,15 @@ $inspect(form);
             </p>
           </div>
           <div class="flex items-center gap-2 mt-4">
-            <Button variant="outline" size="sm" onclick={() => { openDialog('edit') }}>
+            <Button variant="outline" size="sm" onclick={() => { surveyDialogManager.openDialog('edit') }}>
               <PencilIcon class="w-4 h-4 mr-1" />
               Edit Details
             </Button>
-            <Button variant="outline" size="sm" onclick={() => { openDialog('share') }}>
+            <Button variant="outline" size="sm" onclick={() => { surveyDialogManager.openDialog('share') }}>
               <ShareIcon class="w-4 h-4 mr-1" />
               Share
             </Button>
-            <Button variant="outline" size="sm" onclick={() => { openDialog('settings') }}>
+            <Button variant="outline" size="sm" onclick={() => { surveyDialogManager.openDialog('settings') }}>
               <SettingsIcon class="w-4 h-4 mr-1" />
               Settings
             </Button>
@@ -170,7 +147,7 @@ $inspect(form);
     </div>
   {/if}
 </div>
-<Dialog bind:open={() => showEditDialog, () => closeDialog()}>
+<Dialog bind:open={() => surveyDialogManager.isDialogOpen('edit'), () => surveyDialogManager.closeDialog()}>
   <DialogContent class="sm:max-w-xl">
     <DialogHeader>
       <DialogTitle>Edit profile</DialogTitle>
@@ -205,7 +182,7 @@ $inspect(form);
     </form>
   </DialogContent>
 </Dialog>
-<Dialog bind:open={() => showShareDialog, () => closeDialog()}>
+<Dialog bind:open={() => surveyDialogManager.isDialogOpen('share'), () => surveyDialogManager.closeDialog()}>
   <DialogContent class="sm:max-w-xl">
     <DialogHeader>
       <DialogTitle>Share Form</DialogTitle>
@@ -215,7 +192,7 @@ $inspect(form);
     </DialogHeader>
   </DialogContent>
 </Dialog>
-<Dialog bind:open={() => showSettingsDialog, () => closeDialog()}>
+<Dialog bind:open={() => surveyDialogManager.isDialogOpen('settings'), () => surveyDialogManager.closeDialog()}>
   <DialogContent class="sm:max-w-xl">
     <DialogHeader>
       <DialogTitle>Form Settings</DialogTitle>

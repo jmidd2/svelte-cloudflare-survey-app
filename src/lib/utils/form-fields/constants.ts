@@ -2,7 +2,7 @@ import {
   FIELD_FEATURES,
   FORM_FIELD_TYPES,
   type FormFieldType,
-} from '$lib/types.d';
+} from '../../types.d';
 
 // Helper function to get all field types as array
 export function getAllFieldTypes(): readonly FormFieldType[] {

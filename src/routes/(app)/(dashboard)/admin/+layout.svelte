@@ -16,7 +16,6 @@ import {
   DropdownMenuTrigger,
 } from '$lib/components/ui/dropdown-menu';
 import { CheckCheckIcon, ChevronDownIcon } from '@lucide/svelte';
-import { setContext } from 'svelte';
 import { setBreadcrumbContext } from './breadcrumbContext.svelte';
 
 const { children } = $props();

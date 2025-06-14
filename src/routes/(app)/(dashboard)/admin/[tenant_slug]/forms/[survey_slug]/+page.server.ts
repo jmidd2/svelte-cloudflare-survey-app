@@ -9,9 +9,14 @@ import {
   formFields,
   forms,
 } from '$lib/server/db/schema';
-import { isHtmlFormField } from '$lib/utils';
+import { generateUrlSlug, isHtmlFormField } from '$lib/utils';
+import {
+  withFormData,
+  withSuperForm,
+  withZodFormData,
+} from '$lib/utils/server';
 import { editFormSchema, saveFieldSchema } from '$lib/validation-schema';
-import { error, fail } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 import { type SQL, and, asc, eq, gte, inArray, sql } from 'drizzle-orm';
 import { message, superValidate } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
@@ -47,41 +52,63 @@ export const load: PageServerLoad = async function ({
 };
 
 export const actions: Actions = {
-  edit: async event => {
-    const editForm = await superValidate(event, zod4(editFormSchema), {
-      id: 'editForm',
-    });
-    if (!editForm.valid)
-      return message(editForm, { type: 'error', text: 'Invalid form' });
+  edit: withSuperForm(
+    { schema: editFormSchema, options: { id: 'editForm' } },
+    async ({ locals, url }, form) => {
+      const { formId, title, description } = form.data;
+      let path = url.pathname;
+      try {
+        // First, get the current form data to compare the title
+        const [currentForm] = await locals.db
+          .select({ title: forms.title, slug: forms.slug })
+          .from(forms)
+          .where(eq(forms.id, formId));
 
-    const { formId, title, description } = editForm.data;
-
-    try {
-      await event.locals.db
-        .update(forms)
-        .set({
-          title,
-          description,
-        })
-        .where(eq(forms.id, formId));
-
-      return {
-        editForm,
-      };
-    } catch (e) {
-      console.error('There was an error updating the form: ', formId, e);
-      return message(
-        editForm,
-        { type: 'error', text: 'There was an error updating the form' },
-        {
-          status: 500,
+        if (!currentForm) {
+          return message(
+            form,
+            { type: 'error', text: 'Form not found' },
+            { status: 404 }
+          );
         }
-      );
-    }
-  },
-  'save-field': async ({ request, locals }) => {
-    const formData = await request.formData();
 
+        // Only generate new slug if title has changed
+        const shouldUpdateSlug = currentForm.title !== title;
+        const newSlug = shouldUpdateSlug
+          ? generateUrlSlug(title)
+          : currentForm.slug;
+
+        const lastSlash = url.pathname.lastIndexOf('/');
+        path = `${url.pathname.slice(0, lastSlash)}/${newSlug}`;
+
+        await locals.db
+          .update(forms)
+          .set({
+            title,
+            description,
+            slug: newSlug,
+          })
+          .where(eq(forms.id, formId));
+
+        if (path === url.pathname)
+          return {
+            editForm: form,
+            newSlug,
+          };
+      } catch (e) {
+        console.error('There was an error updating the form: ', formId, e);
+        return message(
+          form,
+          { type: 'error', text: 'There was an error updating the form' },
+          {
+            status: 500,
+          }
+        );
+      }
+      redirect(303, path);
+    }
+  ),
+  'orig-save-field': withFormData(async ({ locals }, formData) => {
     const parsed = saveFieldSchema.parse({
       ...Object.fromEntries(formData.entries()),
       options: JSON.parse(formData.get('options')?.toString() ?? '[]'),
@@ -102,8 +129,31 @@ export const actions: Actions = {
       console.error('Failed to update field:', err);
       return fail(500, { message: 'Failed to update field' });
     }
-  },
+  }),
+  'save-field': withZodFormData(
+    saveFieldSchema,
+    formData => ({
+      ...Object.fromEntries(formData.entries()),
+      options: JSON.parse(formData.get('options')?.toString() ?? '[]'),
+    }),
+    async ({ locals }, parsed) => {
+      try {
+        const [updatedField] = await locals.db
+          .update(formFields)
+          .set(parsed)
+          .where(eq(formFields.id, parsed.fieldId))
+          .returning();
 
+        return {
+          success: true,
+          field: updatedField,
+        };
+      } catch (err) {
+        console.error('Failed to update field:', err);
+        return fail(500, { message: 'Failed to update field' });
+      }
+    }
+  ),
   addFormField: async ({ locals, request, params }) => {
     const formData = await request.formData();
     const type = formData.get('type')?.toString();

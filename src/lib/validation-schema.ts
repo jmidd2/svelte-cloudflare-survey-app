@@ -4,8 +4,8 @@ import { z } from 'zod/v4';
 export const saveFieldSchema = z.object({
   fieldId: z.uuidv4(),
   type: z.enum(FORM_FIELD_TYPES),
-  label: z.string().optional(),
-  placeholder: z.string().optional(),
+  label: z.string().min(2).max(50),
+  placeholder: z.string().max(50).optional(),
   required: z.stringbool().optional(),
   options: z
     .array(z.object({ id: z.uuidv4(), val: z.string(), label: z.string() }))
