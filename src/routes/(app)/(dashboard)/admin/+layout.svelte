@@ -12,10 +12,10 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '$lib/components/ui/dropdown-menu';
 import { CheckCheckIcon, ChevronDownIcon } from '@lucide/svelte';
-import { setContext } from 'svelte';
 import { setBreadcrumbContext } from './breadcrumbContext.svelte';
 
 const { children } = $props();
@@ -27,6 +27,19 @@ const isAdmin = $derived(page.data.isAdmin);
 const results = $derived(page.data.submissions ?? []);
 let status = $state({ isSaved: false, isLoading: false });
 setBreadcrumbContext(status);
+
+$effect(() => {
+  let timeout: NodeJS.Timeout | null = null;
+  if (status.isSaved) {
+    timeout = setTimeout(() => {
+      status.isSaved = false;
+    }, 2000);
+  }
+
+  return () => {
+    if (timeout) clearTimeout(timeout);
+  };
+});
 </script>
 
 <div class="border-b border-b-muted px-4 py-3 flex items-center gap-2 text-muted-foreground">
@@ -55,11 +68,13 @@ setBreadcrumbContext(status);
                   {survey.title}
                   <ChevronDownIcon class="size-4"/>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
-                  <DropdownMenuItem><a href={`${tenantHref}/forms/${survey.slug}/results`}>View Submissions</a>
+                <DropdownMenuContent class="w-40" align="start">
+                  <DropdownMenuItem>
+                    <a class="w-full" href={`${tenantHref}/forms/${survey.slug}`}>Edit Form</a>
                   </DropdownMenuItem>
-                  <DropdownMenuItem>Themes</DropdownMenuItem>
-                  <DropdownMenuItem>GitHub</DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <a class="w-full" href={`${tenantHref}/forms/${survey.slug}/results`}>View Submissions</a>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </BreadcrumbItem>

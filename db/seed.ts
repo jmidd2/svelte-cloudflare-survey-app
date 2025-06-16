@@ -161,7 +161,7 @@ async function main() {
   // Create form fields for Phoenix Spark forms
   console.log('📝 Creating form fields...');
   for (const formId of phoenixSparkForms) {
-    for (let i = 0; i < 4; i++) {
+    for (let i = 1; i < 5; i++) {
       await createFormFields(db, formId, i);
     }
   }
@@ -169,7 +169,7 @@ async function main() {
   // Create submissions for Phoenix Spark forms
   console.log('📊 Creating form submissions...');
   for (const formId of phoenixSparkForms) {
-    for (let i = 0; i < 3; i++) {
+    for (let i = 1; i < 4; i++) {
       await createFormSubmissions(db, formId, i);
     }
   }
@@ -203,7 +203,7 @@ async function main() {
 
     // Create forms for this tenant
     const tenantForms = [];
-    for (let i = 0; i < 2; i++) {
+    for (let i = 1; i < 3; i++) {
       const formId = uuidv4();
       await createForm(db, formId, i, tenantId);
       tenantForms.push(formId);
@@ -211,14 +211,14 @@ async function main() {
 
     // Create form fields for each form
     for (const formId of tenantForms) {
-      for (let i = 0; i < 4; i++) {
+      for (let i = 1; i < 5; i++) {
         await createFormFields(db, formId, i);
       }
     }
 
     // Create submissions for each form
     for (const formId of tenantForms) {
-      for (let i = 0; i < 3; i++) {
+      for (let i = 1; i < 4; i++) {
         await createFormSubmissions(db, formId, i);
       }
     }

@@ -2,6 +2,7 @@
 // for information about these interfaces
 
 import type { AuthProvider } from '$lib/auth';
+import type { DrizzleClient } from '$lib/server/db';
 import type { EmailService } from '$lib/server/email';
 import type {
   AnalyticsEngineDataset,
@@ -19,18 +20,25 @@ export interface AuthProfileUserMetadata {
 
 declare global {
   namespace App {
+    namespace SuperForms {
+      type Message = {
+        type: 'success' | 'error';
+        message: string;
+      };
+    }
     // interface Error {}
     // interface PageState {}
     interface Locals {
       auth: AuthProvider;
       mailService: EmailService;
-      db:
-        | (import('drizzle-orm/libsql').LibSQLDatabase<
-            typeof import('$lib/server/db/schema')
-          > & { $client: import('drizzle-orm/libsql').Client })
-        | (import('drizzle-orm/d1').DrizzleD1Database<
-            typeof import('$lib/server/db/schema')
-          > & { $client: D1Database });
+      db: DrizzleClient;
+      // db:
+      //   | (import('drizzle-orm/libsql').LibSQLDatabase<
+      //       typeof import('$lib/server/db/schema')
+      //     > & { $client: import('drizzle-orm/libsql').Client })
+      //   | (import('drizzle-orm/d1').DrizzleD1Database<
+      //       typeof import('$lib/server/db/schema')
+      //     > & { $client: D1Database });
     }
 
     interface Platform {
