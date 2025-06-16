@@ -27,9 +27,7 @@ export class DialogManager<T extends string> {
 
   closeDialog() {
     // Close all dialogs
-    for (const [dialog] of this.dialogState) {
-      this.dialogState.set(dialog, false);
-    }
+    this.dialogState.set(this.activeDialog, false);
     this.activeDialog = null;
   }
 

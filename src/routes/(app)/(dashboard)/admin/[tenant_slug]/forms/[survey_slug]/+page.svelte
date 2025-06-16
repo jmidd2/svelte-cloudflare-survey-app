@@ -2,24 +2,12 @@
 import { FormFieldList } from '$lib/components/FormFieldList';
 import { PropertiesSidebar } from '$lib/components/PropertiesSidebar/index.js';
 import { ToolboxSidebar } from '$lib/components/ToolboxSidebar';
+import {
+  EditDialog,
+  SettingsDialog,
+  ShareDialog,
+} from '$lib/components/dialogs';
 import { Button } from '$lib/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '$lib/components/ui/dialog';
-import {
-  FieldErrors,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormLabel,
-} from '$lib/components/ui/form';
-import { Input } from '$lib/components/ui/input';
-import { Textarea } from '$lib/components/ui/textarea';
 import { surveyDialogManager } from '$lib/stores/SurveyDialog.svelte.js';
 import { editFormSchema } from '$lib/validation-schema';
 import { SurveyEditor, setSurveyEditor } from '$stores/survey-editor.svelte';
@@ -59,6 +47,7 @@ const editForm = superForm(data.editForm, {
   id: 'editForm',
   resetForm: false,
   validators: zod4Client(editFormSchema),
+  validationMethod: 'oninput',
   onError({ result }) {
     breadcrumbStatus.isLoading = false;
     toast.error(result.error.message);
@@ -66,7 +55,7 @@ const editForm = superForm(data.editForm, {
   onSubmit: () => {
     breadcrumbStatus.isLoading = true;
   },
-  onResult: ({ result: { type, status }, cancel }) => {
+  onResult: ({ result: { type, status } }) => {
     if (type === 'redirect' && status === 303) {
       breadcrumbStatus.isLoading = false;
       breadcrumbStatus.isSaved = true;
@@ -87,21 +76,21 @@ const editForm = superForm(data.editForm, {
   },
 });
 
-const {
-  form: editFormData,
-  enhance,
-  submitting: editFormSubmitting,
-} = editForm;
-
-$editFormData.formId = editor.survey?.id ?? '';
-$editFormData.title = editor.survey?.title ?? '';
-$editFormData.description = editor.survey?.description ?? '';
-
-// Reactive values from the editor
 const selectedField = $derived(editor.selectedField);
 
-$inspect(form);
+function openEditDialog() {
+  surveyDialogManager.openDialog('edit');
+}
+
+function openShareDialog() {
+  surveyDialogManager.openDialog('share');
+}
+
+function openSettingsDialog() {
+  surveyDialogManager.openDialog('settings');
+}
 </script>
+
 <div class="flex flex-1 overflow-hidden">
   <div class="w-64 border-r border-spark-secondary-600 flex flex-col h-full">
     <ToolboxSidebar/>
@@ -117,24 +106,23 @@ $inspect(form);
             {editor.survey?.description}</p>
           <div class="text-muted-foreground text-sm flex items-center gap-2 my-1">
             <p>
-            Last Update: {editor.survey ? new Date(editor.survey.updatedAt).toLocaleString() : ''}
+              Last Update: {editor.survey ? new Date(editor.survey.updatedAt).toLocaleString() : ''}
             </p>
           </div>
           <div class="flex items-center gap-2 mt-4">
-            <Button variant="outline" size="sm" onclick={() => { surveyDialogManager.openDialog('edit') }}>
+            <Button variant="outline" size="sm" onclick={openEditDialog}>
               <PencilIcon class="w-4 h-4 mr-1" />
               Edit Details
             </Button>
-            <Button variant="outline" size="sm" onclick={() => { surveyDialogManager.openDialog('share') }}>
+            <Button variant="outline" size="sm" onclick={openShareDialog}>
               <ShareIcon class="w-4 h-4 mr-1" />
               Share
             </Button>
-            <Button variant="outline" size="sm" onclick={() => { surveyDialogManager.openDialog('settings') }}>
+            <Button variant="outline" size="sm" onclick={openSettingsDialog}>
               <SettingsIcon class="w-4 h-4 mr-1" />
               Settings
             </Button>
           </div>
-
         </div>
 
         <FormFieldList/>
@@ -143,62 +131,14 @@ $inspect(form);
   </div>
   {#if selectedField}
     <div transition:slide={{ axis: 'x' }} class="fixed right-0 w-100 top-35.25 xl:top-0 bottom-0 bg-spark-bg-dark xl:relative xl:bg-transparent">
-    <PropertiesSidebar />
+      <PropertiesSidebar />
     </div>
   {/if}
 </div>
-<Dialog bind:open={() => surveyDialogManager.isDialogOpen('edit'), () => surveyDialogManager.closeDialog()}>
-  <DialogContent class="sm:max-w-xl">
-    <DialogHeader>
-      <DialogTitle>Edit profile</DialogTitle>
-      <DialogDescription>
-        Make changes to your title or description here. Click save when you're done.
-      </DialogDescription>
-    </DialogHeader>
-    <form action="?/edit" method="post" class="space-y-4" use:enhance>
-      <input type="hidden" bind:value={editor.survey.id} id="formId" name="formId">
-      <FormField form={editForm} name="title">
-        <FormControl>
-          {#snippet children({props})}
-            <FormLabel>Title</FormLabel>
-            <Input {...props} placeholder={editor.survey?.title} bind:value={$editFormData.title} />
-            <FieldErrors />
-          {/snippet}
-        </FormControl>
-      </FormField>
-      <FormField form={editForm} name="description">
-        <FormControl>
-          {#snippet children({props})}
-            <FormLabel>Description</FormLabel>
-            <Textarea {...props} placeholder={editor.survey?.description} bind:value={$editFormData.description} />
-            <FormDescription>A short description of or instructions for the form.</FormDescription>
-            <FieldErrors />
-          {/snippet}
-        </FormControl>
-      </FormField>
-      <DialogFooter>
-        <Button type="submit">Save changes</Button>
-      </DialogFooter>
-    </form>
-  </DialogContent>
-</Dialog>
-<Dialog bind:open={() => surveyDialogManager.isDialogOpen('share'), () => surveyDialogManager.closeDialog()}>
-  <DialogContent class="sm:max-w-xl">
-    <DialogHeader>
-      <DialogTitle>Share Form</DialogTitle>
-      <DialogDescription>
-        This is where the link to the form would go if that existed.
-      </DialogDescription>
-    </DialogHeader>
-  </DialogContent>
-</Dialog>
-<Dialog bind:open={() => surveyDialogManager.isDialogOpen('settings'), () => surveyDialogManager.closeDialog()}>
-  <DialogContent class="sm:max-w-xl">
-    <DialogHeader>
-      <DialogTitle>Form Settings</DialogTitle>
-      <DialogDescription>
-        This where the settings would go if I had any.
-      </DialogDescription>
-    </DialogHeader>
-  </DialogContent>
-</Dialog>
+{#if editor.survey}
+  <EditDialog {editForm} survey={{ formId: editor.survey.id, ...editor.survey }} />
+
+  <ShareDialog survey={editor.survey} />
+
+  <SettingsDialog />
+{/if}
