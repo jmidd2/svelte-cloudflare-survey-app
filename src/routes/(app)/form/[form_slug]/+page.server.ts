@@ -167,10 +167,10 @@ function convertFieldValue(
 }
 
 export const load: PageServerLoad = async function ({ params, locals }) {
-  if (!params.survey_slug) return error(400, { message: 'slug is required' });
+  if (!params.form_slug) return error(400, { message: 'slug is required' });
 
   try {
-    const survey = await getFormWithFields(locals.db, params.survey_slug);
+    const survey = await getFormWithFields(locals.db, params.form_slug);
 
     const fields: SelectFormFieldWithHash[] = survey.fields.map(
       ({ id, ...f }) => ({
@@ -203,7 +203,7 @@ export const actions = {
     getClientAddress,
   }) {
     try {
-      if (!params.survey_slug)
+      if (!params.form_slug)
         return fail(400, {
           success: false,
           status: 400,
@@ -211,7 +211,7 @@ export const actions = {
         });
 
       const formData = await request.formData();
-      const survey = await getFormWithFields(locals.db, params.survey_slug);
+      const survey = await getFormWithFields(locals.db, params.form_slug);
 
       // Process survey fields and identify required ones
       const { requiredFields, processedFields } = prepareFields(survey.fields);

@@ -65,10 +65,10 @@ $effect(() => {
               <DropdownMenu>
                 <!-- Could put other surveys here or access the survey's settings and delete actions -->
                 <DropdownMenuTrigger class="flex items-center gap-1">
-                  {survey.title}
+                  <BreadcrumbPage>{survey.title}</BreadcrumbPage>
                   <ChevronDownIcon class="size-4"/>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent class="w-40" align="start">
+                <DropdownMenuContent class="w-40" align="end">
                   <DropdownMenuItem>
                     <a class="w-full" href={`${tenantHref}/forms/${survey.slug}`}>Edit Form</a>
                   </DropdownMenuItem>
@@ -80,17 +80,16 @@ $effect(() => {
             </BreadcrumbItem>
           {/if}
         {:else}
-          <BreadcrumbSeparator/>
           <!-- If other tenants show a drop down -->
           {#if isAdmin}
             {#if tenants && tenants.length > 0}
               <BreadcrumbItem>
                 <DropdownMenu>
                   <DropdownMenuTrigger class="flex items-center gap-1">
-                    {tenant.name}
+                    <BreadcrumbPage>{tenant.name}</BreadcrumbPage>
                     <ChevronDownIcon class="size-4"/>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start">
+                  <DropdownMenuContent align="end">
                     <DropdownMenuItem>Documentation</DropdownMenuItem>
                     <DropdownMenuItem>Themes</DropdownMenuItem>
                     <DropdownMenuItem>GitHub</DropdownMenuItem>
@@ -109,6 +108,10 @@ $effect(() => {
             </BreadcrumbItem>
           {/if}
         {/if}
+        {:else}
+        <BreadcrumbItem>
+          <BreadcrumbPage>Dashboard</BreadcrumbPage>
+        </BreadcrumbItem>
       {/if}
     </BreadcrumbList>
   </Breadcrumb>
