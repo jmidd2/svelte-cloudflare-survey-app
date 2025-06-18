@@ -17,35 +17,39 @@ export interface FieldRendererProps {
   field: SelectFormField;
   value?: HTMLInputElement['value'] | HTMLTextAreaElement['value'];
   disabled?: boolean;
+  id?: string;
+  name?: string;
 }
-let { field, disabled, value }: FieldRendererProps = $props();
+let { field, disabled, value, id, name }: FieldRendererProps = $props();
 </script>
 
-{#snippet textField({ field, value, disabled }: FieldRendererProps)}
+{#snippet textField({ field, value, disabled, id, name }: FieldRendererProps)}
   <Input
       type={field.type}
       {value}
       placeholder={field.placeholder}
-      id={field.id}
-      name={field.id}
+      id={id ?? field.id}
+      name={name ?? field.id}
       {disabled}
+      required={field.required}
   />
 {/snippet}
 
 <!-- Textarea -->
-{#snippet textareaField({ field, value, disabled }: FieldRendererProps)}
+{#snippet textareaField({ field, value, disabled, id, name }: FieldRendererProps)}
   <Textarea
-      id={field.id}
-      name={field.id}
+      id={id ?? field.id}
+      name={name ?? field.id}
       placeholder={field.placeholder}
       {value}
       {disabled}
+      required={field.required}
   />
 {/snippet}
 
 <!-- Select dropdown -->
-{#snippet selectField({ field, value, disabled }: FieldRendererProps)}
-  <Select type="single" {value} name={field.id} {disabled}>
+{#snippet selectField({ field, value, disabled, id, name }: FieldRendererProps)}
+  <Select type="single" {value} name={name ?? field.id} {disabled} required={field.required}>
     <SelectTrigger class="w-full">
       {value ?? 'Select an option'}
     </SelectTrigger>
@@ -62,8 +66,8 @@ let { field, disabled, value }: FieldRendererProps = $props();
 {/snippet}
 
 <!-- Radio group -->
-{#snippet radioField({ field, value, disabled }: FieldRendererProps)}
-  <RadioGroup {value} name={field.id} {disabled}>
+{#snippet radioField({ field, value, disabled, id, name }: FieldRendererProps)}
+  <RadioGroup {value} name={name ?? field.id} {disabled} required={field.required}>
     {#if fieldHasOptions(field)}
       {#each field.options as opt, index (opt.val)}
         <div class="flex items-center space-x-2">
@@ -85,20 +89,21 @@ let { field, disabled, value }: FieldRendererProps = $props();
 {/snippet}
 
 <!-- Checkbox group -->
-{#snippet checkboxField({ field, disabled }: FieldRendererProps)}
+{#snippet checkboxField({ field, disabled, id, name }: FieldRendererProps)}
   <div class="grid gap-3">
     {#if fieldHasOptions(field)}
       {#each field.options as opt, index (opt.val)}
         <div class="flex items-center space-x-2">
           <Checkbox
               class="peer"
-              id={`${field.id}-${index}-${opt.val}`}
-              name={`${field.id}[]`}
+              required={field.required}
+              id={id ?? `${field.id}-${index}-${opt.val}`}
+              name={name ?? `${field.id}[]`}
               value={opt.val}
               {disabled}
           />
           <Label
-              for={`${field.id}-${index}-${opt.val}`}
+              for={id ?? `${field.id}-${index}-${opt.val}`}
               class="peer-disabled:opacity-75"
           >
             {opt.label}
@@ -113,13 +118,13 @@ let { field, disabled, value }: FieldRendererProps = $props();
 
 <!-- Export snippets for use in other components -->
   {#if field.type === 'textarea'}
-    {@render textareaField({ field, value, disabled })}
+    {@render textareaField({ field, value, disabled, id, name })}
   {:else if field.type === 'select'}
-    {@render selectField({ field, value, disabled })}
+    {@render selectField({ field, value, disabled, id, name })}
   {:else if field.type === 'radio'}
-    {@render radioField({ field, value, disabled })}
+    {@render radioField({ field, value, disabled, id, name })}
   {:else if field.type === 'checkbox'}
-    {@render checkboxField({ field, disabled })}
+    {@render checkboxField({ field, disabled, id, name })}
   {:else}
-    {@render textField({ field, value, disabled })}
+    {@render textField({ field, value, disabled, id, name })}
   {/if}

@@ -345,7 +345,7 @@ export type InsertOrganization = typeof organizations.$inferInsert;
 
 export type SelectFormField = InferSelectModel<typeof formFields>;
 
-export type SelectFormFieldWithHash = Omit<SelectFormField, 'id'> & {
+export type SelectFormFieldWithHash = SelectFormField & {
   hash: string;
 };
 export type InsertFormField = typeof formFields.$inferInsert;
