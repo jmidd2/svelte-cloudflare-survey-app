@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import {
   type NewSubmissionData,
+  type SelectForm,
   type SelectFormField,
   type SelectFormFieldWithHash,
   type SelectFormWithFields,
@@ -38,23 +39,65 @@ type SubmittedFields =
 
 class NotFoundError extends Error {}
 
+interface FormWithFields {
+  [key: string]: SelectForm & { fields: SelectFormFieldWithHash[] };
+  length: number;
+}
+
 async function getFormWithFields(
   db: ServerLoadEvent['locals']['db'],
   slug: string
-) {
-  const survey: SelectFormWithFields | undefined =
-    await db.query.forms.findFirst({
-      where: eq(forms.slug, slug),
-      with: {
-        fields: {
-          orderBy: asc(formFields.orderIndex),
-        },
+): Promise<[string, FormWithFields]> {
+  const survey = await db.query.forms.findFirst({
+    where: eq(forms.slug, slug),
+    with: {
+      fields: {
+        orderBy: (formFields, { asc }) => [asc(formFields.orderIndex)],
       },
-    });
+    },
+  });
 
-  if (!survey) throw new NotFoundError('survey not found');
+  const survey2result = await db
+    .select()
+    .from(forms)
+    .where(eq(forms.slug, slug))
+    .leftJoin(formFields, eq(forms.id, formFields.formId))
+    .orderBy(asc(formFields.orderIndex))
+    .all();
 
-  return survey;
+  // const fields: SelectFormFieldWithHash[] = survey.fields.map(f => ({
+  //   ...f,
+  //   hash: hashSlug(genSlug(f)),
+  // }));
+
+  const survey2: FormWithFields = survey2result.reduce<FormWithFields>(
+    (acc, row) => {
+      const form = row.forms;
+      const field = row.form_fields;
+
+      if (!acc[form.id]) {
+        acc[form.id] = {
+          ...form,
+          fields: [] as SelectFormFieldWithHash[],
+        };
+        acc.length += 1;
+      }
+
+      if (field) {
+        acc[form.id].fields.push({ ...field, hash: hashSlug(genSlug(field)) });
+      }
+
+      return acc;
+    },
+    { length: 0 }
+  );
+
+  console.log(survey2);
+
+  if (!survey || survey2.length > 1)
+    throw new NotFoundError('survey not found');
+
+  return [survey2result[0].forms.id, survey2];
 }
 
 // Prepare survey fields and identify required ones
@@ -170,20 +213,21 @@ export const load: PageServerLoad = async function ({ params, locals }) {
   if (!params.form_slug) return error(400, { message: 'slug is required' });
 
   try {
-    const survey = await getFormWithFields(locals.db, params.form_slug);
-
-    const fields: SelectFormFieldWithHash[] = survey.fields.map(
-      ({ id, ...f }) => ({
-        ...f,
-        hash: hashSlug(genSlug({ id, ...f })),
-      })
+    const [id, formWithFields] = await getFormWithFields(
+      locals.db,
+      params.form_slug
     );
 
+    const { fields, ...survey } = formWithFields[id];
+
+    // const fields: SelectFormFieldWithHash[] = survey.fields.map(f => ({
+    //   ...f,
+    //   hash: hashSlug(genSlug(f)),
+    // }));
+
     return {
-      survey: {
-        ...survey,
-        fields,
-      },
+      survey,
+      fields,
     };
   } catch (e) {
     console.error(e);
@@ -211,10 +255,15 @@ export const actions = {
         });
 
       const formData = await request.formData();
-      const survey = await getFormWithFields(locals.db, params.form_slug);
+      const [id, formsWithFields] = await getFormWithFields(
+        locals.db,
+        params.form_slug
+      );
 
       // Process survey fields and identify required ones
-      const { requiredFields, processedFields } = prepareFields(survey.fields);
+      const { requiredFields, processedFields } = prepareFields(
+        formsWithFields[id].fields
+      );
 
       // Process submitted form data
       const submittedFields = processFormData(formData, processedFields);
@@ -274,7 +323,7 @@ export const actions = {
       await locals.db.insert(submissions).values({
         id: uuid(),
         data,
-        formId: survey.id,
+        formId: id,
         ipHash: hashSubmission(getClientAddress()),
         userAgentHash: hashSubmission(getClientUserAgent(request.headers)),
         createdAt: new Date(Date.now()),
