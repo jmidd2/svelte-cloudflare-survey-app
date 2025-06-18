@@ -13,7 +13,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
+      - name: Enable corepack
+        run: |
+          corepack enable
+          corepack prepare yarn@4.9.2 --activate
+          yarn set version 4.9.2
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -75,7 +79,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
+      - name: Enable corepack
+        run: |
+          corepack enable
+          corepack prepare yarn@4.9.2 --activate
+          yarn set version 4.9.2
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -109,7 +117,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
+      - name: Enable corepack
+        run: |
+          corepack enable
+          corepack prepare yarn@4.9.2 --activate
+          yarn set version 4.9.2
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -150,6 +162,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Enable corepack
+        run: |
+          corepack enable
+          corepack prepare yarn@4.9.2 --activate
+          yarn set version 4.9.2
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
