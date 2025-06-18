@@ -1,6 +1,5 @@
 <script lang="ts">
-import { applyAction } from '$app/forms';
-import { enhance } from '$app/forms';
+import { applyAction, enhance } from '$app/forms';
 import EditFieldOptionList from '$lib/components/EditFieldOptionList.svelte';
 import { Button } from '$lib/components/ui/button/index.js';
 import { Input } from '$lib/components/ui/input/index.js';

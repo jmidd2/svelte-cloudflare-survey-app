@@ -2,7 +2,7 @@ import type { EmailService } from '$lib/server/email';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin, emailOTP, organization } from 'better-auth/plugins';
-import { type DrizzleClient, createDbClient } from './server/db';
+import { createDbClient, type DrizzleClient } from './server/db';
 import * as schema from './server/db/schema';
 
 export function createAuth(db: DrizzleClient, emailService: EmailService) {

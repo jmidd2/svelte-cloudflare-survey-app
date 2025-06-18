@@ -2,12 +2,12 @@
 import EditFieldOption from '$lib/components/EditFieldOption.svelte';
 import { isSelectedItemOptData } from '$lib/dnd';
 import type { SelectFormField } from '$lib/server/db/schema';
-import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
-import { reorderWithEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/reorder-with-edge';
 import {
   dropTargetForElements,
   monitorForElements,
 } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
+import { reorderWithEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/reorder-with-edge';
 
 type Props = {
   options: SelectFormField['options'];

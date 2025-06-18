@@ -1,9 +1,9 @@
 <script lang="ts">
 import { isToolboxListFieldData } from '$lib/dnd';
 import { getSurveyEditor } from '$stores/survey-editor.svelte';
+import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { reorderWithEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/reorder-with-edge';
-import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import ToolboxFormFieldListItem from './ToolboxFormFieldListItem.svelte';
 
 // Get editor from context

@@ -1,10 +1,9 @@
-export * from './shadcn';
-export * from './form-fields';
 export * from './drag-drop';
-export * from './sanitize';
-
+export * from './form-fields';
 // Legacy re-exports for backward compatibility
 export { isValidFieldType as isHtmlFormField } from './form-fields/constants';
+export * from './sanitize';
+export * from './shadcn';
 
 function generateShortHash(length = 6): string {
   const array = new Uint8Array(Math.ceil(length / 2));

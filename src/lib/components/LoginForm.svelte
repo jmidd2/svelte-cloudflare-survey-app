@@ -7,8 +7,8 @@ import { ArrowLeftIcon, MailIcon } from '@lucide/svelte';
 import type { HTMLAttributes } from 'svelte/elements';
 import { Button } from './ui/button/index.js';
 import * as Card from './ui/card';
-import * as InputOTP from './ui/input-otp';
 import { Input } from './ui/input/index.js';
+import * as InputOTP from './ui/input-otp';
 import { Label } from './ui/label/index.js';
 
 const stepSearchParam = $derived(page.url.searchParams.get('step'));

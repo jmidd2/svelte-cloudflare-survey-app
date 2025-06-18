@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.0.0/schema.json",
   "vcs": {
     "enabled": false,
     "clientKind": "git",
@@ -7,8 +7,7 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "ignore": [],
-    "include": ["src/**/*"]
+    "includes": ["**/src/**/*"]
   },
   "formatter": {
     "enabled": true,
@@ -21,9 +20,7 @@
     "attributePosition": "auto",
     "bracketSpacing": true
   },
-  "organizeImports": {
-    "enabled": true
-  },
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "linter": {
     "enabled": true,
     "rules": {
@@ -50,7 +47,6 @@
         "noUnusedImports": "off",
         "noUnusedPrivateClassMembers": "error",
         "noUnusedVariables": "error",
-        "useArrayLiterals": "warn",
         "useHookAtTopLevel": "error"
       },
       "style": {
@@ -58,7 +54,18 @@
         "useConsistentBuiltinInstantiation": "warn",
         "useDefaultSwitchClause": "error",
         "useFragmentSyntax": "warn",
-        "useThrowNewError": "error"
+        "useThrowNewError": "error",
+        "noParameterAssign": "error",
+        "useAsConstAssertion": "error",
+        "useDefaultParameterLast": "error",
+        "useEnumInitializers": "error",
+        "useSelfClosingElements": "error",
+        "useSingleVarDeclarator": "error",
+        "noUnusedTemplateLiteral": "error",
+        "useNumberNamespace": "error",
+        "noInferrableTypes": "error",
+        "noUselessElse": "error",
+        "useArrayLiterals": "warn"
       },
       "suspicious": {
         "noEvolvingTypes": "error",
@@ -67,7 +74,7 @@
         "useNumberToFixedDigitsArgument": "error"
       }
     },
-    "ignore": ["dist"]
+    "includes": ["**", "!**/dist"]
   },
   "javascript": {
     "formatter": {
@@ -84,7 +91,7 @@
   },
   "overrides": [
     {
-      "include": ["*.svelte"],
+      "includes": ["**/*.svelte"],
       "linter": {
         "rules": {
           "correctness": { "noUnusedVariables": "off" },
@@ -96,7 +103,7 @@
       }
     },
     {
-      "include": ["**/*.{ts,tsx}"],
+      "includes": ["**/*.{ts,tsx}"],
       "linter": {
         "rules": {
           "complexity": {},

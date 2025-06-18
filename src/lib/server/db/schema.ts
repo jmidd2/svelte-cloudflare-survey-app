@@ -1,4 +1,4 @@
-import { type InferSelectModel, type SQL, relations, sql } from 'drizzle-orm';
+import { type InferSelectModel, relations, type SQL, sql } from 'drizzle-orm';
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod/v4';

@@ -3,6 +3,7 @@ import '../app.css';
 import { goto } from '$app/navigation';
 import { page } from '$app/state';
 import { Toaster } from '$lib/components/ui/sonner';
+
 let { children, data } = $props();
 
 $effect(() => {

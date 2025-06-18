@@ -1,5 +1,6 @@
 <script lang="ts">
 import { authClient } from '$lib/auth-client';
+
 // biome-ignore lint/correctness/useHookAtTopLevel: not a react app
 const organizations = authClient.useListOrganizations();
 </script>

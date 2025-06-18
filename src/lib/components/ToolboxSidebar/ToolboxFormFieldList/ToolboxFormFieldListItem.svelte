@@ -1,8 +1,8 @@
 <script lang="ts">
 import { Badge } from '$lib/components/ui/badge/index.js';
 import { getToolboxListFieldData, isToolboxListFieldData } from '$lib/dnd';
-import DropIndicator from '$lib/dnd/DropIndicator.svelte';
 import { createActions } from '$lib/dnd/create-actions';
+import DropIndicator from '$lib/dnd/DropIndicator.svelte';
 import {
   type FieldState,
   FieldStateManager,

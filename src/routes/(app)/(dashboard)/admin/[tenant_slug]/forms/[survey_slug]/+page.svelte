@@ -1,19 +1,19 @@
 <script lang="ts">
-import { FormFieldList } from '$lib/components/FormFieldList';
-import { PropertiesSidebar } from '$lib/components/PropertiesSidebar/index.js';
-import { ToolboxSidebar } from '$lib/components/ToolboxSidebar';
 import {
   EditDialog,
   SettingsDialog,
   ShareDialog,
 } from '$lib/components/dialogs';
+import { FormFieldList } from '$lib/components/FormFieldList';
+import { PropertiesSidebar } from '$lib/components/PropertiesSidebar/index.js';
+import { ToolboxSidebar } from '$lib/components/ToolboxSidebar';
 import { Button } from '$lib/components/ui/button';
 import { surveyDialogManager } from '$lib/stores/SurveyDialog.svelte.js';
 import { editFormSchema } from '$lib/validation-schema';
 import { SurveyEditor, setSurveyEditor } from '$stores/survey-editor.svelte';
 import { PencilIcon, SettingsIcon, ShareIcon } from '@lucide/svelte';
-import { toast } from 'svelte-sonner';
 import { slide } from 'svelte/transition';
+import { toast } from 'svelte-sonner';
 import { superForm } from 'sveltekit-superforms';
 import { zod4Client } from 'sveltekit-superforms/adapters';
 import { getBreadcrumbContext } from '../../../breadcrumbContext.svelte';
