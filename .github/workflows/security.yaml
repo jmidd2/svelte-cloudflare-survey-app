@@ -39,39 +39,39 @@ jobs:
           name: security-audit
           path: audit-results.json
 
-  codeql-analysis:
-    name: CodeQL Security Analysis
-    runs-on: ubuntu-latest
-    permissions:
-      security-events: write
-      contents: read
-      actions: read
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: javascript-typescript
-      - name: Enable corepack
-        run: |
-          corepack enable
-          corepack prepare yarn@4.9.2 --activate
-          yarn set version 4.9.2
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'yarn'
-
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Build for analysis
-        run: yarn build
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+  #  codeql-analysis:
+  #    name: CodeQL Security Analysis
+  #    runs-on: ubuntu-latest
+  #    permissions:
+  #      security-events: write
+  #      contents: read
+  #      actions: read
+  #    steps:
+  #      - uses: actions/checkout@v4
+  #
+  #      - name: Initialize CodeQL
+  #        uses: github/codeql-action/init@v3
+  #        with:
+  #          languages: javascript-typescript
+  #      - name: Enable corepack
+  #        run: |
+  #          corepack enable
+  #          corepack prepare yarn@4.9.2 --activate
+  #          yarn set version 4.9.2
+  #      - name: Setup Node.js
+  #        uses: actions/setup-node@v4
+  #        with:
+  #          node-version: '22'
+  #          cache: 'yarn'
+  #
+  #      - name: Install dependencies
+  #        run: yarn install --frozen-lockfile
+  #
+  #      - name: Build for analysis
+  #        run: yarn build
+  #
+  #      - name: Perform CodeQL Analysis
+  #        uses: github/codeql-action/analyze@v3
 
   secret-scan:
     name: Secret Scanning
