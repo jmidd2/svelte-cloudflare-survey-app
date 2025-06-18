@@ -375,4 +375,12 @@ package
 # .idea/*.iml
 # .idea/modules
 # *.iml
-# *.ipr
+# *.ipr.github/local-testing/.secrets
+.github/workflows-test/
+test-local.db
+audit-results.json
+complexity-report.json
+dependency-*.txt
+coverage/
+.github/local-testing/.secrets
+.github/local-testing/

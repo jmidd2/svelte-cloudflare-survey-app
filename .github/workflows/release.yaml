@@ -1,0 +1,160 @@
+name: Release Management
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run full test suite
+        run: |
+          yarn test:unit
+          yarn check
+          yarn build
+
+      - name: Generate changelog
+        run: |
+          # Generate changelog from commits since last tag
+          LAST_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
+          if [[ -n "$LAST_TAG" ]]; then
+            echo "## Changes since $LAST_TAG" > CHANGELOG.md
+            git log $LAST_TAG..HEAD --pretty=format:"- %s (%h)" >> CHANGELOG.md
+          else
+            echo "## Initial Release" > CHANGELOG.md
+            git log --pretty=format:"- %s (%h)" >> CHANGELOG.md
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: CHANGELOG.md
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy release to production
+        run: |
+          # Run production deployment with release tag
+          yarn wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+  automated-release:
+    name: Automated Release
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump version
+        run: |
+          npm version ${{ github.event.inputs.version_type }} --no-git-tag-version
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "NEW_VERSION=v$NEW_VERSION" >> $GITHUB_ENV
+
+      - name: Update CHANGELOG
+        run: |
+          # Create or update CHANGELOG.md
+          if [[ ! -f CHANGELOG.md ]]; then
+            echo "# Changelog" > CHANGELOG.md
+            echo "" >> CHANGELOG.md
+          fi
+
+          # Add new version entry
+          sed -i "2i\\## [$NEW_VERSION] - $(date +%Y-%m-%d)\\n" CHANGELOG.md
+
+      - name: Commit and tag
+        run: |
+          git add package.json CHANGELOG.md
+          git commit -m "chore: release $NEW_VERSION"
+          git tag $NEW_VERSION
+          git push origin main
+          git push origin $NEW_VERSION
+
+#  hotfix-release:
+#    name: Hotfix Release
+#    runs-on: ubuntu-latest
+#    if: startsWith(github.ref, 'refs/heads/hotfix/')
+#    steps:
+#      - uses: actions/checkout@v4
+#
+#      - name: Setup Node.js
+#        uses: actions/setup-node@v4
+#        with:
+#          node-version: '18'
+#          cache: 'yarn'
+#
+#      - name: Install dependencies
+#        run: yarn install --frozen-lockfile
+#
+#      - name: Run critical tests
+#        run: |
+#          yarn test:unit
+#          yarn check
+#
+#      - name: Deploy hotfix
+#        run: yarn wrangler deploy
+#        env:
+#          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+#
+#      - name: Create hotfix PR
+#        uses: peter-evans/create-pull-request@v7
+#        with:
+#          token: ${{ secrets.GITHUB_TOKEN }}
+#          title: 'hotfix: ${{ github.ref_name }}'
+#          body: |
+#            🚨 **HOTFIX DEPLOYMENT**
+#
+#            This hotfix has been automatically deployed to production.
+#            Please review and merge to keep main branch in sync.
+#
+#            Branch: `${{ github.ref_name }}`
+#          base: main
+#          head: ${{ github.ref_name }}

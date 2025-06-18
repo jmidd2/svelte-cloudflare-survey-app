@@ -22,7 +22,9 @@
     "cf-typegen": "wrangler types && mv worker-configuration.d.ts src/",
     "auth:schema": "npx @better-auth/cli@latest generate --output src/lib/server/db/auth-schema.ts",
     "sentry:sourcemaps": "_SENTRY_RELEASE=$(sentry-cli releases propose-version) && sentry-cli releases new $_SENTRY_RELEASE --org=jmidd-dev --project=feedback-app && sentry-cli sourcemaps upload --org=jmidd-dev --project=feedback-app --release=$_SENTRY_RELEASE --strip-prefix 'dist/..' dist",
-    "postdeploy": "yarn sentry:sourcemaps"
+    "postdeploy": "yarn sentry:sourcemaps",
+    "test:coverage": "vitest --coverage",
+    "type-check": "tsc --noEmit"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.0.0",
