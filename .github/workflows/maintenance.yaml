@@ -1,0 +1,115 @@
+name: Maintenance & Updates
+
+on:
+  schedule:
+    # Run weekly on Sundays at 3 AM UTC
+    - cron: '0 3 * * 0'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  update-dependencies:
+    name: Update Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Enable corepack
+        run: |
+          corepack enable
+          corepack prepare yarn@4.9.2 --activate
+          yarn set version 4.9.2
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn'
+
+      - name: Check for dependency updates
+        run: |
+          yarn install --frozen-lockfile
+          yarn upgrade-interactive --latest || true
+
+      - name: Run tests after updates
+        run: |
+          yarn test:unit
+          yarn check
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore: update dependencies'
+          title: 'chore: Weekly dependency updates'
+          body: |
+            Automated dependency updates from scheduled workflow.
+
+            Please review the changes and ensure all tests pass before merging.
+          branch: automated/dependency-updates
+          delete-branch: true
+
+  database-backup:
+    name: Database Backup
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enable corepack
+        run: |
+          corepack enable
+          corepack prepare yarn@4.9.2 --activate
+          yarn set version 4.9.2
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Create database backup
+        run: |
+          # Create a backup script if needed
+          yarn wrangler d1 export DB --output backup-$(date +%Y%m%d).sql
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Upload backup to artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: database-backup-${{ github.run_number }}
+          path: backup-*.sql
+          retention-days: 30
+
+  migration-check:
+    name: Migration Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enable corepack
+        run: |
+          corepack enable
+          corepack prepare yarn@4.9.2 --activate
+          yarn set version 4.9.2
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Generate migration files
+        run: yarn db:generate
+
+      - name: Check for uncommitted migration changes
+        run: |
+          if [[ -n $(git status --porcelain db/migrations/) ]]; then
+            echo "❌ Uncommitted migration files detected!"
+            git status --porcelain db/migrations/
+            exit 1
+          else
+            echo "✅ All migration files are committed"
+          fi

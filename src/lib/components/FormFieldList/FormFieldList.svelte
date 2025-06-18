@@ -2,14 +2,14 @@
 import { type FieldData, isFieldData, isNewFieldData } from '$lib/dnd';
 import type { SelectFormField } from '$lib/server/db/schema.js';
 import { getSurveyEditor } from '$stores/survey-editor.svelte';
-import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
-import type { Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/types';
-import { reorderWithEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/reorder-with-edge';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import type {
   BaseEventPayload,
   ElementDragType,
 } from '@atlaskit/pragmatic-drag-and-drop/types';
+import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
+import type { Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/types';
+import { reorderWithEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/reorder-with-edge';
 import FormFieldItem from './FormFieldItem.svelte';
 
 // Get editor from context

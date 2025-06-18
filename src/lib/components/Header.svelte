@@ -2,7 +2,7 @@
 import { goto, invalidateAll } from '$app/navigation';
 import { page } from '$app/state';
 import logo from '$lib/assets/survey-logo.png';
-import { type Session, authClient } from '$lib/auth-client';
+import { authClient, type Session } from '$lib/auth-client';
 import { Avatar } from '$lib/components/ui/avatar';
 import { AvatarFallback } from '$lib/components/ui/avatar/index.js';
 import { type Snippet } from 'svelte';

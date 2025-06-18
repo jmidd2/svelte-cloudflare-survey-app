@@ -1,0 +1,239 @@
+---
+name: Code Quality & Coverage
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  code-coverage:
+    name: Code Coverage Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enable corepack
+        run: |
+          corepack enable
+          corepack prepare yarn@4.9.2 --activate
+          yarn set version 4.9.2
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run tests with coverage
+        run: yarn test:coverage
+
+      #      - name: Upload coverage to Codecov
+      #        uses: codecov/codecov-action@v3
+      #        with:
+      #          token: ${{ secrets.CODECOV_TOKEN }}
+      #          file: ./coverage/lcov.info
+      #          flags: unittests
+      #          name: codecov-umbrella
+
+      - name: Coverage comment on PR
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          recreate: true
+          path: coverage/coverage-summary.json
+
+  #  bundle-analysis:
+  #    name: Bundle Size Analysis
+  #    runs-on: ubuntu-latest
+  #    steps:
+  #      - uses: actions/checkout@v4
+  #
+  #      - name: Setup Node.js
+  #        uses: actions/setup-node@v4
+  #        with:
+  #          node-version: '22'
+  #          cache: 'yarn'
+  #
+  #      - name: Install dependencies
+  #        run: yarn install --frozen-lockfile
+  #
+  #      - name: Build application
+  #        run: yarn build
+  #
+  #      - name: Analyze bundle size
+  #        run: |
+  #          # Create bundle analysis
+  #          npx bundlesize
+  #
+  #      - name: Bundle size comment
+  #        if: github.event_name == 'pull_request'
+  #        uses: andresz1/size-limit-action@v1
+  #        with:
+  #          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+  type-coverage:
+    name: TypeScript Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enable corepack
+        run: |
+          corepack enable
+          corepack prepare yarn@4.9.2 --activate
+          yarn set version 4.9.2
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Check TypeScript coverage
+        run: |
+          # Install type-coverage globally
+          npm install -g type-coverage
+
+          # Generate type coverage report
+          type-coverage --detail --strict --ignore-files "**/*.spec.ts" --ignore-files "**/*.test.ts" > type-coverage.txt
+
+          # Display results
+          cat type-coverage.txt
+
+          # Fail if type coverage is below threshold (e.g., 90%)
+          COVERAGE=$(type-coverage --strict --ignore-files "**/*.spec.ts" --ignore-files "**/*.test.ts" | grep -oP '\d+\.\d+(?=%)')
+          if (( $(echo "$COVERAGE < 90.0" | bc -l) )); then
+            echo "❌ Type coverage ($COVERAGE%) is below required threshold (90%)"
+            exit 1
+          fi
+          echo "✅ Type coverage ($COVERAGE%) meets requirements"
+  
+  #  complexity-analysis:
+  #    name: Code Complexity Analysis
+  #    runs-on: ubuntu-latest
+  #    steps:
+  #      - uses: actions/checkout@v4
+  #      - name: Enable corepack
+  #        run: |
+  #          corepack enable
+  #          corepack prepare yarn@4.9.2 --activate
+  #          yarn set version 4.9.2
+  #      - name: Setup Node.js
+  #        uses: actions/setup-node@v4
+  #        with:
+  #          node-version: '22'
+  #          cache: 'yarn'
+  #
+  #      - name: Install dependencies
+  #        run: yarn install --frozen-lockfile
+  #
+  #      - name: Run complexity analysis
+  #        run: |
+  #          # Install complexity analysis tool
+  #          npm install -g complexity-report
+  #
+  #          # Generate complexity report
+  #          cr --format json --output complexity-report.json src/
+  #
+  #          # Check for high complexity functions
+  #          node -e "
+  #            const report = require('./complexity-report.json');
+  #            const highComplexity = report.functions.filter(f => f.complexity.cyclomatic > 10);
+  #            if (highComplexity.length > 0) {
+  #              console.log('❌ High complexity functions found:');
+  #              highComplexity.forEach(f => console.log(\`- \${f.name}: \${f.complexity.cyclomatic}\`));
+  #              process.exit(1);
+  #            }
+  #            console.log('✅ All functions have acceptable complexity');
+  #          "
+  #
+  #      - name: Upload complexity report
+  #        uses: actions/upload-artifact@v4
+  #        with:
+  #          name: complexity-report
+  #          path: complexity-report.json
+
+  dependency-graph:
+    name: Dependency Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enable corepack
+        run: |
+          corepack enable
+          corepack prepare yarn@4.9.2 --activate
+          yarn set version 4.9.2
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Generate dependency graph
+        run: |
+          # Install madge for dependency analysis
+          npm install -g madge
+
+          # Check for circular dependencies
+          madge --circular src/
+
+          # Generate dependency tree
+          madge src/ > dependency-tree.txt
+
+          # Generate visual dependency graph (SVG)
+          madge --image dependency-graph.svg src/
+
+      - name: Upload dependency artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-analysis
+          path: |
+            dependency-tree.txt
+            dependency-graph.svg
+
+  quality-gates:
+    name: Quality Gates
+    runs-on: ubuntu-latest
+    needs: [code-coverage, type-coverage, complexity-analysis]
+    if: always()
+    steps:
+      - name: Check quality gates
+        run: |
+          # Check if all quality jobs passed
+          if [[ "${{ needs.code-coverage.result }}" != "success" ]]; then
+            echo "❌ Code coverage check failed"
+            exit 1
+          fi
+
+          if [[ "${{ needs.type-coverage.result }}" != "success" ]]; then
+            echo "❌ Type coverage check failed"
+            exit 1
+          fi
+                        
+          echo "✅ All quality gates passed!"
+      #          if [[ "${{ needs.complexity-analysis.result }}" != "success" ]]; then
+      #            echo "❌ Complexity analysis failed"
+      #            exit 1
+      #          fi
+
+
+      - name: Update status check
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.sha,
+              state: 'success',
+              context: 'Quality Gates',
+              description: 'All quality checks passed'
+            });

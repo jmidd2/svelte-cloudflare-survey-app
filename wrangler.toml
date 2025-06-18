@@ -43,7 +43,11 @@ dataset = "analytics"
 binding = "CACHE"
 id = "2843031524a84ca2b6d879c17ca94a5e"
 
+[env.staging]
+name = "feedback-system-staging"
 
+[env.production]
+name = "feedback-system-production"
 # Development environment specific settings
 #[env.dev]
 ## Development-specific variables

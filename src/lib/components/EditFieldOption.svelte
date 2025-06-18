@@ -2,12 +2,12 @@
 import { Button } from '$lib/components/ui/button';
 import { Input } from '$lib/components/ui/input';
 import {
+  createActions,
   DropIndicator,
   FieldStateManager,
-  Portal,
-  createActions,
   getSelectedItemOptData,
   isSelectedItemOptData,
+  Portal,
 } from '$lib/dnd';
 import DragHandle from '$lib/dnd/DragHandle.svelte';
 import { MinusCircle } from '@lucide/svelte';

@@ -1,10 +1,10 @@
 <script lang="ts">
 import { FormFieldItem } from '$lib/components/FormFieldList';
 import {
-  Portal,
   createActions,
   getNewFieldData,
   isNewFieldData,
+  Portal,
 } from '$lib/dnd';
 import { FieldStateManager } from '$lib/dnd/field-state-manager.svelte';
 import type { SelectFormField } from '$lib/server/db/schema';

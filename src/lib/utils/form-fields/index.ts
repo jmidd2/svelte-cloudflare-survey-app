@@ -24,8 +24,8 @@ export function genSlug({ label, id }: SelectFormField): string {
 
 // Form field utilities barrel file
 export * from './constants';
-export * from './types.d';
 export * from './type-guards';
+export * from './types.d';
 
 // Field configuration with metadata
 export const FIELD_DATA: Record<
