@@ -1,4 +1,6 @@
 <script lang="ts">
+import { applyAction, enhance as stdEnhance } from '$app/forms';
+import { goto } from '$app/navigation';
 import { Alert, AlertDescription } from '$lib/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 import { Badge } from '$lib/components/ui/badge';
@@ -65,6 +67,7 @@ import {
   XCircle,
 } from '@lucide/svelte';
 import type { InvitationStatus } from 'better-auth/plugins';
+import { toast } from 'svelte-sonner';
 import { superForm } from 'sveltekit-superforms';
 import { zod4Client } from 'sveltekit-superforms/adapters';
 
@@ -290,7 +293,6 @@ function getRoleColor(role: keyof typeof OrganizationRoles): string {
                 <TableHead>Email</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Sent</TableHead>
                 <TableHead>Expires</TableHead>
                 {#if isAdmin}
                   <TableHead class="w-12"></TableHead>
@@ -336,12 +338,6 @@ function getRoleColor(role: keyof typeof OrganizationRoles): string {
                   <TableCell>
                     <div class="flex items-center gap-2 text-sm text-muted-foreground">
                       <Calendar class="h-4 w-4" />
-                      {formatDate(invite.createdAt)}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div class="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Calendar class="h-4 w-4" />
                       {formatDate(invite.expiresAt)}
                     </div>
                   </TableCell>
@@ -354,9 +350,28 @@ function getRoleColor(role: keyof typeof OrganizationRoles): string {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>Resend Invitation</DropdownMenuItem>
+                          <DropdownMenuItem disabled>Resend Invitation</DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem class="text-destructive">Cancel Invitation</DropdownMenuItem>
+                          <DropdownMenuItem class="text-destructive">
+                            <form method="POST" action="?/cancel-invite" class="inline" use:stdEnhance={() => {
+                              return async ({update, result}) => {
+                                if (result.type === 'redirect') {
+                                  goto(result.location);
+                                } else {
+                                  if (result.type === 'success')
+                                    toast.success('Invitation cancelled');
+                                  else if (result.type === 'error' || result.type === 'failure')
+                                    toast.error('Failed to cancel invitation');
+
+                                  await update({invalidateAll: true});
+                                  await applyAction(result);
+                                }
+                              }
+                            }}>
+                              <input type="hidden" name="inviteId" value={invite.id}>
+                              <button>Cancel Invitation</button>
+                            </form>
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -481,9 +496,11 @@ function getRoleColor(role: keyof typeof OrganizationRoles): string {
                           </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>Edit Role</DropdownMenuItem>
+                        <DropdownMenuItem disabled>Edit Role</DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem class="text-destructive">Remove Member</DropdownMenuItem>
+                        <DropdownMenuItem class="text-destructive" disabled>Ban Member</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem class="text-destructive" disabled>Remove Member</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

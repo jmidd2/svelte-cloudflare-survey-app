@@ -9,7 +9,7 @@ export const load: PageServerLoad = async function ({
 }) {
   const data = await parent();
 
-  const session = await locals.auth.api.getSession({
+  const session = await locals.auth.getSession({
     headers: request.headers,
   });
 

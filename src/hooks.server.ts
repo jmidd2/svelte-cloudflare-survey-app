@@ -58,10 +58,15 @@ export const handle: Handle = sequence(
       );
     }
 
-    event.locals.auth = createAuth(event.locals.db, event.locals.mailService);
+    const { api, ...authHandler } = createAuth(
+      event.locals.db,
+      event.locals.mailService
+    );
+
+    event.locals.auth = api;
 
     // Check session for all authenticated routes
-    const session = await event.locals.auth.api.getSession({
+    const session = await event.locals.auth.getSession({
       headers: event.request.headers,
     });
 
@@ -91,7 +96,7 @@ export const handle: Handle = sequence(
       }
     }
 
-    return svelteKitHandler({ event, resolve, auth: event.locals.auth });
+    return svelteKitHandler({ event, resolve, auth: authHandler });
   }
 );
 

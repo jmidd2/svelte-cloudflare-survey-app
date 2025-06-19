@@ -2,7 +2,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, request }) => {
-  const session = await locals.auth.api.getSession({
+  const session = await locals.auth.getSession({
     headers: request.headers,
   });
 
@@ -27,7 +27,7 @@ export const actions: Actions = {
 
     try {
       // Update user name using Better Auth
-      await locals.auth.api.updateUser({
+      await locals.auth.updateUser({
         headers: request.headers,
         body: {
           name: name.trim(),

@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async function ({ locals, request }) {
-  const session = await locals.auth.api.getSession({
+  const session = await locals.auth.getSession({
     headers: request.headers,
   });
 

@@ -6,7 +6,7 @@ export const load = async function ({ locals, params, request }) {
   const { tenant_slug } = params;
 
   // const tenant = await getTenantBySlug(locals.db, tenant_slug);
-  const tenant = await locals.auth.api.getFullOrganization({
+  const tenant = await locals.auth.getFullOrganization({
     headers: request.headers,
     query: { organizationSlug: tenant_slug },
   });

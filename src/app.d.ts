@@ -9,6 +9,7 @@ import type {
   D1Database,
   KVNamespace,
 } from '@cloudflare/workers-types';
+import type { Auth } from 'better-auth';
 
 export interface AuthProfileUserMetadata {
   roles?: string[];
@@ -29,7 +30,7 @@ declare global {
     // interface Error {}
     // interface PageState {}
     interface Locals {
-      auth: AuthProvider;
+      auth: AuthProvider['api'];
       mailService: EmailService;
       db: DrizzleClient;
       // db:

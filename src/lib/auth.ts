@@ -1,5 +1,10 @@
+import { BASE_URL } from '$env/static/private';
 import type { EmailService } from '$lib/server/email';
-import { betterAuth } from 'better-auth';
+import {
+  type BetterAuthOptions,
+  type BetterAuthPlugin,
+  betterAuth,
+} from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin, emailOTP, organization } from 'better-auth/plugins';
 import { createDbClient, type DrizzleClient } from './server/db';
@@ -22,7 +27,7 @@ export function createAuth(db: DrizzleClient, emailService: EmailService) {
       },
     },
     emailVerification: {
-      async sendVerificationEmail({ user, token, url }, request) {
+      async sendVerificationEmail({ user, token, url }) {
         console.log(`TODO:send verification email to ${user.email}`, url);
         try {
           await emailService.sendOTPEmail({
@@ -53,8 +58,6 @@ export function createAuth(db: DrizzleClient, emailService: EmailService) {
             template: {
               type: 'forget-password',
               otp: token,
-              url,
-              name: user.name,
             },
           });
           console.log(
@@ -84,8 +87,9 @@ export function createAuth(db: DrizzleClient, emailService: EmailService) {
         },
       }),
       organization({
-        async sendInvitationEmail(data, { url }) {
-          const inviteUrl = `${url.origin}/accept-invitation/${data.id}`;
+        async sendInvitationEmail(data, request) {
+          console.log('send-invitation-email', request);
+          const inviteUrl = `${BASE_URL}/accept-invitation?id=${data.id}`;
           await emailService.sendEmail({
             to: data.email,
             template: {
