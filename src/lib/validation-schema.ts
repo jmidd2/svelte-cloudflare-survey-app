@@ -28,3 +28,8 @@ export const editFormSchema = z.object({
 });
 
 export type EditFormSchema = typeof editFormSchema;
+
+export const sendInviteSchema = z.object({
+  email: z.string(),
+  role: z.enum(['admin', 'member']).default('member'),
+});

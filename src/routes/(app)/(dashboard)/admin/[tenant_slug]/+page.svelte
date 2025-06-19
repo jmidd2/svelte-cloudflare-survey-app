@@ -22,6 +22,9 @@ function openShareDialog(survey: SelectForm) {
 <div class="px-4 py-3">
   <h1 class="text-xl pb-1 mb-2 border-b">Dashboard</h1>
   <div>
+    <a href={`${tenantSlug}/members`}>Members</a>
+  </div>
+  <div>
     <h2>Forms</h2>
     {#each forms as survey}
       <div class="border-b my-2 py-3">

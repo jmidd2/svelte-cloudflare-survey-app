@@ -46,6 +46,7 @@ $effect(() => {
   <Breadcrumb>
     <BreadcrumbList>
       {#if tenant}
+        <!--On a form page-->
         {#if survey}
           {@const tenantHref = `/admin/${tenant.slug}`}
           <BreadcrumbItem>
@@ -79,9 +80,9 @@ $effect(() => {
               </DropdownMenu>
             </BreadcrumbItem>
           {/if}
-        {:else}
-          <!-- If other tenants show a drop down -->
+        {:else} <!-- Not a form page -->
           {#if isAdmin}
+            <!-- If other tenants show a drop down -->
             {#if tenants && tenants.length > 0}
               <BreadcrumbItem>
                 <DropdownMenu>
@@ -106,6 +107,12 @@ $effect(() => {
             <BreadcrumbItem>
               <BreadcrumbPage>{tenant.name}</BreadcrumbPage>
             </BreadcrumbItem>
+          {/if}
+        {#if page.url.pathname.endsWith('members')}
+          <BreadcrumbSeparator/>
+          <BreadcrumbItem>
+            <BreadcrumbPage>Members</BreadcrumbPage>
+          </BreadcrumbItem>
           {/if}
         {/if}
         {:else}

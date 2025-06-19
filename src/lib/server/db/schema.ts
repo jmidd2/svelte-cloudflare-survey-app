@@ -1,3 +1,4 @@
+import type { InferMember, Invitation } from 'better-auth/plugins';
 import { type InferSelectModel, relations, type SQL, sql } from 'drizzle-orm';
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 import { createInsertSchema } from 'drizzle-zod';
@@ -7,6 +8,7 @@ import { ALL_FIELD_TYPES } from '../../utils/form-fields/constants';
 
 export type UserRoles = 'admin' | 'user';
 export type MemberRoles = 'owner' | 'admin' | 'member';
+export type OrganizationMember = InferMember<{ teams: { enabled: false } }>;
 
 export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
