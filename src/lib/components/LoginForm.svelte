@@ -11,7 +11,9 @@ import { Input } from './ui/input/index.js';
 import * as InputOTP from './ui/input-otp';
 import { Label } from './ui/label/index.js';
 
+const currentQueryParams = new URLSearchParams(page.url.searchParams);
 const stepSearchParam = $derived(page.url.searchParams.get('step'));
+const redirect = $derived(page.url.searchParams.get('redirect'));
 
 let { class: className, ...restProps }: HTMLAttributes<HTMLDivElement> =
   $props();
@@ -32,7 +34,8 @@ async function sendOtp(event: SubmitEvent) {
 
   if (data?.success) {
     // formView = 'verify-otp';
-    await goto('?step=verify-otp', {
+    currentQueryParams.set('step', 'verify-otp');
+    await goto(`?${currentQueryParams.toString()}`, {
       replaceState: true,
     });
   } else {
@@ -47,6 +50,11 @@ async function verifyOtp(event: SubmitEvent) {
     otp: otp,
   });
   if (data?.user) {
+    if (redirect === 'accept-invitation') {
+      await goto('/accept-invitation', { invalidateAll: true });
+      return;
+    }
+
     goto('/', {
       invalidateAll: true,
     });
@@ -65,11 +73,14 @@ async function handleSubmit(event: SubmitEvent) {
 $effect(() => {
   if (!formView) return;
 
-  goto(`?step=${formView}`, {
+  currentQueryParams.set('step', formView);
+  goto(`?${currentQueryParams.toString()}`, {
     noScroll: true,
     replaceState: true,
   });
 });
+
+$inspect(redirect);
 </script>
 
 <div class={cn("flex flex-col gap-6", className)} {...restProps}>
