@@ -83,7 +83,21 @@ export function createAuth(db: DrizzleClient, emailService: EmailService) {
           }
         },
       }),
-      organization(),
+      organization({
+        async sendInvitationEmail(data, { url }) {
+          const inviteUrl = `${url.origin}/accept-invitation/${data.id}`;
+          await emailService.sendEmail({
+            to: data.email,
+            template: {
+              type: 'organization-invite',
+              inviterName: data.inviter.user.name,
+              organizationName: data.organization.name,
+              inviteUrl,
+              role: data.role,
+            },
+          });
+        },
+      }),
     ],
   });
 }

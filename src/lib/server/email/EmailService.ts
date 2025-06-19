@@ -3,6 +3,13 @@ export type EmailTemplate = {
   html: string;
 };
 
+export interface OrganizationInvitationOptions {
+  organizationName: string;
+  inviterName: string;
+  inviteUrl: string;
+  role: string;
+}
+
 type EmailTemplateOptions =
   | { type: 'welcome'; name?: string }
   | { type: 'normal-email-verification'; url: string; name: string }
@@ -10,7 +17,8 @@ type EmailTemplateOptions =
   /** OTP Plugin Types **/
   | { type: 'email-verification'; otp: string }
   | { type: 'forget-password'; otp: string }
-  | { type: 'sign-in'; otp: string };
+  | { type: 'sign-in'; otp: string }
+  | ({ type: 'organization-invite' } & OrganizationInvitationOptions);
 
 export type SendEmailOptions =
   | {
@@ -39,7 +47,9 @@ type EmailTypes =
   | 'welcome'
   | 'email-verification'
   | 'forget-password'
-  | 'sign-in';
+  | 'sign-in'
+  | 'organization-invite';
+
 export const RESEND_ERROR_CODES_BY_KEY = {
   missing_required_field: 422,
   invalid_idempotency_key: 400,
@@ -189,6 +199,46 @@ export class EmailService {
           </div>
         `,
         };
+
+      case 'organization-invite': {
+        const opts = options;
+        return {
+          subject: `You're invited to join ${opts.organizationName}`,
+          html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #333; margin-bottom: 10px;">You're Invited!</h1>
+          <p style="color: #666; font-size: 16px;">
+            ${opts.inviterName} has invited you to join <strong>${opts.organizationName}</strong>
+          </p>
+        </div>
+
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="margin-top: 0; color: #333;">Invitation Details</h3>
+          <p><strong>Organization:</strong> ${opts.organizationName}</p>
+          <p><strong>Role:</strong> ${opts.role}</p>
+          <p><strong>Invited by:</strong> ${opts.inviterName}</p>
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${opts.inviteUrl}" 
+             style="background-color: #007cba; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 500;">
+            Accept Invitation
+          </a>
+        </div>
+
+        <div style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 30px;">
+          <p style="color: #666; font-size: 14px;">
+            If the button doesn't work, copy and paste this link: ${opts.inviteUrl}
+          </p>
+          <p style="color: #999; font-size: 12px;">
+            This invitation will expire in 7 days.
+          </p>
+        </div>
+      </div>
+    `,
+        };
+      }
 
       default: {
         // This ensures exhaustive checking
