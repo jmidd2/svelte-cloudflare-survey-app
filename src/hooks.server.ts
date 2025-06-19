@@ -1,5 +1,5 @@
 import { env } from '$env/dynamic/private';
-import { createAuth } from '$lib/auth';
+import { type AuthProvider, createAuth } from '$lib/auth';
 import { createDbClient } from '$lib/server/db';
 import * as schema from '$lib/server/db/schema';
 import { createEmailService } from '$lib/server/email';
@@ -7,6 +7,7 @@ import * as Sentry from '@sentry/cloudflare';
 import { handleErrorWithSentry } from '@sentry/sveltekit';
 import { type Handle, redirect } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
+import type { Auth } from 'better-auth';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
 
 export const handle: Handle = sequence(
@@ -46,7 +47,7 @@ export const handle: Handle = sequence(
     const isEmailDisabled =
       env.DISABLE_EMAIL === 'true' || env.DISABLE_EMAIL === '1';
 
-    if (event.platform?.env?.RESEND_API_KEY) {
+    if (event.platform?.env?.RESEND_API_KEY && !event.locals.mailService) {
       event.locals.mailService = createEmailService(
         event.platform?.env?.RESEND_API_KEY || 'dummy-key',
         event.platform?.env?.EMAIL_FROM ?? 'no-reply@jmidd.dev',
@@ -58,12 +59,16 @@ export const handle: Handle = sequence(
       );
     }
 
-    const { api, ...authHandler } = createAuth(
-      event.locals.db,
-      event.locals.mailService
-    );
+    if (!(event.locals.auth && event.locals.authHandler)) {
+      const { api, ...authHandler } = createAuth(
+        event.locals.db,
+        event.locals.mailService
+      );
 
-    event.locals.auth = api;
+      event.locals.authHandler = authHandler;
+
+      event.locals.auth = api;
+    }
 
     // Check session for all authenticated routes
     const session = await event.locals.auth.getSession({
@@ -77,26 +82,47 @@ export const handle: Handle = sequence(
       }
     }
 
-    // Check if user needs to complete profile (has session but no name)
-    if (session?.user && !session.user.name) {
-      // Define routes that don't require profile completion
-      const allowedRoutes = [
-        '/profile/complete',
-        '/auth/logout',
-        '/api/', // Allow API routes
-      ];
+    // Check if user needs to complete profile
+    if (session?.user) {
+      const missingName = !session.user.name;
 
-      const isAllowedRoute = allowedRoutes.some(route =>
-        event.url.pathname.startsWith(route)
-      );
+      // Check organization membership (requires active session)
+      const memberOfOrganizations = await event.locals.auth.listOrganizations({
+        headers: event.request.headers,
+      });
+      const missingOrganization = memberOfOrganizations.length === 0;
 
-      // If not on an allowed route, redirect to profile completion
-      if (!isAllowedRoute) {
-        throw redirect(303, '/profile/complete');
+      // If user is missing name or organization membership
+      if (missingName || missingOrganization) {
+        // Define routes that don't require profile completion
+        const allowedRoutes = [
+          '/profile/complete',
+          '/auth/logout',
+          '/api/', // Allow API routes
+        ];
+
+        const isAllowedRoute = allowedRoutes.some(route =>
+          event.url.pathname.startsWith(route)
+        );
+
+        // If not on an allowed route, redirect to profile completion
+        if (!isAllowedRoute) {
+          if (missingName) {
+            console.log('Redirecting to profile completion, missing name');
+          }
+          if (missingOrganization) {
+            console.log('Redirecting to profile completion, missing org');
+          }
+          throw redirect(303, '/profile/complete');
+        }
       }
     }
 
-    return svelteKitHandler({ event, resolve, auth: authHandler });
+    return svelteKitHandler({
+      event,
+      resolve,
+      auth: event.locals.authHandler,
+    });
   }
 );
 

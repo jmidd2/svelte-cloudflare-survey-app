@@ -11,8 +11,8 @@ type Link = {
 
 type Links = Link[];
 
-const session = $derived(data.session);
-const user = $derived(session?.user ?? null);
+// const session = $derived(data.session);
+const user = $derived(data.user ?? null);
 
 const links = $derived.by(() => {
   const links: Links = [
@@ -34,7 +34,7 @@ const links = $derived.by(() => {
   return links;
 });
 </script>
-<Header session={data.session}>
+<Header {user}>
   {#snippet navLinks(closeMenu)}
     {#each links as link}
       <a href={link.href} class:active={link.compare(page.url.pathname)}

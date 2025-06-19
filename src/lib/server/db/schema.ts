@@ -345,6 +345,8 @@ export const submissionRelations = relations(submissions, ({ one }) => ({
 
 export type InsertOrganization = typeof organizations.$inferInsert;
 
+export type SelectOrganization = typeof organizations.$inferSelect;
+
 export type SelectFormField = InferSelectModel<typeof formFields>;
 
 export type SelectFormFieldWithHash = SelectFormField & {

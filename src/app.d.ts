@@ -33,6 +33,7 @@ declare global {
       auth: AuthProvider['api'];
       mailService: EmailService;
       db: DrizzleClient;
+      authHandler: Omit<AuthProvider, 'api'>;
       // db:
       //   | (import('drizzle-orm/libsql').LibSQLDatabase<
       //       typeof import('$lib/server/db/schema')

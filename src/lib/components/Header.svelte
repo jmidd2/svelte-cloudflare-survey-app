@@ -5,21 +5,21 @@ import logo from '$lib/assets/survey-logo.png';
 import { authClient, type Session } from '$lib/auth-client';
 import { Avatar } from '$lib/components/ui/avatar';
 import { AvatarFallback } from '$lib/components/ui/avatar/index.js';
+import { type User } from 'better-auth';
 import { type Snippet } from 'svelte';
 import { slide } from 'svelte/transition';
 
 interface HeaderProps {
-  session: Session | null;
+  user: User | null;
   children?: Snippet;
   navLinks: Snippet<[typeof closeMenus]>;
 }
 const { signOut } = authClient;
-const { session, navLinks }: HeaderProps = $props();
+const { user, navLinks }: HeaderProps = $props();
 
 let showProfileMenu = $state(false);
 let showMobileNavMenu = $state(false);
 
-const user = $derived(session?.user);
 const userInitials = $derived.by(() => {
   if (!user) return '';
   if (user.name) return user.name.toLocaleUpperCase().slice(0, 2);
@@ -80,6 +80,8 @@ function handleLogout() {
     },
   });
 }
+
+$inspect(user);
 </script>
 <svelte:window bind:innerWidth={windowInnerWidth}></svelte:window>
 <header class="bg-spark-primary p-4">

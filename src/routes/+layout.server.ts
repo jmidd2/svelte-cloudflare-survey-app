@@ -14,7 +14,7 @@ export const load: LayoutServerLoad = async function ({
   if (flashMessage) cookies.delete('flash_message', { path: '/' });
 
   return {
-    session,
+    user: session?.user,
     flashMessage,
   };
 };

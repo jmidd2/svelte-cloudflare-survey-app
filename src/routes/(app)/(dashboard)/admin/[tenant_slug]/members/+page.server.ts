@@ -3,7 +3,6 @@ import { withSuperForm, withZodFormData } from '$lib/utils/server';
 import { sendInviteSchema } from '$lib/validation-schema';
 import { constants } from 'node:http2';
 import { type Actions, fail, redirect } from '@sveltejs/kit';
-import type { Auth } from 'better-auth';
 import { eq } from 'drizzle-orm';
 import { superValidate } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
@@ -27,17 +26,17 @@ const flattenMembers = (member: OrganizationMember) => {
 export const load: PageServerLoad = async function ({ parent }) {
   const {
     tenant: { members, invitations, ...tenant },
-    session,
+    user,
   } = await parent();
 
-  if (!session) redirect(constants.HTTP_STATUS_SEE_OTHER, '/auth/login');
+  if (!user) redirect(constants.HTTP_STATUS_SEE_OTHER, '/auth/login');
 
   return {
     members: members.map(flattenMembers),
     invitations,
     tenant,
-    session,
-    isAdmin: session.user.role === ADMIN_ROLE,
+    user,
+    isAdmin: user.role === ADMIN_ROLE,
     sendInviteForm: await superValidate(zod4(sendInviteSchema)),
   };
 };
