@@ -98,6 +98,7 @@ export const handle: Handle = sequence(
         const allowedRoutes = [
           '/profile/complete',
           '/auth/logout',
+          '/accept-invitation',
           '/api/', // Allow API routes
         ];
 

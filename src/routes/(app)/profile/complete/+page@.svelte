@@ -67,7 +67,7 @@ const getStartingStep = () => {
 const getTotalSteps = () => {
   let steps = 0;
   if (needsProfile) steps++;
-  if (needsOrganization) steps++;
+  if (needsOrganization) steps += 2;
   return Math.max(steps, 1);
 };
 
@@ -151,7 +151,7 @@ const getDisplayStep = (step: number) => {
 };
 
 const getMaxDisplaySteps = () => {
-  return getTotalSteps() + 1; // +1 for the choice step
+  return getTotalSteps(); // +1 for the choice step
 };
 
 // Form submission handlers remain the same...
@@ -165,7 +165,7 @@ const handleProfileSubmit: SubmitFunction = () => {
         if (needsOrganization) {
           nextStep();
         } else {
-          goto('/dashboard');
+          goto('/admin');
         }
         status = null;
       }, 1000);
@@ -190,7 +190,7 @@ const handleOrganizationCreate: SubmitFunction = () => {
         message: 'Organization created successfully!',
       };
       setTimeout(() => {
-        goto('/dashboard');
+        goto('/admin');
       }, 2000);
     } else {
       let message =
@@ -216,7 +216,7 @@ const handleJoinRequest: SubmitFunction = () => {
     if (result.type === 'success') {
       status = { type: 'success', message: 'Join request sent successfully!' };
       setTimeout(() => {
-        goto('/dashboard');
+        goto('/admin');
       }, 2000);
     } else {
       status = {
@@ -267,7 +267,6 @@ const handleJoinRequest: SubmitFunction = () => {
     </div>
 
     <!-- Completion Status Banner -->
-    {#if hasName || hasOrganization}
       <Card class="mb-6">
         <CardContent class="px-4">
           <div class="flex items-center gap-3">
@@ -302,7 +301,6 @@ const handleJoinRequest: SubmitFunction = () => {
           </div>
         </CardContent>
       </Card>
-    {/if}
 
     <!-- Step 1: Profile Completion - Only show if needed -->
     {#if currentStep === 1 && needsProfile}
