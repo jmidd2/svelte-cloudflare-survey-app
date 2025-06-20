@@ -1,14 +1,15 @@
 import {
   type OrganizationMember,
   organizations,
-  requests as requestsTable, type SelectRequest,
+  requests as requestsTable,
+  type SelectRequest,
   users,
 } from '$lib/server/db/schema';
 import { withSuperForm, withZodFormData } from '$lib/utils/server';
 import { sendInviteSchema } from '$lib/validation-schema';
-import type { User } from 'better-auth';
 import { constants } from 'node:http2';
 import { type Actions, fail, redirect } from '@sveltejs/kit';
+import type { User } from 'better-auth';
 import { eq } from 'drizzle-orm';
 import { superValidate } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
@@ -43,11 +44,17 @@ export const load: PageServerLoad = async function ( { locals, parent } ) {
     .rightJoin( users, eq( users.id, requestsTable.userId ) )
     .where( eq( requestsTable.organizationId, tenant.id ) );
 
-  const requests = requestsResult.map( ( { users, requests } ) => ( {
-    ...requests,
-    user: users,
-  }
-  ) );
+  const requests =
+    requestsResult.length > 0
+    ? requestsResult.map<SelectRequest & { user: User }>( row => {
+      const { users, requests } = row;
+
+      return {
+        ...requests,
+        user: users,
+      };
+    } )
+    : [];
 
   return {
     members: members.map( flattenMembers ),
@@ -55,7 +62,7 @@ export const load: PageServerLoad = async function ( { locals, parent } ) {
     requests,
     tenant,
     user,
-    isAdmin: user.role === ADMIN_ROLE,
+    isAdmin: user.role === ADMIN_ROLE, // TODO: FIX: to use org role not global admin role
     sendInviteForm: await superValidate( zod4( sendInviteSchema ) ),
   };
 };
@@ -141,6 +148,42 @@ export const actions: Actions = {
           organizationId,
         },
       } );
+    }
+  ),
+  'accept-request': withZodFormData(
+    z.object( { requestId: z.string().length( 32 ) } ),
+    async ( { locals, request }, formData ) => {
+      const requestToJoin = await locals.db
+        .update( requestsTable )
+        .set( { status: 'accepted' } )
+        .where( eq( requestsTable.id, formData.requestId ) )
+        .returning();
+
+      const requestToJoinResult = requestToJoin[0];
+      const { userId, organizationId } = requestToJoinResult;
+
+      await locals.auth.addMember( {
+        headers: request.headers,
+        body: {
+          userId,
+          organizationId,
+          role: 'member',
+        },
+      } );
+
+      // TODO: Send notification to user
+    }
+  ),
+  'reject-request': withZodFormData(
+    z.object( { requestId: z.string().length( 32 ) } ),
+    async ( { locals, request }, formData ) => {
+      const requestToJoin = await locals.db
+        .update( requestsTable )
+        .set( { status: 'rejected' } )
+        .where( eq( requestsTable.id, formData.requestId ) )
+        .returning();
+
+      // TODO: Send notification to user
     }
   ),
 };

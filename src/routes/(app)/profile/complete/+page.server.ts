@@ -1,6 +1,7 @@
 import {
   members,
   organizations as organizationsTable,
+  requests,
   type SelectOrganization,
 } from '$lib/server/db/schema';
 import { withZodFormData } from '$lib/utils/server';
@@ -67,9 +68,7 @@ const createOrganizationSchema = z.object({
 });
 
 const requestJoinSchema = z.object({
-  userId: z.string().min('first-user'.length),
   organizationId: z.string().length(32),
-  role: z.enum(['admin', 'owner', 'member']).default('member'),
 });
 
 export const actions: Actions = {
@@ -138,11 +137,39 @@ export const actions: Actions = {
   ),
   'request-join': withZodFormData(
     requestJoinSchema,
-    async ({ locals }, formData) => {
-      const id = generateId();
+    async ({ locals, request, cookies }, formData) => {
+      const session = await locals.auth.getSession({
+        headers: request.headers,
+      });
 
-      // do i use invites and let admins use an accept invite button on the dashboard
-      // or add a new table for requests
+      if (!session) {
+        return fail(401, { error: 'Unauthenticated' });
+      }
+
+      const id = generateId();
+      const defaultExpiration = 60 * 60 * 48 * 1000; // 2 Days
+      const expiresAt = new Date(Date.now() + defaultExpiration);
+      try {
+        await locals.db
+          .insert(requests)
+          .values({
+            id,
+            userId: session.user.id,
+            organizationId: formData.organizationId,
+            expiresAt,
+          })
+          .onConflictDoNothing({
+            target: [requests.userId, requests.organizationId],
+          });
+      } catch (e) {
+        console.error('error creating request to join', e);
+        return fail(400, { error: 'error creating request to join' });
+      }
+
+      cookies.set('flash_message', 'Request to join sent', {
+        path: '/',
+      });
+      return redirect(303, '/');
     }
   ),
   original: async ({ request, locals }) => {

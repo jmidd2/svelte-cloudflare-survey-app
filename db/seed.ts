@@ -1,3 +1,4 @@
+import { generateId } from 'better-auth';
 import * as schema from '../src/lib/server/db/schema';
 import {createClient} from '@libsql/client';
 import {drizzle} from 'drizzle-orm/libsql';
@@ -105,11 +106,16 @@ async function main() {
   }
 
   const baseDate = new Date(Date.now() - 10000000000);
+  const firstUserId = generateId();
+  const firstAccountId = generateId();
+  const firstAccountAccountId = generateId();
+  const firstOrganizationId = generateId();
+  const firstMemberId = generateId();
 
   // Insert initial user
   console.log('👤 Creating initial user...');
   await db.insert(schema.users).values({
-    id: 'first-user',
+    id: firstUserId,
     name: 'Jon Middleton',
     email: 'jonathan.middleton@travisspark.com',
     emailVerified: true,
@@ -122,10 +128,10 @@ async function main() {
   // Insert initial account
   console.log('🔐 Creating initial account...');
   await db.insert(schema.accounts).values({
-    id: 'first-account',
-    accountId: 'first-account',
+    id: firstAccountId,
+    accountId: firstAccountAccountId,
     providerId: 'email-otp',
-    userId: 'first-user',
+    userId: firstUserId,
     createdAt: baseDate,
     updatedAt: baseDate,
   });
@@ -133,7 +139,7 @@ async function main() {
   // Insert initial organization
   console.log('🏠 Creating Phoenix Spark organization...');
   await db.insert(schema.organizations).values({
-    id: 'phoenix-spark',
+    id: firstOrganizationId,
     name: 'Phoenix Spark',
     slug: 'phoenix-spark',
     createdAt: baseDate,
@@ -142,9 +148,9 @@ async function main() {
   // Insert initial member
   console.log('👥 Creating initial member...');
   await db.insert(schema.members).values({
-    id: 'first-member',
-    organizationId: 'phoenix-spark',
-    userId: 'first-user',
+    id: firstMemberId,
+    organizationId: firstOrganizationId,
+    userId: firstUserId,
     role: 'owner',
     createdAt: baseDate,
   });
@@ -154,7 +160,7 @@ async function main() {
   const phoenixSparkForms = [];
   for (let i = 0; i < 2; i++) {
     const formId = uuidv4();
-    await createForm(db, formId, i);
+    await createForm(db, formId, i, firstOrganizationId, firstUserId);
     phoenixSparkForms.push(formId);
   }
 
@@ -206,7 +212,7 @@ async function main() {
     const tenantForms = [];
     for (let i = 1; i < 3; i++) {
       const formId = uuidv4();
-      await createForm(db, formId, i, tenantId);
+      await createForm(db, formId, i, tenantId, firstUserId);
       tenantForms.push(formId);
     }
 

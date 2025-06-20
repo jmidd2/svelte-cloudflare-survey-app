@@ -17,7 +17,6 @@
   } from '$lib/components/ui/dropdown-menu';
   import { CheckCheckIcon, ChevronDownIcon } from '@lucide/svelte';
   import { setBreadcrumbContext } from './breadcrumbContext.svelte';
-  import { base } from '$app/paths';
 
   const { children } = $props();
 
@@ -83,11 +82,11 @@
       href: `/admin/${ tenant?.slug ?? '' }/forms/${ survey?.slug ?? '' }`,
       options: [
         {
-          href: `${ base }/admin/${ tenant?.slug }/forms/${ survey?.slug }`,
+          href: `/admin/${ tenant?.slug }/forms/${ survey?.slug }`,
           label: 'Edit',
         },
         {
-          href: `${ base }/admin/${ tenant?.slug }/forms/${ survey?.slug }/results`,
+          href: `/admin/${ tenant?.slug }/forms/${ survey?.slug }/results`,
           label: 'Results'
         }
       ]

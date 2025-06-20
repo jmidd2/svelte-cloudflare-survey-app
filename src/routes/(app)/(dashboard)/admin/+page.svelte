@@ -1,8 +1,10 @@
 <script lang="ts">
-import { authClient } from '$lib/auth-client';
+  import { authClient } from '$lib/auth-client';
 
-// biome-ignore lint/correctness/useHookAtTopLevel: not a react app
-const organizations = authClient.useListOrganizations();
+  // TODO: Show something to say that a request to join is pending
+
+  // biome-ignore lint/correctness/useHookAtTopLevel: not a react app
+  const organizations = authClient.useListOrganizations();
 </script>
 
 <h1>Your Organizations</h1>

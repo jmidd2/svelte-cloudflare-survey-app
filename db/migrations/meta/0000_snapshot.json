@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "72b6b8ff-66bb-496d-816f-5a9aed0d2e74",
+  "id": "f60e579b-346d-4a03-b273-ba44e1bc5fa7",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "accounts": {
@@ -185,7 +185,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(unixepoch()\n                 )"
+          "default": "(unixepoch())"
         },
         "updated_at": {
           "name": "updated_at",
@@ -193,7 +193,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(unixepoch()\n                 )"
+          "default": "(unixepoch())"
         }
       },
       "indexes": {},
@@ -282,7 +282,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(unixepoch()\n                 )"
+          "default": "(unixepoch())"
         },
         "updated_at": {
           "name": "updated_at",
@@ -290,7 +290,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(unixepoch()\n                 )"
+          "default": "(unixepoch())"
         }
       },
       "indexes": {},
@@ -579,7 +579,16 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "user_organization_idx": {
+          "name": "user_organization_idx",
+          "columns": [
+            "user_id",
+            "organization_id"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
         "requests_organization_id_organizations_id_fk": {
           "name": "requests_organization_id_organizations_id_fk",
@@ -771,7 +780,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(unixepoch()\n                 )"
+          "default": "(unixepoch())"
         }
       },
       "indexes": {},

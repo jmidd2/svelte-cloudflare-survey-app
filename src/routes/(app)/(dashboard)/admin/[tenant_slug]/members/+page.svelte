@@ -49,7 +49,12 @@
     TableHeader,
     TableRow,
   } from '$lib/components/ui/table';
-  import { Tabs, TabsContent, TabsList, TabsTrigger } from '$lib/components/ui/tabs';
+  import {
+    Tabs,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
+  } from '$lib/components/ui/tabs';
   import { sendInviteSchema } from '$lib/validation-schema';
   import {
     Calendar,
@@ -76,7 +81,7 @@
   const isAdmin = $derived( data.isAdmin );
   const members = $derived( data.members );
   const invites = $derived( data.invitations );
-  const requests = $derived( data.requests || [] );
+  const requests = $derived( data.requests );
 
   // Form handling
   const sendInviteForm = superForm( data.sendInviteForm, {
@@ -92,8 +97,7 @@
   let selectedRole = $state( 'all' );
 
   $effect( () => {
-    if ( activeTab )
-      searchQuery = '';
+    if ( activeTab ) searchQuery = '';
   } );
 
   // Initialize form
@@ -116,8 +120,12 @@
   // Computed values
   const totalMembers = $derived( members.length );
   const totalInvites = $derived( invites.length );
-  const pendingInvites = $derived( invites.filter( invite => invite.status === 'pending' ).length );
-  const pendingRequests = $derived( requests.filter( request => request.status === 'pending' ).length );
+  const pendingInvites = $derived(
+      invites.filter( invite => invite.status === 'pending' ).length
+  );
+  const pendingRequests = $derived(
+      requests.filter( request => request.status === 'pending' ).length
+  );
 
   // Filter functions
   const filteredMembers = $derived.by( () => {
@@ -154,9 +162,10 @@
     let filtered = requests;
 
     if ( searchQuery ) {
-      filtered = filtered.filter( request =>
-          request.user?.name?.toLowerCase().includes( searchQuery.toLowerCase() ) ||
-          request.user?.email?.toLowerCase().includes( searchQuery.toLowerCase() )
+      filtered = filtered.filter(
+          request =>
+              request.user?.name?.toLowerCase().includes( searchQuery.toLowerCase() ) ||
+              request.user?.email?.toLowerCase().includes( searchQuery.toLowerCase() )
       );
     }
 
@@ -471,7 +480,6 @@
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Sent</TableHead>
                   <TableHead>Expires</TableHead>
                   {#if isAdmin}
                     <TableHead class="w-12"></TableHead>
@@ -513,12 +521,6 @@
                         {/if}
                         {InviteStatus[invite.status]}
                       </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div class="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Calendar class="h-4 w-4"/>
-                        {formatDate( invite.createdAt )}
-                      </div>
                     </TableCell>
                     <TableCell>
                       <div class="flex items-center gap-2 text-sm text-muted-foreground">
@@ -607,7 +609,7 @@
                   <TableHead>User</TableHead>
                   <TableHead>Requested Role</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Requested</TableHead>
+                  <TableHead>Expires</TableHead>
                   {#if isAdmin}
                     <TableHead class="w-32">Actions</TableHead>
                   {/if}
@@ -631,37 +633,37 @@
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" class={getRoleColor(request.requestedRole || 'member')}>
-                        {#if request.requestedRole === 'admin'}
+                      <Badge variant="outline" class={getRoleColor(request.role || 'member')}>
+                        {#if request.role === 'admin'}
                           <Crown class="h-3 w-3 mr-1"/>
                         {:else}
                           <User class="h-3 w-3 mr-1"/>
                         {/if}
-                        {OrganizationRoles[request.requestedRole || 'member']}
+                        {OrganizationRoles[request.role || 'member']}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <Badge class={getStatusColor(request.status)}>
                         {#if request.status === 'pending'}
                           <Clock class="h-3 w-3 mr-1"/>
-                        {:else if request.status === 'approved'}
+                        {:else if request.status === 'accepted'}
                           <CheckCircle class="h-3 w-3 mr-1"/>
                         {:else}
                           <XCircle class="h-3 w-3 mr-1"/>
                         {/if}
-                        {request.status === 'pending' ? 'Pending' : request.status === 'approved' ? 'Approved' : 'Rejected'}
+                        {request.status === 'pending' ? 'Pending' : request.status === 'accepted' ? 'Accepted' : 'Rejected'}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <div class="flex items-center gap-2 text-sm text-muted-foreground">
                         <Calendar class="h-4 w-4"/>
-                        {formatDate( request.createdAt )}
+                        {formatDate( request.expiresAt )}
                       </div>
                     </TableCell>
                     {#if isAdmin && request.status === 'pending'}
                       <TableCell>
                         <div class="flex items-center gap-2">
-                          <form method="POST" action="?/approve-request" class="inline" use:stdEnhance={() => {
+                          <form method="POST" action="?/accept-request" class="inline" use:stdEnhance={() => {
                             return async ({update, result}) => {
                               if (result.type === 'success') {
                                 toast.success('Request approved');
@@ -672,7 +674,7 @@
                             }
                           }}>
                             <input type="hidden" name="requestId" value={request.id}>
-                            <Button size="sm" variant="default" class="h-7 px-2">
+                            <Button type="submit" size="sm" variant="default" class="h-7 px-2">
                               <CheckCircle class="h-3 w-3 mr-1"/>
                               Approve
                             </Button>
@@ -689,7 +691,7 @@
                             }
                           }}>
                             <input type="hidden" name="requestId" value={request.id}>
-                            <Button size="sm" variant="destructive" class="h-7 px-2">
+                            <Button type="submit" size="sm" variant="destructive" class="h-7 px-2">
                               <XCircle class="h-3 w-3 mr-1"/>
                               Reject
                             </Button>
@@ -699,7 +701,7 @@
                     {:else if isAdmin}
                       <TableCell>
                         <Badge variant="secondary" class="text-xs">
-                          {request.status === 'approved' ? 'Approved' : 'Rejected'}
+                          {request.status === 'accepted' ? 'Accepted' : 'Rejected'}
                         </Badge>
                       </TableCell>
                     {/if}
@@ -725,6 +727,7 @@
 </div>
 
 <!-- Invite Dialog -->
+<!-- TODO: Show success or error toast / message -->
 <Dialog bind:open={sendDialogOpen}>
   <DialogContent class="sm:max-w-md">
     <DialogHeader>

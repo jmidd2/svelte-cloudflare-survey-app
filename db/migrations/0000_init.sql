@@ -24,10 +24,8 @@ CREATE TABLE `form_fields` (
 	`required` integer DEFAULT false NOT NULL,
 	`options` text,
 	`order_index` integer NOT NULL,
-	`created_at` integer DEFAULT (unixepoch()
-                 ) NOT NULL,
-	`updated_at` integer DEFAULT (unixepoch()
-                 ) NOT NULL,
+	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
+	`updated_at` integer DEFAULT (unixepoch()) NOT NULL,
 	FOREIGN KEY (`form_id`) REFERENCES `forms`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
@@ -40,10 +38,8 @@ CREATE TABLE `forms` (
 	`active` integer DEFAULT true NOT NULL,
 	`slug` text,
 	`settings` text,
-	`created_at` integer DEFAULT (unixepoch()
-                 ) NOT NULL,
-	`updated_at` integer DEFAULT (unixepoch()
-                 ) NOT NULL,
+	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
+	`updated_at` integer DEFAULT (unixepoch()) NOT NULL,
 	FOREIGN KEY (`organization_id`) REFERENCES `organizations`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
@@ -90,6 +86,7 @@ CREATE TABLE `requests` (
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
+CREATE UNIQUE INDEX `user_organization_idx` ON `requests` (`user_id`,`organization_id`);--> statement-breakpoint
 CREATE TABLE `sessions` (
 	`id` text PRIMARY KEY NOT NULL,
 	`expires_at` integer NOT NULL,
@@ -112,8 +109,7 @@ CREATE TABLE `submissions` (
 	`data` text NOT NULL,
 	`ip_hash` text,
 	`user_agent_hash` text,
-	`created_at` integer DEFAULT (unixepoch()
-                 ) NOT NULL,
+	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
 	FOREIGN KEY (`form_id`) REFERENCES `forms`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint

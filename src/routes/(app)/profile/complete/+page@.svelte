@@ -49,11 +49,11 @@ let { form, data } = $props();
 // User state from server
 const user = $derived(data.user);
 const userOrganizations = $derived(data.userOrganizations || []);
-const hasName = $derived(data.hasName);
+let hasName = $state(data.hasName);
 const hasOrganization = $derived(data.hasOrganization);
 
 // Determine what steps are needed
-const needsProfile = $derived.by(() => !hasName);
+const needsProfile = $derived.by(() => !data.hasName);
 const needsOrganization = $derived.by(() => !hasOrganization);
 const isComplete = $derived.by(() => hasName && hasOrganization);
 
@@ -163,6 +163,7 @@ const handleProfileSubmit: SubmitFunction = () => {
       status = { type: 'success', message: 'Profile saved successfully!' };
       setTimeout(() => {
         if (needsOrganization) {
+          hasName = true;
           nextStep();
         } else {
           goto('/admin');
@@ -212,11 +213,12 @@ const handleOrganizationCreate: SubmitFunction = () => {
 const handleJoinRequest: SubmitFunction = () => {
   return async ({ result }) => {
     loading = true;
-
-    if (result.type === 'success') {
+    if (result.type === 'redirect') {
+      goto(result.location);
+    } else if (result.type === 'success') {
       status = { type: 'success', message: 'Join request sent successfully!' };
       setTimeout(() => {
-        goto('/admin');
+        goto('/');
       }, 2000);
     } else {
       status = {
