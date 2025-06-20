@@ -10,6 +10,7 @@ import type {
   KVNamespace,
 } from '@cloudflare/workers-types';
 import type { Auth } from 'better-auth';
+import type { ToastTypes } from 'svelte-sonner/dist/types';
 
 export interface AuthProfileUserMetadata {
   roles?: string[];
@@ -23,7 +24,7 @@ declare global {
   namespace App {
     namespace SuperForms {
       type Message = {
-        type: 'success' | 'error';
+        type: ToastTypes;
         message: string;
       };
     }

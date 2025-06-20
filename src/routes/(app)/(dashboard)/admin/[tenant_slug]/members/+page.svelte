@@ -1,225 +1,240 @@
 <script lang="ts">
-  import { applyAction, enhance as stdEnhance } from '$app/forms';
-  import { goto } from '$app/navigation';
-  import { Alert, AlertDescription } from '$lib/components/ui/alert';
-  import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
-  import { Badge } from '$lib/components/ui/badge';
-  import { Button } from '$lib/components/ui/button';
-  import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-  } from '$lib/components/ui/card';
-  import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-  } from '$lib/components/ui/dialog';
-  import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-  } from '$lib/components/ui/dropdown-menu';
-  import {
-    FieldErrors,
-    FormControl,
-    FormField,
-    FormLabel,
-  } from '$lib/components/ui/form';
-  import { Input } from '$lib/components/ui/input';
-  import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-  } from '$lib/components/ui/select';
-  import { Separator } from '$lib/components/ui/separator';
-  import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-  } from '$lib/components/ui/table';
-  import {
-    Tabs,
-    TabsContent,
-    TabsList,
-    TabsTrigger,
-  } from '$lib/components/ui/tabs';
-  import { sendInviteSchema } from '$lib/validation-schema';
-  import {
-    Calendar,
-    CheckCircle,
-    Clock,
-    Crown,
-    Filter,
-    Mail,
-    MoreHorizontal,
-    Search,
-    User,
-    UserCheck,
-    UserPlus,
-    Users,
-    XCircle,
-  } from '@lucide/svelte';
-  import type { InvitationStatus } from 'better-auth/plugins';
-  import { toast } from 'svelte-sonner';
-  import { superForm } from 'sveltekit-superforms';
-  import { zod4Client } from 'sveltekit-superforms/adapters';
+import { applyAction, enhance as stdEnhance } from '$app/forms';
+import { goto } from '$app/navigation';
+import { Alert, AlertDescription } from '$lib/components/ui/alert';
+import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
+import { Badge } from '$lib/components/ui/badge';
+import { Button } from '$lib/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '$lib/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '$lib/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '$lib/components/ui/dropdown-menu';
+import {
+  FieldErrors,
+  FormControl,
+  FormField,
+  FormLabel,
+} from '$lib/components/ui/form';
+import { Input } from '$lib/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from '$lib/components/ui/select';
+import { Separator } from '$lib/components/ui/separator';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '$lib/components/ui/table';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '$lib/components/ui/tabs';
+import { sendInviteSchema } from '$lib/validation-schema';
+import {
+  Calendar,
+  CheckCircle,
+  CheckCircleIcon,
+  Clock,
+  CrossIcon,
+  Crown,
+  Filter,
+  Mail,
+  MoreHorizontal,
+  Search,
+  User,
+  UserCheck,
+  UserPlus,
+  Users,
+  XCircle,
+} from '@lucide/svelte';
+import type { InvitationStatus } from 'better-auth/plugins';
+import { toast } from 'svelte-sonner';
+import { superForm } from 'sveltekit-superforms';
+import { zod4Client } from 'sveltekit-superforms/adapters';
 
-  const { data } = $props();
+const { data } = $props();
 
-  const isAdmin = $derived( data.isAdmin );
-  const members = $derived( data.members );
-  const invites = $derived( data.invitations );
-  const requests = $derived( data.requests );
+const isSiteAdmin = $derived(data.isSiteAdmin);
+const members = $derived(data.members);
+const invites = $derived(data.invitations);
+const requests = $derived(data.requests);
 
-  // Form handling
-  const sendInviteForm = superForm( data.sendInviteForm, {
-    validators: zod4Client( sendInviteSchema ),
-  } );
-
-  const { form: sendInviteData, enhance } = sendInviteForm;
-
-  // UI State
-  let sendDialogOpen = $state( false );
-  let activeTab = $state( 'members' );
-  let searchQuery = $state( '' );
-  let selectedRole = $state( 'all' );
-
-  $effect( () => {
-    if ( activeTab ) searchQuery = '';
-  } );
-
-  // Initialize form
-  $sendInviteData.role = 'member';
-
-  const OrganizationRoles = {
-    member: 'Member',
-    admin: 'Admin',
-    owner: 'Owner',
-  };
-
-  const InviteStatus = {
-    pending: 'Pending',
-    accepted: 'Accepted',
-    expired: 'Expired',
-    canceled: 'Cancelled',
-    rejected: 'Rejected',
-  };
-
-  // Computed values
-  const totalMembers = $derived( members.length );
-  const totalInvites = $derived( invites.length );
-  const pendingInvites = $derived(
-      invites.filter( invite => invite.status === 'pending' ).length
-  );
-  const pendingRequests = $derived(
-      requests.filter( request => request.status === 'pending' ).length
-  );
-
-  // Filter functions
-  const filteredMembers = $derived.by( () => {
-    let filtered = members;
-
-    if ( searchQuery ) {
-      filtered = filtered.filter(
-          member =>
-              member.name?.toLowerCase().includes( searchQuery.toLowerCase() ) ||
-              member.email?.toLowerCase().includes( searchQuery.toLowerCase() )
-      );
+// Form handling
+const sendInviteForm = superForm(data.sendInviteForm, {
+  validators: zod4Client(sendInviteSchema),
+  onError: ({ result }) => {
+    console.error('The form had an error', result);
+    toast.error('There was an error sending the invite.', { icon: XCircle });
+  },
+  onUpdated: ({ form }) => {
+    if (form.message) {
+      if (form.message.status === 'success') {
+        toast.success(form.message.text, { icon: CheckCircleIcon });
+      } else if (form.message.status === 'error') {
+        toast.error(form.message.text, { icon: XCircle });
+      }
     }
+  },
+});
 
-    if ( selectedRole !== 'all' ) {
-      filtered = filtered.filter( member => member.role === selectedRole );
-    }
+const { form: sendInviteData, enhance } = sendInviteForm;
 
-    return filtered;
-  } );
+// UI State
+let sendDialogOpen = $state(false);
+let activeTab = $state('members');
+let searchQuery = $state('');
+let selectedRole = $state('all');
 
-  const filteredInvites = $derived.by( () => {
-    let filtered = invites;
+$effect(() => {
+  if (activeTab) searchQuery = '';
+});
 
-    if ( searchQuery ) {
-      filtered = filtered.filter( invite =>
-          invite.email.toLowerCase().includes( searchQuery.toLowerCase() )
-      );
-    }
+// Initialize form
+$sendInviteData.role = 'member';
 
-    return filtered;
-  } );
+const OrganizationRoles = {
+  member: 'Member',
+  admin: 'Admin',
+  owner: 'Owner',
+};
 
-  const filteredRequests = $derived.by( () => {
-    let filtered = requests;
+const InviteStatus = {
+  pending: 'Pending',
+  accepted: 'Accepted',
+  expired: 'Expired',
+  canceled: 'Cancelled',
+  rejected: 'Rejected',
+};
 
-    if ( searchQuery ) {
-      filtered = filtered.filter(
-          request =>
-              request.user?.name?.toLowerCase().includes( searchQuery.toLowerCase() ) ||
-              request.user?.email?.toLowerCase().includes( searchQuery.toLowerCase() )
-      );
-    }
+// Computed values
+const totalMembers = $derived(members.length);
+const totalInvites = $derived(invites.length);
+const pendingInvites = $derived(
+  invites.filter(invite => invite.status === 'pending').length
+);
+const pendingRequests = $derived(
+  requests.filter(request => request.status === 'pending').length
+);
 
-    return filtered;
-  } );
+// Filter functions
+const filteredMembers = $derived.by(() => {
+  let filtered = members;
 
-  // Helper functions
-  function getInitials( name: string ): string {
-    return (
-        name
-            ?.split( ' ' )
-            .map( n => n[0] )
-            .join( '' )
-            .toUpperCase() || '?'
+  if (searchQuery) {
+    filtered = filtered.filter(
+      member =>
+        member.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        member.email?.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }
 
-  function formatDate( date: string | Date ): string {
-    return new Date( date ).toLocaleDateString( 'en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    } );
+  if (selectedRole !== 'all') {
+    filtered = filtered.filter(member => member.role === selectedRole);
   }
 
-  function getStatusColor( status: string ): string {
-    switch ( status ) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300';
-      case 'accepted':
-      case 'approved':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300';
-      case 'expired':
-      case 'rejected':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300';
-      case 'canceled':
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300';
-    }
+  return filtered;
+});
+
+const filteredInvites = $derived.by(() => {
+  let filtered = invites;
+
+  if (searchQuery) {
+    filtered = filtered.filter(invite =>
+      invite.email.toLowerCase().includes(searchQuery.toLowerCase())
+    );
   }
 
-  function getRoleColor( role: string ): string {
-    switch ( role ) {
-      case 'admin':
-        return 'bg-primary/10 text-primary border-primary/20';
-      case 'owner':
-        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300 border-purple/20';
-      case 'member':
-        return 'bg-secondary/10 text-secondary-foreground border-secondary/20';
-      default:
-        return 'bg-muted text-muted-foreground';
-    }
+  return filtered;
+});
+
+const filteredRequests = $derived.by(() => {
+  let filtered = requests;
+
+  if (searchQuery) {
+    filtered = filtered.filter(
+      request =>
+        request.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        request.user?.email?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
   }
+
+  return filtered;
+});
+
+// Helper functions
+function getInitials(name: string): string {
+  return (
+    name
+      ?.split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase() || '?'
+  );
+}
+
+function formatDate(date: string | Date): string {
+  return new Date(date).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
+function getStatusColor(status: string): string {
+  switch (status) {
+    case 'pending':
+      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300';
+    case 'accepted':
+    case 'approved':
+      return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300';
+    case 'expired':
+    case 'rejected':
+      return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300';
+    case 'canceled':
+      return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300';
+    default:
+      return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300';
+  }
+}
+
+function getRoleColor(role: string): string {
+  switch (role) {
+    case 'admin':
+      return 'bg-primary/10 text-primary border-primary/20';
+    case 'owner':
+      return 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300 border-purple/20';
+    case 'member':
+      return 'bg-secondary/10 text-secondary-foreground border-secondary/20';
+    default:
+      return 'bg-muted text-muted-foreground';
+  }
+}
 </script>
 
 <svelte:head>
@@ -239,7 +254,7 @@
       </p>
     </div>
 
-    {#if isAdmin}
+    {#if isSiteAdmin}
       <Button
           onclick={() => { sendDialogOpen = true; }}
           class="flex items-center gap-2"
@@ -384,7 +399,7 @@
                   <TableHead>Member</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Joined</TableHead>
-                  {#if isAdmin}
+                  {#if isSiteAdmin}
                     <TableHead class="w-12"></TableHead>
                   {/if}
                 </TableRow>
@@ -395,7 +410,7 @@
                     <TableCell>
                       <div class="flex items-center gap-3">
                         <Avatar class="h-10 w-10">
-                          <AvatarImage src={member.image || "/placeholder.svg"} alt={member.name}/>
+                          <AvatarImage src={member.image} alt={member.name}/>
                           <AvatarFallback class="bg-primary/10 text-primary font-medium">
                             {getInitials( member.name )}
                           </AvatarFallback>
@@ -424,7 +439,7 @@
                         {formatDate( member.createdAt )}
                       </div>
                     </TableCell>
-                    {#if isAdmin}
+                    {#if isSiteAdmin}
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -481,7 +496,7 @@
                   <TableHead>Role</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Expires</TableHead>
-                  {#if isAdmin}
+                  {#if isSiteAdmin}
                     <TableHead class="w-12"></TableHead>
                   {/if}
                 </TableRow>
@@ -528,7 +543,7 @@
                         {formatDate( invite.expiresAt )}
                       </div>
                     </TableCell>
-                    {#if isAdmin}
+                    {#if isSiteAdmin}
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -559,6 +574,27 @@
                                 <button>Cancel Invitation</button>
                               </form>
                             </DropdownMenuItem>
+                            <DropdownMenuSeparator/>
+                            <DropdownMenuItem class="text-destructive">
+                              <form method="POST" action="?/remove-invite" class="inline" use:stdEnhance={() => {
+                                return async ({update, result}) => {
+                                  if (result.type === 'redirect') {
+                                    goto(result.location);
+                                  } else {
+                                    if (result.type === 'success')
+                                      toast.success('Invitation deleted');
+                                    else if (result.type === 'error' || result.type === 'failure')
+                                      toast.error('Failed to delete invitation');
+
+                                    await update({invalidateAll: true});
+                                    await applyAction(result);
+                                  }
+                                }
+                              }}>
+                                <input type="hidden" name="inviteId" value={invite.id}>
+                                <button>Delete Invitation</button>
+                              </form>
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -576,7 +612,7 @@
                  ? 'No invitations match your search criteria.'
                  : 'No invitations have been sent yet.'}
               </p>
-              {#if isAdmin && !searchQuery}
+              {#if isSiteAdmin && !searchQuery}
                 <Button onclick={() => { sendDialogOpen = true; }} variant="outline">
                   <UserPlus class="h-4 w-4 mr-2"/>
                   Send Invitation
@@ -610,7 +646,7 @@
                   <TableHead>Requested Role</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Expires</TableHead>
-                  {#if isAdmin}
+                  {#if isSiteAdmin}
                     <TableHead class="w-32">Actions</TableHead>
                   {/if}
                 </TableRow>
@@ -621,7 +657,7 @@
                     <TableCell>
                       <div class="flex items-center gap-3">
                         <Avatar class="h-10 w-10">
-                          <AvatarImage src={request.user?.image || "/placeholder.svg"} alt={request.user?.name}/>
+                          <AvatarImage src={request.user?.image} alt={request.user?.name}/>
                           <AvatarFallback class="bg-primary/10 text-primary font-medium">
                             {getInitials( request.user?.name || request.user?.email || 'U' )}
                           </AvatarFallback>
@@ -660,7 +696,7 @@
                         {formatDate( request.expiresAt )}
                       </div>
                     </TableCell>
-                    {#if isAdmin && request.status === 'pending'}
+                    {#if isSiteAdmin && request.status === 'pending'}
                       <TableCell>
                         <div class="flex items-center gap-2">
                           <form method="POST" action="?/accept-request" class="inline" use:stdEnhance={() => {
@@ -698,7 +734,7 @@
                           </form>
                         </div>
                       </TableCell>
-                    {:else if isAdmin}
+                    {:else if isSiteAdmin}
                       <TableCell>
                         <Badge variant="secondary" class="text-xs">
                           {request.status === 'accepted' ? 'Accepted' : 'Rejected'}
@@ -727,7 +763,6 @@
 </div>
 
 <!-- Invite Dialog -->
-<!-- TODO: Show success or error toast / message -->
 <Dialog bind:open={sendDialogOpen}>
   <DialogContent class="sm:max-w-md">
     <DialogHeader>
@@ -756,12 +791,12 @@
         </FormControl>
       </FormField>
 
-      {#if isAdmin}
+      {#if isSiteAdmin}
         <FormField form={sendInviteForm} name="role">
           <FormControl>
             {#snippet children( { props } )}
               <FormLabel>Role</FormLabel>
-              <Select type="single" bind:value={$sendInviteData.role}>
+              <Select type="single" name="role" id="invite-role" bind:value={$sendInviteData.role}>
                 <SelectTrigger {...props}>
                   {$sendInviteData.role ? OrganizationRoles[$sendInviteData.role] : 'Select Role'}
                 </SelectTrigger>

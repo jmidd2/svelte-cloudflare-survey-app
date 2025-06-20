@@ -11,6 +11,8 @@ import * as schema from './schema';
  */
 export type DrizzleClient = Awaited<ReturnType<typeof createDbClient>>;
 
+const enableLogger = process.env.DEBUG_DB === 'true';
+
 export async function createDbClient<T extends typeof import('./schema')>({
   d1Database,
   dbUrl,
@@ -28,7 +30,7 @@ export async function createDbClient<T extends typeof import('./schema')>({
     const { drizzle } = await import('drizzle-orm/libsql');
 
     const client = createClient({ url: dbUrl });
-    return drizzle(client, { schema, logger: true });
+    return drizzle(client, { schema, logger: enableLogger });
   }
 
   if (d1Database) {
