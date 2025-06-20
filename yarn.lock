@@ -149,7 +149,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@atlaskit/pragmatic-drag-and-drop@npm:^1.6.0, @atlaskit/pragmatic-drag-and-drop@npm:^1.7.2":
+"@atlaskit/pragmatic-drag-and-drop@npm:^1.6.0":
   version: 1.7.2
   resolution: "@atlaskit/pragmatic-drag-and-drop@npm:1.7.2"
   dependencies:
@@ -157,6 +157,17 @@ __metadata:
     bind-event-listener: "npm:^3.0.0"
     raf-schd: "npm:^4.0.3"
   checksum: 10c0/723646925ddb738c3c4fd79bea22baebc3a6b8bb0b4e4bf118e207ff6e2937a571a4323864456124e35f1cfbed268531a2bf6226a5b929d6643651b19d0cc185
+  languageName: node
+  linkType: hard
+
+"@atlaskit/pragmatic-drag-and-drop@npm:^1.7.3":
+  version: 1.7.3
+  resolution: "@atlaskit/pragmatic-drag-and-drop@npm:1.7.3"
+  dependencies:
+    "@babel/runtime": "npm:^7.0.0"
+    bind-event-listener: "npm:^3.0.0"
+    raf-schd: "npm:^4.0.3"
+  checksum: 10c0/d7c6e1a2e421c9da9134af403bc0f3eacf21c5bce56c2d5434093b559b0dd3ac87238c1d2f043fa55750201a7d859fdea00916f6280ea23a27b7726c7a78dd63
   languageName: node
   linkType: hard
 
@@ -403,18 +414,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@biomejs/biome@npm:^2.0.0":
-  version: 2.0.0
-  resolution: "@biomejs/biome@npm:2.0.0"
+"@biomejs/biome@npm:^2.0.2":
+  version: 2.0.2
+  resolution: "@biomejs/biome@npm:2.0.2"
   dependencies:
-    "@biomejs/cli-darwin-arm64": "npm:2.0.0"
-    "@biomejs/cli-darwin-x64": "npm:2.0.0"
-    "@biomejs/cli-linux-arm64": "npm:2.0.0"
-    "@biomejs/cli-linux-arm64-musl": "npm:2.0.0"
-    "@biomejs/cli-linux-x64": "npm:2.0.0"
-    "@biomejs/cli-linux-x64-musl": "npm:2.0.0"
-    "@biomejs/cli-win32-arm64": "npm:2.0.0"
-    "@biomejs/cli-win32-x64": "npm:2.0.0"
+    "@biomejs/cli-darwin-arm64": "npm:2.0.2"
+    "@biomejs/cli-darwin-x64": "npm:2.0.2"
+    "@biomejs/cli-linux-arm64": "npm:2.0.2"
+    "@biomejs/cli-linux-arm64-musl": "npm:2.0.2"
+    "@biomejs/cli-linux-x64": "npm:2.0.2"
+    "@biomejs/cli-linux-x64-musl": "npm:2.0.2"
+    "@biomejs/cli-win32-arm64": "npm:2.0.2"
+    "@biomejs/cli-win32-x64": "npm:2.0.2"
   dependenciesMeta:
     "@biomejs/cli-darwin-arm64":
       optional: true
@@ -434,62 +445,62 @@ __metadata:
       optional: true
   bin:
     biome: bin/biome
-  checksum: 10c0/a255d2e84e303c6b1bd841877463f358415a35fb39dc4051dec80d9dd44e4f2f546e7e13804f7cd9f0932ca11664600f819e0b0dd75c55c2c0571ed771d86cb5
+  checksum: 10c0/cc2276fceeb8d5612eee7f1e524e996112f365b11d48a2af99eb2ad661415ce151ff585733c1618b093c887549a5020e941166f4ff0ea9b9ea7a9268a8518c4c
   languageName: node
   linkType: hard
 
-"@biomejs/cli-darwin-arm64@npm:2.0.0":
-  version: 2.0.0
-  resolution: "@biomejs/cli-darwin-arm64@npm:2.0.0"
+"@biomejs/cli-darwin-arm64@npm:2.0.2":
+  version: 2.0.2
+  resolution: "@biomejs/cli-darwin-arm64@npm:2.0.2"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@biomejs/cli-darwin-x64@npm:2.0.0":
-  version: 2.0.0
-  resolution: "@biomejs/cli-darwin-x64@npm:2.0.0"
+"@biomejs/cli-darwin-x64@npm:2.0.2":
+  version: 2.0.2
+  resolution: "@biomejs/cli-darwin-x64@npm:2.0.2"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@biomejs/cli-linux-arm64-musl@npm:2.0.0":
-  version: 2.0.0
-  resolution: "@biomejs/cli-linux-arm64-musl@npm:2.0.0"
+"@biomejs/cli-linux-arm64-musl@npm:2.0.2":
+  version: 2.0.2
+  resolution: "@biomejs/cli-linux-arm64-musl@npm:2.0.2"
   conditions: os=linux & cpu=arm64 & libc=musl
   languageName: node
   linkType: hard
 
-"@biomejs/cli-linux-arm64@npm:2.0.0":
-  version: 2.0.0
-  resolution: "@biomejs/cli-linux-arm64@npm:2.0.0"
+"@biomejs/cli-linux-arm64@npm:2.0.2":
+  version: 2.0.2
+  resolution: "@biomejs/cli-linux-arm64@npm:2.0.2"
   conditions: os=linux & cpu=arm64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@biomejs/cli-linux-x64-musl@npm:2.0.0":
-  version: 2.0.0
-  resolution: "@biomejs/cli-linux-x64-musl@npm:2.0.0"
+"@biomejs/cli-linux-x64-musl@npm:2.0.2":
+  version: 2.0.2
+  resolution: "@biomejs/cli-linux-x64-musl@npm:2.0.2"
   conditions: os=linux & cpu=x64 & libc=musl
   languageName: node
   linkType: hard
 
-"@biomejs/cli-linux-x64@npm:2.0.0":
-  version: 2.0.0
-  resolution: "@biomejs/cli-linux-x64@npm:2.0.0"
+"@biomejs/cli-linux-x64@npm:2.0.2":
+  version: 2.0.2
+  resolution: "@biomejs/cli-linux-x64@npm:2.0.2"
   conditions: os=linux & cpu=x64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@biomejs/cli-win32-arm64@npm:2.0.0":
-  version: 2.0.0
-  resolution: "@biomejs/cli-win32-arm64@npm:2.0.0"
+"@biomejs/cli-win32-arm64@npm:2.0.2":
+  version: 2.0.2
+  resolution: "@biomejs/cli-win32-arm64@npm:2.0.2"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
-"@biomejs/cli-win32-x64@npm:2.0.0":
-  version: 2.0.0
-  resolution: "@biomejs/cli-win32-x64@npm:2.0.0"
+"@biomejs/cli-win32-x64@npm:2.0.2":
+  version: 2.0.2
+  resolution: "@biomejs/cli-win32-x64@npm:2.0.2"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
@@ -516,37 +527,37 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@cloudflare/workerd-darwin-64@npm:1.20250612.0":
-  version: 1.20250612.0
-  resolution: "@cloudflare/workerd-darwin-64@npm:1.20250612.0"
+"@cloudflare/workerd-darwin-64@npm:1.20250617.0":
+  version: 1.20250617.0
+  resolution: "@cloudflare/workerd-darwin-64@npm:1.20250617.0"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@cloudflare/workerd-darwin-arm64@npm:1.20250612.0":
-  version: 1.20250612.0
-  resolution: "@cloudflare/workerd-darwin-arm64@npm:1.20250612.0"
+"@cloudflare/workerd-darwin-arm64@npm:1.20250617.0":
+  version: 1.20250617.0
+  resolution: "@cloudflare/workerd-darwin-arm64@npm:1.20250617.0"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@cloudflare/workerd-linux-64@npm:1.20250612.0":
-  version: 1.20250612.0
-  resolution: "@cloudflare/workerd-linux-64@npm:1.20250612.0"
+"@cloudflare/workerd-linux-64@npm:1.20250617.0":
+  version: 1.20250617.0
+  resolution: "@cloudflare/workerd-linux-64@npm:1.20250617.0"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
 
-"@cloudflare/workerd-linux-arm64@npm:1.20250612.0":
-  version: 1.20250612.0
-  resolution: "@cloudflare/workerd-linux-arm64@npm:1.20250612.0"
+"@cloudflare/workerd-linux-arm64@npm:1.20250617.0":
+  version: 1.20250617.0
+  resolution: "@cloudflare/workerd-linux-arm64@npm:1.20250617.0"
   conditions: os=linux & cpu=arm64
   languageName: node
   linkType: hard
 
-"@cloudflare/workerd-windows-64@npm:1.20250612.0":
-  version: 1.20250612.0
-  resolution: "@cloudflare/workerd-windows-64@npm:1.20250612.0"
+"@cloudflare/workerd-windows-64@npm:1.20250617.0":
+  version: 1.20250617.0
+  resolution: "@cloudflare/workerd-windows-64@npm:1.20250617.0"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
@@ -558,10 +569,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@cloudflare/workers-types@npm:^4.20250617.0":
-  version: 4.20250617.0
-  resolution: "@cloudflare/workers-types@npm:4.20250617.0"
-  checksum: 10c0/5a95cb1aad3d724da185fb514623a1f67edab591df8a5829d1397193ff33be65c898cdaa190262b478f3b7a9cf4f9f9729aa0ba63935ea6de97becf0dd6ad7f7
+"@cloudflare/workers-types@npm:^4.20250620.0":
+  version: 4.20250620.0
+  resolution: "@cloudflare/workers-types@npm:4.20250620.0"
+  checksum: 10c0/acb2cf3ef70565834612c067d0933ca75a6e58379caa01b717c9d711f1f0ce798c7003305949d09f3691981b3c5f3d807862f44909fedbc051dcd53d52efd454
   languageName: node
   linkType: hard
 
@@ -1220,7 +1231,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@floating-ui/core@npm:^1.7.0, @floating-ui/core@npm:^1.7.1":
+"@floating-ui/core@npm:^1.7.1":
   version: 1.7.1
   resolution: "@floating-ui/core@npm:1.7.1"
   dependencies:
@@ -1719,12 +1730,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@lucide/svelte@npm:^0.516.0":
-  version: 0.516.0
-  resolution: "@lucide/svelte@npm:0.516.0"
+"@lucide/svelte@npm:^0.519.0":
+  version: 0.519.0
+  resolution: "@lucide/svelte@npm:0.519.0"
   peerDependencies:
     svelte: ^5
-  checksum: 10c0/4731d613bcf89194d968159d9c52bae19a9aae0c090a92c961239284aa22c983e354da9f7546a6638cbf1ee61c3a0a40e8b6ff7ccf318f4030e4af4cb28ead9d
+  checksum: 10c0/8b302f1e1f7f0a912a9e26152bbc2af2ae8a1a44713096048c3f16316efda072e42a949f8ee5754ffb8272e15527d13775b8786ddcbff53970ad02fd4c48da52
   languageName: node
   linkType: hard
 
@@ -2325,14 +2336,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@playwright/test@npm:^1.53.0":
-  version: 1.53.0
-  resolution: "@playwright/test@npm:1.53.0"
+"@playwright/test@npm:^1.53.1":
+  version: 1.53.1
+  resolution: "@playwright/test@npm:1.53.1"
   dependencies:
-    playwright: "npm:1.53.0"
+    playwright: "npm:1.53.1"
   bin:
     playwright: cli.js
-  checksum: 10c0/8335d56545a172b3b0d98c67094ce659899577746d95e991d7c47d94b533f715b2278d13795646cd3c5c2ed4559ce89b520aafd6f4ec4586fb51d047215173db
+  checksum: 10c0/f2ef7899ca6bc178c9f2ba6c8633d0bbeb5ba135048e9df01ecb949c6f743811ba5ef76d495f619454074c81dbfa28be12e4c0a1224bb2af0d4cb403182c716f
   languageName: node
   linkType: hard
 
@@ -2989,9 +3000,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sveltejs/kit@npm:^2.21.5":
-  version: 2.21.5
-  resolution: "@sveltejs/kit@npm:2.21.5"
+"@sveltejs/kit@npm:^2.22.0":
+  version: 2.22.0
+  resolution: "@sveltejs/kit@npm:2.22.0"
   dependencies:
     "@sveltejs/acorn-typescript": "npm:^1.0.5"
     "@types/cookie": "npm:^0.6.0"
@@ -3007,12 +3018,12 @@ __metadata:
     sirv: "npm:^3.0.0"
     vitefu: "npm:^1.0.6"
   peerDependencies:
-    "@sveltejs/vite-plugin-svelte": ^3.0.0 || ^4.0.0-next.1 || ^5.0.0
+    "@sveltejs/vite-plugin-svelte": ^3.0.0 || ^4.0.0-next.1 || ^5.0.0 || ^6.0.0-next.0
     svelte: ^4.0.0 || ^5.0.0-next.0
-    vite: ^5.0.3 || ^6.0.0
+    vite: ^5.0.3 || ^6.0.0 || ^7.0.0-beta.0
   bin:
     svelte-kit: svelte-kit.js
-  checksum: 10c0/56728cad376f20811d1b519d25bfe5a05f58513059b369afb430cb9f6213771d71c58904ebdabbaa0a8d321c8fd392922370c902d86f43b87887db3f04c48630
+  checksum: 10c0/79593dadc1a8a1f4363be9a94027521fefd15bbad6e3a4abb54ab91b12029390e2e57923e6e4c2e8cffe7a1c875913d914a3581fecf62ed64766ac00cba003ce
   languageName: node
   linkType: hard
 
@@ -3690,23 +3701,23 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "anon-feedback-app@workspace:."
   dependencies:
-    "@atlaskit/pragmatic-drag-and-drop": "npm:^1.7.2"
+    "@atlaskit/pragmatic-drag-and-drop": "npm:^1.7.3"
     "@atlaskit/pragmatic-drag-and-drop-flourish": "npm:^2.0.3"
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "npm:^1.1.0"
-    "@biomejs/biome": "npm:^2.0.0"
-    "@cloudflare/workers-types": "npm:^4.20250617.0"
+    "@biomejs/biome": "npm:^2.0.2"
+    "@cloudflare/workers-types": "npm:^4.20250620.0"
     "@floating-ui/core": "npm:^1.7.1"
     "@floating-ui/dom": "npm:^1.7.1"
     "@internationalized/date": "npm:^3.8.2"
     "@libsql/client": "npm:^0.15.9"
-    "@lucide/svelte": "npm:^0.516.0"
-    "@playwright/test": "npm:^1.53.0"
+    "@lucide/svelte": "npm:^0.519.0"
+    "@playwright/test": "npm:^1.53.1"
     "@sentry/cli": "npm:^2.46.0"
     "@sentry/cloudflare": "npm:^9.30.0"
     "@sentry/sveltekit": "npm:^9.30.0"
     "@sveltejs/adapter-auto": "npm:^6.0.1"
     "@sveltejs/adapter-cloudflare": "npm:^7.0.4"
-    "@sveltejs/kit": "npm:^2.21.5"
+    "@sveltejs/kit": "npm:^2.22.0"
     "@sveltejs/vite-plugin-svelte": "npm:^5.1.0"
     "@tailwindcss/forms": "npm:^0.5.10"
     "@tailwindcss/typography": "npm:^0.5.16"
@@ -3717,7 +3728,7 @@ __metadata:
     "@types/node": "npm:^22.15.32"
     "@vitest/coverage-v8": "npm:^3.2.4"
     better-auth: "npm:^1.2.9"
-    bits-ui: "npm:^2.8.0"
+    bits-ui: "npm:^2.8.5"
     chalk: "npm:^5.4.1"
     clsx: "npm:^2.1.1"
     drizzle-kit: "npm:^0.31.1"
@@ -3729,10 +3740,10 @@ __metadata:
     jsdom: "npm:^26.1.0"
     layerchart: "npm:2.0.0-next.23"
     mode-watcher: "npm:^1.0.8"
-    paneforge: "npm:^1.0.0-next.5"
-    runed: "npm:^0.28.0"
-    svelte: "npm:^5.34.5"
-    svelte-check: "npm:^4.2.1"
+    paneforge: "npm:^1.0.0"
+    runed: "npm:^0.29.0"
+    svelte: "npm:^5.34.7"
+    svelte-check: "npm:^4.2.2"
     svelte-sonner: "npm:^1.0.5"
     sveltekit-superforms: "npm:^2.27.0"
     tailwind-merge: "npm:^3.3.1"
@@ -3747,7 +3758,7 @@ __metadata:
     vaul-svelte: "npm:^1.0.0-next.7"
     vite: "npm:^6.3.5"
     vitest: "npm:^3.2.4"
-    wrangler: "npm:^4.20.1"
+    wrangler: "npm:^4.20.5"
     zod: "npm:^3.25.67"
   languageName: unknown
   linkType: soft
@@ -3932,21 +3943,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bits-ui@npm:^2.8.0":
-  version: 2.8.0
-  resolution: "bits-ui@npm:2.8.0"
+"bits-ui@npm:^2.8.5":
+  version: 2.8.5
+  resolution: "bits-ui@npm:2.8.5"
   dependencies:
-    "@floating-ui/core": "npm:^1.7.0"
-    "@floating-ui/dom": "npm:^1.7.0"
-    css.escape: "npm:^1.5.1"
+    "@floating-ui/core": "npm:^1.7.1"
+    "@floating-ui/dom": "npm:^1.7.1"
     esm-env: "npm:^1.1.2"
     runed: "npm:^0.28.0"
-    svelte-toolbelt: "npm:^0.9.1"
+    svelte-toolbelt: "npm:^0.9.2"
     tabbable: "npm:^6.2.0"
   peerDependencies:
     "@internationalized/date": ^3.8.1
     svelte: ^5.33.0
-  checksum: 10c0/104e5492707d97921ba20e1a4136912f1f0da7164a668e33b4bd363aa7573645fd49a40d5bb798eabaf1f7452981eae800fe417a89f95584f0e8693bf609fb84
+  checksum: 10c0/3519c389542e2f8db305b5c21f2232a505e82e4475c8d79b2b163f1798b31aa64915d43d49de3818211533a8c3db985f6e36431919cd9b6bbf798152375dfb99
   languageName: node
   linkType: hard
 
@@ -6342,9 +6352,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"miniflare@npm:4.20250612.0":
-  version: 4.20250612.0
-  resolution: "miniflare@npm:4.20250612.0"
+"miniflare@npm:4.20250617.3":
+  version: 4.20250617.3
+  resolution: "miniflare@npm:4.20250617.3"
   dependencies:
     "@cspotcode/source-map-support": "npm:0.8.1"
     acorn: "npm:8.14.0"
@@ -6354,13 +6364,13 @@ __metadata:
     sharp: "npm:^0.33.5"
     stoppable: "npm:1.1.0"
     undici: "npm:^5.28.5"
-    workerd: "npm:1.20250612.0"
+    workerd: "npm:1.20250617.0"
     ws: "npm:8.18.0"
     youch: "npm:3.3.4"
     zod: "npm:3.22.3"
   bin:
     miniflare: bootstrap.js
-  checksum: 10c0/089a4987cbf5fafb1441910a75ff7c407321117b41abeb9eda7d17b5d45e6cfe57c7e73ee5d7f564f89795fd6a07c5d8295c413e66efa23d412b8b8e97e19faa
+  checksum: 10c0/ed4ede8ed849819c27ed3ce4187c777cef822a6733861120db0bac5a33acce35927240babd4ca669a5d6ce56a735424e25df33af4d66d805d7ed41c3819d898e
   languageName: node
   linkType: hard
 
@@ -6730,15 +6740,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"paneforge@npm:^1.0.0-next.5":
-  version: 1.0.0-next.5
-  resolution: "paneforge@npm:1.0.0-next.5"
+"paneforge@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "paneforge@npm:1.0.0"
   dependencies:
     runed: "npm:^0.23.4"
-    svelte-toolbelt: "npm:^0.7.1"
+    svelte-toolbelt: "npm:^0.9.2"
   peerDependencies:
-    svelte: ^5.20.0
-  checksum: 10c0/9131875846783e192611517fa2ccd26f34368d9f018ae153c01a1af7d8d18ce8668ec8791743ad6d7734b83c3c6abceb813627652a6347cd73dad0ab5a1e297b
+    svelte: ^5.29.0
+  checksum: 10c0/a8e9dc07a1eda3ad61e1ad913c06d152f2ef57d31a3ae909b1e09393dee892c9faabd866041b0b23ebd18091f31e8c20ab2326e7e25c973bdbfd12e8094e906b
   languageName: node
   linkType: hard
 
@@ -6851,27 +6861,27 @@ __metadata:
   languageName: node
   linkType: hard
 
-"playwright-core@npm:1.53.0":
-  version: 1.53.0
-  resolution: "playwright-core@npm:1.53.0"
+"playwright-core@npm:1.53.1":
+  version: 1.53.1
+  resolution: "playwright-core@npm:1.53.1"
   bin:
     playwright-core: cli.js
-  checksum: 10c0/fda0cf76115b15b1ca5cbc69e14185904e5c85e9e7cddb0a48121e69d681c638ac497e8a103985976cae260aa02e9c03ea27d6cd0b5f3d3ca914d4c7fd96f930
+  checksum: 10c0/8780552740741b94c346373ab6f949e9a44d3df54016b12123da9fe2f5fb60c1838197642916789b0a2ffb567e4ba0089f2e57d496bef7e460ddc4526f9b3b0f
   languageName: node
   linkType: hard
 
-"playwright@npm:1.53.0":
-  version: 1.53.0
-  resolution: "playwright@npm:1.53.0"
+"playwright@npm:1.53.1":
+  version: 1.53.1
+  resolution: "playwright@npm:1.53.1"
   dependencies:
     fsevents: "npm:2.3.2"
-    playwright-core: "npm:1.53.0"
+    playwright-core: "npm:1.53.1"
   dependenciesMeta:
     fsevents:
       optional: true
   bin:
     playwright: cli.js
-  checksum: 10c0/8d995114808b92f2005bd12ff5e494cdc3fa2d484f4d85a3e54be1fb99e88ae3e34b24792d83bb987462c73e553a0fa37a2a70264afbf67894b51c1498cf5a11
+  checksum: 10c0/3dcbcd3791a7f0d1007db4d3126c8136258a2002c2fbfc8b840086b64cbc1fb628b2e25dd3b345d685fb27ba39790ab0f4ce81a8faade7dc748af3a63bdf3550
   languageName: node
   linkType: hard
 
@@ -7281,6 +7291,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"runed@npm:^0.29.0":
+  version: 0.29.0
+  resolution: "runed@npm:0.29.0"
+  dependencies:
+    esm-env: "npm:^1.0.0"
+  peerDependencies:
+    svelte: ^5.7.0
+  checksum: 10c0/4ba1adbb5b7b30cc561ff83dbe166ad82f1507563e6432a0801552f98d17d0be3ca30e3c83e8c8cc11720d62266462ff6d1d6ad8ad2d1ca77472d7256291c14a
+  languageName: node
+  linkType: hard
+
 "rw@npm:1":
   version: 1.3.3
   resolution: "rw@npm:1.3.3"
@@ -7673,9 +7694,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"svelte-check@npm:^4.2.1":
-  version: 4.2.1
-  resolution: "svelte-check@npm:4.2.1"
+"svelte-check@npm:^4.2.2":
+  version: 4.2.2
+  resolution: "svelte-check@npm:4.2.2"
   dependencies:
     "@jridgewell/trace-mapping": "npm:^0.3.25"
     chokidar: "npm:^4.0.1"
@@ -7687,7 +7708,7 @@ __metadata:
     typescript: ">=5.0.0"
   bin:
     svelte-check: bin/svelte-check
-  checksum: 10c0/95d969a181cf31df8c5a22bdf0061fe73a13ac0825ce93fb407b36b0b5a83f1fa604790cd243bd96b7e7a7d23cdeb9fb48e309162ae40259205d7aafdb69fb9e
+  checksum: 10c0/21903d3f1af42f98311e686571e4dced2849fc41e66112ef05c3a74e9355e1bcf5755e1d8cc3f03d8c4fbeeca44b002e6f5939a44ed639a20b52219ed36c8ba3
   languageName: node
   linkType: hard
 
@@ -7727,22 +7748,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"svelte-toolbelt@npm:^0.9.1":
-  version: 0.9.1
-  resolution: "svelte-toolbelt@npm:0.9.1"
+"svelte-toolbelt@npm:^0.9.2":
+  version: 0.9.2
+  resolution: "svelte-toolbelt@npm:0.9.2"
   dependencies:
     clsx: "npm:^2.1.1"
     runed: "npm:^0.28.0"
     style-to-object: "npm:^1.0.8"
   peerDependencies:
     svelte: ^5.30.2
-  checksum: 10c0/3fed10d1d34ea6252d629dd1f9fe8d7fdbfd4e6df05257d79a33519e4220aeb09908dc1b296d146472baf5b8e85757c7b843df44010e5931d26f0abdcb8f1c81
+  checksum: 10c0/1dce3a80025cce1cc8ed8eace730e758d719665e0e990a3edc82bd007dd60e00270f49430c7f263be33dd50859983acbddfc3ca1b2117b5d4a2c6fa034a4ebe4
   languageName: node
   linkType: hard
 
-"svelte@npm:^5.34.5":
-  version: 5.34.5
-  resolution: "svelte@npm:5.34.5"
+"svelte@npm:^5.34.7":
+  version: 5.34.7
+  resolution: "svelte@npm:5.34.7"
   dependencies:
     "@ampproject/remapping": "npm:^2.3.0"
     "@jridgewell/sourcemap-codec": "npm:^1.5.0"
@@ -7758,7 +7779,7 @@ __metadata:
     locate-character: "npm:^3.0.0"
     magic-string: "npm:^0.30.11"
     zimmerframe: "npm:^1.1.2"
-  checksum: 10c0/ce9668c696daed882a8d19494a4c310785be9daef90648571b2a6b786f76b14e5a8939ceab616c44753b031ebb1c176c7627d0591fb049f1402b355613614d7e
+  checksum: 10c0/14e0cad64aff2ddb6b93309f50ce191493a5a5dde462cd524a3429914aa03a67b9df098fde425ccd2fcc02741d6111168bf6dc626945a3408e5a424433f4a220
   languageName: node
   linkType: hard
 
@@ -8682,15 +8703,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"workerd@npm:1.20250612.0":
-  version: 1.20250612.0
-  resolution: "workerd@npm:1.20250612.0"
+"workerd@npm:1.20250617.0":
+  version: 1.20250617.0
+  resolution: "workerd@npm:1.20250617.0"
   dependencies:
-    "@cloudflare/workerd-darwin-64": "npm:1.20250612.0"
-    "@cloudflare/workerd-darwin-arm64": "npm:1.20250612.0"
-    "@cloudflare/workerd-linux-64": "npm:1.20250612.0"
-    "@cloudflare/workerd-linux-arm64": "npm:1.20250612.0"
-    "@cloudflare/workerd-windows-64": "npm:1.20250612.0"
+    "@cloudflare/workerd-darwin-64": "npm:1.20250617.0"
+    "@cloudflare/workerd-darwin-arm64": "npm:1.20250617.0"
+    "@cloudflare/workerd-linux-64": "npm:1.20250617.0"
+    "@cloudflare/workerd-linux-arm64": "npm:1.20250617.0"
+    "@cloudflare/workerd-windows-64": "npm:1.20250617.0"
   dependenciesMeta:
     "@cloudflare/workerd-darwin-64":
       optional: true
@@ -8704,7 +8725,7 @@ __metadata:
       optional: true
   bin:
     workerd: bin/workerd
-  checksum: 10c0/a878d624118930a39ea1a6733bcbc5182b09668e60ba947df0126a785ad4c10580c1ce69f3164c1bdc45186b95cc4a42e99fe6ace43b15c58c123c210a63d024
+  checksum: 10c0/3f3342840a4d439232f86d88019601071f18470c37582a2b7de1273346785aa090d0259e674be1f4d59f898d38d5b6d276da2cc4625de1609e0966e9405bdf7a
   languageName: node
   linkType: hard
 
@@ -8718,21 +8739,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"wrangler@npm:^4.20.1":
-  version: 4.20.1
-  resolution: "wrangler@npm:4.20.1"
+"wrangler@npm:^4.20.5":
+  version: 4.20.5
+  resolution: "wrangler@npm:4.20.5"
   dependencies:
     "@cloudflare/kv-asset-handler": "npm:0.4.0"
     "@cloudflare/unenv-preset": "npm:2.3.3"
     blake3-wasm: "npm:2.1.5"
     esbuild: "npm:0.25.4"
     fsevents: "npm:~2.3.2"
-    miniflare: "npm:4.20250612.0"
+    miniflare: "npm:4.20250617.3"
     path-to-regexp: "npm:6.3.0"
     unenv: "npm:2.0.0-rc.17"
-    workerd: "npm:1.20250612.0"
+    workerd: "npm:1.20250617.0"
   peerDependencies:
-    "@cloudflare/workers-types": ^4.20250612.0
+    "@cloudflare/workers-types": ^4.20250617.0
   dependenciesMeta:
     fsevents:
       optional: true
@@ -8742,7 +8763,7 @@ __metadata:
   bin:
     wrangler: bin/wrangler.js
     wrangler2: bin/wrangler.js
-  checksum: 10c0/9b3d334f857df170999913698b3189af02b677ec0bea32cc47a1fe86329f878a60db0bcc22808ed95b93c6772b3465394b610f37fb47b8d05a617346a9dd1e88
+  checksum: 10c0/8f8d397b6878b5b767abc98ed6cfcb5119aef5dcb7db25832cf1f056cf378afa79efe787668f4caf8bc6f88e88253dc1676d05e8ef2d820cd964dbde1b529a55
   languageName: node
   linkType: hard
 
