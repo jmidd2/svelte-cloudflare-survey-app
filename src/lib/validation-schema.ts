@@ -30,6 +30,6 @@ export const editFormSchema = z.object({
 export type EditFormSchema = typeof editFormSchema;
 
 export const sendInviteSchema = z.object({
-  email: z.string().nonempty(),
+  email: z.email(),
   role: z.enum(['owner', 'admin', 'member']).default('member'),
 });

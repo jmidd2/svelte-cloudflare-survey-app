@@ -77,6 +77,7 @@ import type { InvitationStatus } from 'better-auth/plugins';
 import { toast } from 'svelte-sonner';
 import { superForm } from 'sveltekit-superforms';
 import { zod4Client } from 'sveltekit-superforms/adapters';
+import SuperDebug from 'sveltekit-superforms/SuperDebug.svelte';
 
 const { data } = $props();
 
@@ -88,6 +89,7 @@ const requests = $derived(data.requests);
 // Form handling
 const sendInviteForm = superForm(data.sendInviteForm, {
   validators: zod4Client(sendInviteSchema),
+  validationMethod: 'oninput',
   onError: ({ result }) => {
     console.error('The form had an error', result);
     toast.error('There was an error sending the invite.', { icon: XCircle });
@@ -833,6 +835,10 @@ function getRoleColor(role: string): string {
           An invitation email will be sent to this address with a secure link to join your organization.
         </AlertDescription>
       </Alert>
+
+      <div class="max-w-96">
+        <SuperDebug data={sendInviteData}></SuperDebug>
+      </div>
 
       <DialogFooter>
         <Button type="button" variant="outline" onclick={() => { sendDialogOpen = false; }}>
