@@ -5,6 +5,7 @@ import {
 } from '$lib/server/db/schema';
 import { withZodFormData } from '$lib/utils/server';
 import { fail, redirect } from '@sveltejs/kit';
+import { generateId } from 'better-auth';
 import { APIError } from 'better-call';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod/v4';
@@ -137,7 +138,12 @@ export const actions: Actions = {
   ),
   'request-join': withZodFormData(
     requestJoinSchema,
-    async ({}, formData) => {}
+    async ({ locals }, formData) => {
+      const id = generateId();
+
+      // do i use invites and let admins use an accept invite button on the dashboard
+      // or add a new table for requests
+    }
   ),
   original: async ({ request, locals }) => {
     const formData = await request.formData();

@@ -197,6 +197,7 @@ async function main() {
       id: tenantId,
       name: tenantName,
       createdAt: baseDate,
+      slug: tenantName.toLowerCase().replace(/\s/g, '-'),
     }
 
     await db.insert(schema.organizations).values(orgData);

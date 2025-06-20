@@ -24,8 +24,10 @@ CREATE TABLE `form_fields` (
 	`required` integer DEFAULT false NOT NULL,
 	`options` text,
 	`order_index` integer NOT NULL,
-	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
-	`updated_at` integer DEFAULT (unixepoch()) NOT NULL,
+	`created_at` integer DEFAULT (unixepoch()
+                 ) NOT NULL,
+	`updated_at` integer DEFAULT (unixepoch()
+                 ) NOT NULL,
 	FOREIGN KEY (`form_id`) REFERENCES `forms`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
@@ -38,8 +40,10 @@ CREATE TABLE `forms` (
 	`active` integer DEFAULT true NOT NULL,
 	`slug` text,
 	`settings` text,
-	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
-	`updated_at` integer DEFAULT (unixepoch()) NOT NULL,
+	`created_at` integer DEFAULT (unixepoch()
+                 ) NOT NULL,
+	`updated_at` integer DEFAULT (unixepoch()
+                 ) NOT NULL,
 	FOREIGN KEY (`organization_id`) REFERENCES `organizations`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
@@ -75,6 +79,17 @@ CREATE TABLE `organizations` (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `organizations_slug_unique` ON `organizations` (`slug`);--> statement-breakpoint
+CREATE TABLE `requests` (
+	`id` text PRIMARY KEY NOT NULL,
+	`organization_id` text NOT NULL,
+	`user_id` text NOT NULL,
+	`role` text NOT NULL,
+	`status` text DEFAULT 'pending' NOT NULL,
+	`expires_at` integer NOT NULL,
+	FOREIGN KEY (`organization_id`) REFERENCES `organizations`(`id`) ON UPDATE no action ON DELETE cascade,
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE cascade
+);
+--> statement-breakpoint
 CREATE TABLE `sessions` (
 	`id` text PRIMARY KEY NOT NULL,
 	`expires_at` integer NOT NULL,
@@ -97,7 +112,8 @@ CREATE TABLE `submissions` (
 	`data` text NOT NULL,
 	`ip_hash` text,
 	`user_agent_hash` text,
-	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
+	`created_at` integer DEFAULT (unixepoch()
+                 ) NOT NULL,
 	FOREIGN KEY (`form_id`) REFERENCES `forms`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
