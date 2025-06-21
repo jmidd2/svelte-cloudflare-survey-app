@@ -8,6 +8,7 @@ import {v4 as uuidv4} from 'uuid';
 import type {InsertForm, InsertOrganization, InsertSubmission} from "../src/lib/server/db/schema";
 import type {FormFieldType} from "../src/lib/types.d";
 import chalk from 'chalk';
+import genRequestsToJoin from './gen-requests';
 
 const BASE_DATE = new Date(Date.now() - 10000000000);
 
@@ -179,6 +180,7 @@ async function main() {
       await createFormSubmissions(db, formId, i);
     }
   }
+  console.log(chalk.green('✅ Initial records created successfully!'));
 
   // Create additional test tenants
   const tenantNames = [
@@ -193,7 +195,7 @@ async function main() {
     'Quantum Dynamics',
   ];
 
-  console.log('🏢 Creating additional test organizations...');
+  console.log('🏢 Creating additional organizations...');
   for (let tenantIndex = 0; tenantIndex < 3; tenantIndex++) {
     const tenantId = uuidv4();
     const tenantName = tenantNames[tenantIndex % tenantNames.length];
@@ -230,6 +232,13 @@ async function main() {
       }
     }
   }
+  console.log(chalk.green('✅ Organizations created successfully!'));
+
+  console.log('🏢 Creating requests to join...');
+
+  await genRequestsToJoin();
+
+  console.log(chalk.green('✅ Requests to join created successfully!'));
 
   console.log(chalk.green('✅ Database seed completed successfully!'));
 }
