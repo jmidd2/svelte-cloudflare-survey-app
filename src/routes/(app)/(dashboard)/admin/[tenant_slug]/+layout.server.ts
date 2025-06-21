@@ -13,6 +13,13 @@ export const load = async function ({ locals, params, request }) {
 
   if (!tenant) redirect(constants.HTTP_STATUS_SEE_OTHER, '/auth/login');
 
+  await locals.auth.setActiveOrganization({
+    headers: request.headers,
+    body: {
+      organizationId: tenant.id,
+    },
+  });
+
   return {
     tenant,
   };

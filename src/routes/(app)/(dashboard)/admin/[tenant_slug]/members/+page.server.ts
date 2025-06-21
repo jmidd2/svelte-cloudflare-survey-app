@@ -1,4 +1,9 @@
 import {
+  ADMIN_ROLE,
+  canInviteMembers,
+  canManageMembers,
+} from '$lib/server/auth';
+import {
   invitations,
   type OrganizationMember,
   organizations,
@@ -6,18 +11,24 @@ import {
   type SelectRequest,
   users,
 } from '$lib/server/db/schema';
-import { withSuperForm, withZodFormData } from '$lib/utils/server';
-import { sendInviteSchema } from '$lib/validation-schema';
+import {
+  requireActionPermission,
+  withSuperForm,
+  withZodFormData,
+} from '$lib/server/utils/';
+import {
+  cancelInviteSchema,
+  requestToJoinSchema,
+  resendInviteSchema,
+  sendInviteSchema,
+} from '$lib/validation-schema';
 import { constants } from 'node:http2';
 import { type Actions, fail, redirect } from '@sveltejs/kit';
 import type { User } from 'better-auth';
 import { eq } from 'drizzle-orm';
 import { message, superValidate } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
-import { z } from 'zod/v4';
 import type { PageServerLoad } from './$types';
-
-const ADMIN_ROLE = 'admin';
 
 const flattenMembers = (member: OrganizationMember) => {
   const {
@@ -31,7 +42,11 @@ const flattenMembers = (member: OrganizationMember) => {
   return { createdAt, email, id, image, name, organizationId, role, userId };
 };
 
-export const load: PageServerLoad = async function ({ locals, parent }) {
+export const load: PageServerLoad = async function ({
+  locals,
+  parent,
+  request,
+}) {
   const {
     tenant: { members, invitations, ...tenant },
     user,
@@ -39,10 +54,22 @@ export const load: PageServerLoad = async function ({ locals, parent }) {
 
   if (!user) redirect(constants.HTTP_STATUS_SEE_OTHER, '/auth/login');
 
+  // Check if the user can manage members of this organization
+  const hasManagePermission = await canManageMembers(
+    locals.auth,
+    request.headers
+  );
+
+  const hasInvitePermission = await canInviteMembers(
+    locals.auth,
+    request.headers
+  );
+
+  // TODO: Filter requests based on a timeline, might need to add a createdAt column
   const requestsResult = await locals.db
     .select()
     .from(requestsTable)
-    .rightJoin(users, eq(users.id, requestsTable.userId))
+    .innerJoin(users, eq(users.id, requestsTable.userId))
     .where(eq(requestsTable.organizationId, tenant.id));
 
   const requests =
@@ -63,25 +90,32 @@ export const load: PageServerLoad = async function ({ locals, parent }) {
     requests,
     tenant,
     user,
-    isSiteAdmin: user.role === ADMIN_ROLE, // TODO: FIX: to use org role not global admin role
+    isSiteAdmin: user.role === ADMIN_ROLE,
+    canManageMembers: hasManagePermission,
+    canManageInvites: hasInvitePermission,
     sendInviteForm: await superValidate(zod4(sendInviteSchema)),
   };
 };
-
-const cancelInviteSchema = z.object({
-  inviteId: z.string().length(32),
-});
-
-const resendInviteSchema = z.object({
-  inviteId: z.string().length(32),
-  email: z.email(),
-  role: z.enum(['admin', 'owner', 'member']).default('member'),
-});
 
 export const actions: Actions = {
   'cancel-invite': withZodFormData(
     cancelInviteSchema,
     async ({ locals, request }, formData) => {
+      const session = await locals.auth.getSession({
+        headers: request.headers,
+      });
+      if (!session) return fail(401, { message: 'Unauthorized' });
+
+      // Check permissions
+      const hasPermission = await canManageMembers(
+        locals.auth,
+        request.headers
+      );
+
+      if (!hasPermission) {
+        return fail(403, { message: 'Insufficient permissions' });
+      }
+
       await locals.auth.cancelInvitation({
         headers: request.headers,
         body: {
@@ -104,7 +138,22 @@ export const actions: Actions = {
   ),
   'remove-invite': withZodFormData(
     cancelInviteSchema,
-    async ({ locals }, formData) => {
+    async ({ locals, request }, formData) => {
+      const session = await locals.auth.getSession({
+        headers: request.headers,
+      });
+      if (!session) return fail(401, { message: 'Unauthorized' });
+
+      // Check permissions
+      const hasPermission = await canManageMembers(
+        locals.auth,
+        request.headers
+      );
+
+      if (!hasPermission) {
+        return fail(403, { message: 'Insufficient permissions' });
+      }
+
       await locals.db
         .delete(invitations)
         .where(eq(invitations.id, formData.inviteId));
@@ -113,10 +162,25 @@ export const actions: Actions = {
   'resend-invite': withZodFormData(
     resendInviteSchema,
     async ({ locals, request, params }, { inviteId, email, role }) => {
+      const session = await locals.auth.getSession({
+        headers: request.headers,
+      });
+      if (!session) return fail(401, { message: 'Unauthorized' });
+
       const [{ id: organizationId }] = await locals.db
         .select()
         .from(organizations)
         .where(eq(organizations.slug, params.tenant_slug ?? ''));
+
+      // Check permissions
+      const hasPermission = await canManageMembers(
+        locals.auth,
+        request.headers
+      );
+
+      if (!hasPermission) {
+        return fail(403, { message: 'Insufficient permissions' });
+      }
 
       const invite = await locals.auth.getInvitation({
         headers: request.headers,
@@ -125,7 +189,8 @@ export const actions: Actions = {
         },
       });
 
-      if (!invite) fail(404, { success: false, message: 'invite not found' });
+      if (!invite)
+        return fail(404, { success: false, message: 'invite not found' });
 
       await locals.auth.createInvitation({
         headers: request.headers,
@@ -139,31 +204,49 @@ export const actions: Actions = {
       return { success: true, message: 'invite resent' };
     }
   ),
-  'send-invite': withSuperForm(
-    { schema: sendInviteSchema },
-    async ({ locals, request, params }, form) => {
-      const { email, role } = form.data;
+  'send-invite': requireActionPermission(
+    canInviteMembers,
+    withSuperForm(
+      { schema: sendInviteSchema },
+      async ({ locals, request, params }, form) => {
+        const { email, role } = form.data;
 
-      const [{ id: organizationId }] = await locals.db
-        .select()
-        .from(organizations)
-        .where(eq(organizations.slug, params.tenant_slug ?? ''));
+        const [{ id: organizationId }] = await locals.db
+          .select()
+          .from(organizations)
+          .where(eq(organizations.slug, params.tenant_slug ?? ''));
 
-      await locals.auth.createInvitation({
-        headers: request.headers,
-        body: {
-          email,
-          role,
-          organizationId,
-        },
-      });
+        await locals.auth.createInvitation({
+          headers: request.headers,
+          body: {
+            email,
+            role,
+            organizationId,
+          },
+        });
 
-      return message(form, { status: 'success', text: 'Invite Sent!' });
-    }
+        return message(form, { status: 'success', text: 'Invite Sent!' });
+      }
+    )
   ),
   'accept-request': withZodFormData(
-    z.object({ requestId: z.string().length(32) }),
+    requestToJoinSchema,
     async ({ locals, request }, formData) => {
+      const session = await locals.auth.getSession({
+        headers: request.headers,
+      });
+      if (!session) return fail(401, { message: 'Unauthorized' });
+
+      // Check permissions
+      const hasPermission = await canManageMembers(
+        locals.auth,
+        request.headers
+      );
+
+      if (!hasPermission) {
+        return fail(403, { message: 'Insufficient permissions' });
+      }
+
       const requestToJoin = await locals.db
         .update(requestsTable)
         .set({ status: 'accepted' })
@@ -171,13 +254,13 @@ export const actions: Actions = {
         .returning();
 
       const requestToJoinResult = requestToJoin[0];
-      const { userId, organizationId } = requestToJoinResult;
+      const { userId, organizationId: reqOrgId } = requestToJoinResult;
 
       await locals.auth.addMember({
         headers: request.headers,
         body: {
           userId,
-          organizationId,
+          organizationId: reqOrgId,
           role: 'member',
         },
       });
@@ -186,9 +269,24 @@ export const actions: Actions = {
     }
   ),
   'reject-request': withZodFormData(
-    z.object({ requestId: z.string().length(32) }),
+    requestToJoinSchema,
     async ({ locals, request }, formData) => {
-      const requestToJoin = await locals.db
+      const session = await locals.auth.getSession({
+        headers: request.headers,
+      });
+      if (!session) return fail(401, { message: 'Unauthorized' });
+
+      // Check permissions
+      const hasPermission = await canManageMembers(
+        locals.auth,
+        request.headers
+      );
+
+      if (!hasPermission) {
+        return fail(403, { message: 'Insufficient permissions' });
+      }
+
+      await locals.db
         .update(requestsTable)
         .set({ status: 'rejected' })
         .where(eq(requestsTable.id, formData.requestId))

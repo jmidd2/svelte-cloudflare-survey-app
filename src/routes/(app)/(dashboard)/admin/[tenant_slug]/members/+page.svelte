@@ -61,7 +61,6 @@ import {
   CheckCircle,
   CheckCircleIcon,
   Clock,
-  CrossIcon,
   Crown,
   Filter,
   Mail,
@@ -73,15 +72,18 @@ import {
   Users,
   XCircle,
 } from '@lucide/svelte';
-import type { InvitationStatus } from 'better-auth/plugins';
 import { toast } from 'svelte-sonner';
 import { superForm } from 'sveltekit-superforms';
 import { zod4Client } from 'sveltekit-superforms/adapters';
-import SuperDebug from 'sveltekit-superforms/SuperDebug.svelte';
 
 const { data } = $props();
 
 const isSiteAdmin = $derived(data.isSiteAdmin);
+const canManageMembers = $derived(isSiteAdmin ? true : data.canManageMembers);
+const canManageInvites = $derived(isSiteAdmin ? true : data.canManageInvites);
+const canManageBoth = $derived(
+  isSiteAdmin ? true : canManageMembers && canManageInvites
+);
 const members = $derived(data.members);
 const invites = $derived(data.invitations);
 const requests = $derived(data.requests);
@@ -111,14 +113,16 @@ const { form: sendInviteData, enhance } = sendInviteForm;
 let sendDialogOpen = $state(false);
 let activeTab = $state('members');
 let searchQuery = $state('');
-let selectedRole = $state('all');
+let selectedRole = $state<'all' | keyof typeof OrganizationRoles>('all');
+let selectedStatus = $state<'all' | keyof typeof InviteStatus>('all');
 
 $effect(() => {
-  if (activeTab) searchQuery = '';
+  if (activeTab) {
+    searchQuery = '';
+    selectedRole = 'all';
+    selectedStatus = 'all';
+  }
 });
-
-// Initialize form
-$sendInviteData.role = 'member';
 
 const OrganizationRoles = {
   member: 'Member',
@@ -157,7 +161,7 @@ const filteredMembers = $derived.by(() => {
   }
 
   if (selectedRole !== 'all') {
-    filtered = filtered.filter(member => member.role === selectedRole);
+    filtered = filtered.filter(member => member.role.includes(selectedRole));
   }
 
   return filtered;
@@ -172,6 +176,14 @@ const filteredInvites = $derived.by(() => {
     );
   }
 
+  if (selectedRole !== 'all') {
+    filtered = filtered.filter(invite => invite.role.includes(selectedRole));
+  }
+
+  if (selectedStatus !== 'all') {
+    filtered = filtered.filter(request => request.status === selectedStatus);
+  }
+
   return filtered;
 });
 
@@ -184,6 +196,14 @@ const filteredRequests = $derived.by(() => {
         request.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         request.user?.email?.toLowerCase().includes(searchQuery.toLowerCase())
     );
+  }
+
+  if (selectedRole !== 'all') {
+    filtered = filtered.filter(request => request.role.includes(selectedRole));
+  }
+
+  if (selectedStatus !== 'all') {
+    filtered = filtered.filter(request => request.status === selectedStatus);
   }
 
   return filtered;
@@ -225,17 +245,29 @@ function getStatusColor(status: string): string {
   }
 }
 
-function getRoleColor(role: string): string {
-  switch (role) {
-    case 'admin':
-      return 'bg-primary/10 text-primary border-primary/20';
-    case 'owner':
-      return 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300 border-purple/20';
-    case 'member':
-      return 'bg-secondary/10 text-secondary-foreground border-secondary/20';
-    default:
-      return 'bg-muted text-muted-foreground';
+function getRoleColor(role: string | string[]): string {
+  if (role.includes('owner')) {
+    return 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300 border-purple/20';
   }
+  if (role.includes('admin')) {
+    return 'bg-primary/10 text-primary border-primary/20';
+  }
+  if (role.includes('member')) {
+    return 'bg-secondary/10 text-secondary-foreground border-secondary/20';
+  }
+
+  return 'bg-muted text-muted-foreground';
+}
+
+function displayRole(role: string): string {
+  if (role.includes('owner')) {
+    return 'Owner';
+  }
+  if (role.includes('admin')) {
+    return 'Admin';
+  }
+
+  return 'Member';
 }
 </script>
 
@@ -338,18 +370,33 @@ function getRoleColor(role: string): string {
           />
         </div>
 
-        <Select bind:value={selectedRole}>
+        <Select type="single" bind:value={selectedRole}>
           <SelectTrigger class="w-full sm:w-48">
             <Filter class="h-4 w-4 mr-2"/>
             {selectedRole === 'all' ? 'All Roles' : OrganizationRoles[selectedRole]}
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Roles</SelectItem>
-            <SelectItem value="owner">Owner</SelectItem>
-            <SelectItem value="admin">Admin</SelectItem>
-            <SelectItem value="member">Member</SelectItem>
+            {#each Object.entries(OrganizationRoles) as [value, label]}
+              <SelectItem {value}>{label}</SelectItem>
+            {/each}
           </SelectContent>
         </Select>
+
+        {#if activeTab !== 'members'}
+          <Select type="single" bind:value={selectedStatus}>
+            <SelectTrigger class="w-full sm:w-48">
+              <Filter class="h-4 w-4 mr-2"/>
+              {selectedStatus === 'all' ? 'All Statuses' : InviteStatus[selectedStatus]}
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              {#each Object.entries(InviteStatus) as [value, label]}
+              <SelectItem {value}>{label}</SelectItem>
+                {/each}
+            </SelectContent>
+          </Select>
+        {/if}
       </div>
     </CardContent>
   </Card>
@@ -401,7 +448,7 @@ function getRoleColor(role: string): string {
                   <TableHead>Member</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Joined</TableHead>
-                  {#if isSiteAdmin}
+                  {#if canManageMembers}
                     <TableHead class="w-12"></TableHead>
                   {/if}
                 </TableRow>
@@ -424,16 +471,24 @@ function getRoleColor(role: string): string {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" class={getRoleColor(member.role)}>
-                        {#if member.role === 'admin'}
-                          <Crown class="h-3 w-3 mr-1"/>
-                        {:else if member.role === 'owner'}
-                          <Crown class="h-3 w-3 mr-1"/>
-                        {:else}
-                          <User class="h-3 w-3 mr-1"/>
-                        {/if}
-                        {OrganizationRoles[member.role]}
-                      </Badge>
+                      <div class="flex items-center gap-2">
+                        {#each member.role.split(',').sort((a, b) => {
+                          if (a.includes('owner')) return -1;
+                          if (b.includes('owner')) return 1;
+                          if (a.includes('admin')) return -1;
+                          if (b.includes('admin')) return 1;
+                          return 0;
+                        }) as r}
+                        <Badge variant="outline" class={getRoleColor(r)}>
+                          {#if r.includes('owner') || r.includes('admin')}
+                            <Crown class="h-3 w-3 mr-1"/>
+                          {:else}
+                            <User class="h-3 w-3 mr-1"/>
+                          {/if}
+                          {displayRole(r)}
+                        </Badge>
+                        {/each}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <div class="flex items-center gap-2 text-sm text-muted-foreground">
@@ -441,10 +496,10 @@ function getRoleColor(role: string): string {
                         {formatDate( member.createdAt )}
                       </div>
                     </TableCell>
-                    {#if isSiteAdmin}
+                    {#if canManageMembers}
                       <TableCell>
                         <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
+                          <DropdownMenuTrigger>
                             <Button variant="ghost" size="sm" class="h-8 w-8 p-0">
                               <MoreHorizontal class="h-4 w-4"/>
                             </Button>
@@ -498,7 +553,7 @@ function getRoleColor(role: string): string {
                   <TableHead>Role</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Expires</TableHead>
-                  {#if isSiteAdmin}
+                  {#if canManageInvites}
                     <TableHead class="w-12"></TableHead>
                   {/if}
                 </TableRow>
@@ -545,10 +600,10 @@ function getRoleColor(role: string): string {
                         {formatDate( invite.expiresAt )}
                       </div>
                     </TableCell>
-                    {#if isSiteAdmin}
+                    {#if canManageInvites}
                       <TableCell>
                         <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
+                          <DropdownMenuTrigger>
                             <Button variant="ghost" size="sm" class="h-8 w-8 p-0">
                               <MoreHorizontal class="h-4 w-4"/>
                             </Button>
@@ -576,27 +631,29 @@ function getRoleColor(role: string): string {
                                 <button>Cancel Invitation</button>
                               </form>
                             </DropdownMenuItem>
-                            <DropdownMenuSeparator/>
-                            <DropdownMenuItem class="text-destructive">
-                              <form method="POST" action="?/remove-invite" class="inline" use:stdEnhance={() => {
-                                return async ({update, result}) => {
-                                  if (result.type === 'redirect') {
-                                    goto(result.location);
-                                  } else {
-                                    if (result.type === 'success')
-                                      toast.success('Invitation deleted');
-                                    else if (result.type === 'error' || result.type === 'failure')
-                                      toast.error('Failed to delete invitation');
+                            {#if isSiteAdmin}
+                              <DropdownMenuSeparator/>
+                              <DropdownMenuItem class="text-destructive">
+                                <form method="POST" action="?/remove-invite" class="inline" use:stdEnhance={() => {
+                                  return async ({update, result}) => {
+                                    if (result.type === 'redirect') {
+                                      goto(result.location);
+                                    } else {
+                                      if (result.type === 'success')
+                                        toast.success('Invitation deleted');
+                                      else if (result.type === 'error' || result.type === 'failure')
+                                        toast.error('Failed to delete invitation');
 
-                                    await update({invalidateAll: true});
-                                    await applyAction(result);
+                                      await update({invalidateAll: true});
+                                      await applyAction(result);
+                                    }
                                   }
-                                }
-                              }}>
-                                <input type="hidden" name="inviteId" value={invite.id}>
-                                <button>Delete Invitation</button>
-                              </form>
-                            </DropdownMenuItem>
+                                }}>
+                                  <input type="hidden" name="inviteId" value={invite.id}>
+                                  <button>Delete Invitation</button>
+                                </form>
+                              </DropdownMenuItem>
+                            {/if}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -648,7 +705,7 @@ function getRoleColor(role: string): string {
                   <TableHead>Requested Role</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Expires</TableHead>
-                  {#if isSiteAdmin}
+                  {#if canManageMembers}
                     <TableHead class="w-32">Actions</TableHead>
                   {/if}
                 </TableRow>
@@ -694,14 +751,25 @@ function getRoleColor(role: string): string {
                     </TableCell>
                     <TableCell>
                       <div class="flex items-center gap-2 text-sm text-muted-foreground">
+                        {#if request.status === 'pending'}
                         <Calendar class="h-4 w-4"/>
                         {formatDate( request.expiresAt )}
+                          {:else}
+                          -
+                          {/if}
                       </div>
                     </TableCell>
-                    {#if isSiteAdmin && request.status === 'pending'}
+                    {#if canManageMembers && request.status === 'pending'}
                       <TableCell>
-                        <div class="flex items-center gap-2">
-                          <form method="POST" action="?/accept-request" class="inline" use:stdEnhance={() => {
+                        <DropdownMenu>
+                          <DropdownMenuTrigger>
+                            <Button variant="ghost" size="sm" class="h-8 w-8 p-0">
+                              <MoreHorizontal class="h-4 w-4"/>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem>
+                              <form method="POST" action="?/accept-request" class="inline" use:stdEnhance={() => {
                             return async ({update, result}) => {
                               if (result.type === 'success') {
                                 toast.success('Request approved');
@@ -711,14 +779,16 @@ function getRoleColor(role: string): string {
                               await update({invalidateAll: true});
                             }
                           }}>
-                            <input type="hidden" name="requestId" value={request.id}>
-                            <Button type="submit" size="sm" variant="default" class="h-7 px-2">
-                              <CheckCircle class="h-3 w-3 mr-1"/>
-                              Approve
-                            </Button>
-                          </form>
-
-                          <form method="POST" action="?/reject-request" class="inline" use:stdEnhance={() => {
+                                <input type="hidden" name="requestId" value={request.id}>
+                                <button type="submit">
+                                  Approve
+                                </button>
+                              </form>
+                            </DropdownMenuItem>
+                            {#if isSiteAdmin}
+                              <DropdownMenuSeparator/>
+                              <DropdownMenuItem class="text-destructive">
+                                <form method="POST" action="?/reject-request" class="inline" use:stdEnhance={() => {
                             return async ({update, result}) => {
                               if (result.type === 'success') {
                                 toast.success('Request rejected');
@@ -728,21 +798,17 @@ function getRoleColor(role: string): string {
                               await update({invalidateAll: true});
                             }
                           }}>
-                            <input type="hidden" name="requestId" value={request.id}>
-                            <Button type="submit" size="sm" variant="destructive" class="h-7 px-2">
-                              <XCircle class="h-3 w-3 mr-1"/>
-                              Reject
-                            </Button>
-                          </form>
-                        </div>
+                                  <input type="hidden" name="requestId" value={request.id}>
+                                  <button type="submit">
+                                    Reject
+                                  </button>
+                                </form>
+                              </DropdownMenuItem>
+                            {/if}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
-                    {:else if isSiteAdmin}
-                      <TableCell>
-                        <Badge variant="secondary" class="text-xs">
-                          {request.status === 'accepted' ? 'Accepted' : 'Rejected'}
-                        </Badge>
-                      </TableCell>
-                    {/if}
+                      {/if}
                   </TableRow>
                 {/each}
               </TableBody>
@@ -798,7 +864,7 @@ function getRoleColor(role: string): string {
           <FormControl>
             {#snippet children( { props } )}
               <FormLabel>Role</FormLabel>
-              <Select type="single" name="role" id="invite-role" bind:value={$sendInviteData.role}>
+              <Select type="single" name="role" bind:value={$sendInviteData.role}>
                 <SelectTrigger {...props}>
                   {$sendInviteData.role ? OrganizationRoles[$sendInviteData.role] : 'Select Role'}
                 </SelectTrigger>
@@ -835,10 +901,6 @@ function getRoleColor(role: string): string {
           An invitation email will be sent to this address with a secure link to join your organization.
         </AlertDescription>
       </Alert>
-
-      <div class="max-w-96">
-        <SuperDebug data={sendInviteData}></SuperDebug>
-      </div>
 
       <DialogFooter>
         <Button type="button" variant="outline" onclick={() => { sendDialogOpen = false; }}>
