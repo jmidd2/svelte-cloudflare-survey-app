@@ -14,6 +14,7 @@ export * from './create-auth';
  * @version 1.0.0
  */
 
+// TODO: create load wrapper for requireAuth or requirePermission
 /** Required for BetterAuth CLI to generate the schema **/
 // export const auth = betterAuth({
 //   database: drizzleAdapter(

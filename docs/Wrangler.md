@@ -1,6 +1,7 @@
 # Auth0 Implementation for Cloudflare Worker Deployment
 
-This guide covers specific considerations and implementation details for Auth0 authentication in a Cloudflare Worker deployment.
+This guide covers specific considerations and implementation details for Auth0 authentication in a Cloudflare Worker
+deployment.
 
 ## Auth0 Configuration for Workers
 
@@ -50,7 +51,7 @@ export const handle = SvelteKitAuth(async (event) => {
         if (profile && profile.roles) {
           token.roles = profile.roles;
         }
-        
+
         // Extract tenant ID from roles (assuming role format "tenant-123")
         if (token.roles) {
           const tenantRole = token.roles.find(role => role.startsWith('tenant-'));
@@ -58,7 +59,7 @@ export const handle = SvelteKitAuth(async (event) => {
             token.tenantId = tenantRole.replace('tenant-', '');
           }
         }
-        
+
         return token;
       },
       async session({ session, token }) {
@@ -71,7 +72,7 @@ export const handle = SvelteKitAuth(async (event) => {
     secret: event.platform.env.AUTH_SECRET,
     trustHost: true
   };
-  
+
   return authOptions;
 });
 ```
@@ -159,7 +160,7 @@ export const handle = SvelteKitAuth(async (event) => {
     adapter: KVAdapter(event.platform.env.CACHE),
     // Other configuration...
   };
-  
+
   return authOptions;
 });
 ```
@@ -180,17 +181,17 @@ import { redirect, error } from '@sveltejs/kit';
  */
 export async function verifyTenantAccess(event) {
   const session = await event.locals.getSession();
-  
+
   // Check if user is authenticated
   if (!session?.user) {
     throw redirect(303, '/api/auth/signin');
   }
-  
+
   // Check if user has a tenant ID
   if (!session.user.tenantId) {
-    throw error(403, 'No tenant association found');
+    throw error(constants.HTTP_STATUS_FORBIDDEN, 'No tenant association found');
   }
-  
+
   return session.user.tenantId;
 }
 ```
@@ -205,7 +206,7 @@ import { verifyTenantAccess } from '$lib/auth/tenant-middleware';
 export async function GET(event) {
   // Get tenant ID and verify access
   const tenantId = await verifyTenantAccess(event);
-  
+
   // Continue with tenant-specific logic
   // ...
 }
@@ -235,19 +236,19 @@ export async function createTenantUser(email, tenantId, role, env) {
   const existingUser = await env.DB.prepare(`
     SELECT * FROM users WHERE email = ?
   `).bind(email.toLowerCase()).first();
-  
+
   if (existingUser) {
     // User exists, update tenant association
     await env.DB.prepare(`
       UPDATE users SET tenant_id = ?, role = ? WHERE id = ?
     `).bind(tenantId, role || 'viewer', existingUser.id).run();
-    
+
     return existingUser.id;
   }
-  
+
   // Create new user
   const userId = crypto.randomUUID();
-  
+
   await env.DB.prepare(`
     INSERT INTO users (id, email, tenant_id, role, created_at)
     VALUES (?, ?, ?, ?, ?)
@@ -258,7 +259,7 @@ export async function createTenantUser(email, tenantId, role, env) {
     role || 'viewer',
     Math.floor(Date.now() / 1000)
   ).run();
-  
+
   return userId;
 }
 ```
@@ -277,15 +278,15 @@ export async function assignAuth0Role(userId, roleName, env) {
     clientSecret: env.AUTH0_CLIENT_SECRET,
     scope: 'read:users update:users'
   });
-  
+
   // Get Auth0 role ID
   const roles = await management.getRoles();
   const role = roles.find(r => r.name === roleName);
-  
+
   if (!role) {
     throw new Error(`Role ${roleName} not found`);
   }
-  
+
   // Assign role to user
   await management.assignRolestoUser({ id: userId }, { roles: [role.id] });
 }
@@ -293,14 +294,17 @@ export async function assignAuth0Role(userId, roleName, env) {
 
 ## Important Worker-Specific Considerations
 
-1. **Cookie Handling**: Workers have different cookie handling than Pages, ensure your Auth.js configuration accounts for this.
+1. **Cookie Handling**: Workers have different cookie handling than Pages, ensure your Auth.js configuration accounts
+   for this.
 
 2. **KV Limitations**: KV has eventual consistency, which may affect session management in high-traffic scenarios.
 
-3. **Environment Variables**: Worker environment variables are accessed through `event.platform.env` rather than `process.env`.
+3. **Environment Variables**: Worker environment variables are accessed through `event.platform.env` rather than
+   `process.env`.
 
 4. **Headers**: Some Auth0 features may require specific headers that need to be handled differently in Workers.
 
 5. **Resource Limits**: Be mindful of Worker CPU time limits when implementing complex authentication flows.
 
-This implementation provides a solid foundation for Auth0 authentication in a Cloudflare Worker deployment, with specific considerations for the Worker runtime environment and multi-tenant support.
+This implementation provides a solid foundation for Auth0 authentication in a Cloudflare Worker deployment, with
+specific considerations for the Worker runtime environment and multi-tenant support.

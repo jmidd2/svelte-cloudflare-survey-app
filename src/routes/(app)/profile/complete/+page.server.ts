@@ -4,7 +4,8 @@ import {
   requests,
   type SelectOrganization,
 } from '$lib/server/db/schema';
-import { withZodFormData } from '$lib/utils/server';
+import { withZodFormData } from '$lib/server/utils/';
+import { constants } from 'node:http2';
 import { fail, redirect } from '@sveltejs/kit';
 import { generateId } from 'better-auth';
 import { APIError } from 'better-call';
@@ -15,12 +16,12 @@ import type { Actions, PageServerLoad } from './$types';
 export const load: PageServerLoad = async ({ locals, parent, request }) => {
   const { user } = await parent();
 
-  // If no user, redirect to login
+  // If no user, redirect to log in
   if (!user) {
     redirect(303, '/auth/login');
   }
 
-  // Check if user is already complete (has name AND is member of an organization)
+  // Check if the user is already complete (has name AND is member of an organization)
   const memberOfOrganizations = await locals.auth.listOrganizations({
     headers: request.headers,
   });
@@ -33,11 +34,12 @@ export const load: PageServerLoad = async ({ locals, parent, request }) => {
     redirect(303, '/');
   }
 
-  let organizations: Array<SelectOrganization & { memberCount: number }> = [];
+  let organizations: Array<SelectOrganization & { memberCount?: number }> = [];
   if (hasOrganization) {
     console.log('has organization', memberOfOrganizations);
   } else {
     organizations = await locals.db
+      // @ts-expect-error For some reason the SQLite | D1 adapter does not like partial select
       .select({
         ...organizationsTable,
         memberCount: locals.db.$count(
@@ -143,7 +145,9 @@ export const actions: Actions = {
       });
 
       if (!session) {
-        return fail(401, { error: 'Unauthenticated' });
+        return fail(constants.HTTP_STATUS_UNAUTHORIZED, {
+          error: 'Unauthenticated',
+        });
       }
 
       const id = generateId();

@@ -11,6 +11,7 @@ import {
 } from '$lib/server/db/schema';
 import { genSlug } from '$lib/utils';
 import crypto from 'node:crypto';
+import { constants } from 'node:http2';
 import * as Sentry from '@sentry/sveltekit';
 import { type Actions, error, fail, type ServerLoadEvent } from '@sveltejs/kit';
 import { asc, eq } from 'drizzle-orm';
@@ -233,7 +234,9 @@ export const load: PageServerLoad = async function ({ params, locals }) {
     console.error(e);
     Sentry.captureException(e);
     if (e instanceof Error) {
-      return error(404, { message: 'survey not found' });
+      return error(constants.HTTP_STATUS_NOT_FOUND, {
+        message: 'survey not found',
+      });
     }
     return error(500, 'There was an internal error');
   }
@@ -334,7 +337,11 @@ export const actions = {
       console.error(e);
 
       if (e instanceof NotFoundError)
-        return fail(404, { success: false, status: 404, message: e.message });
+        return fail(constants.HTTP_STATUS_NOT_FOUND, {
+          success: false,
+          status: constants.HTTP_STATUS_NOT_FOUND,
+          message: e.message,
+        });
 
       if (e instanceof Error)
         return fail(500, { success: false, status: 500, message: e.message });

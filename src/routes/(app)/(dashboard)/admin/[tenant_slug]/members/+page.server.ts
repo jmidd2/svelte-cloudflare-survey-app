@@ -96,7 +96,7 @@ export const load: PageServerLoad = async function ({
     sendInviteForm: await superValidate(zod4(sendInviteSchema)),
   };
 };
-
+// TODO: Finish refactoring actions to use requireActionPermission()
 export const actions: Actions = {
   'cancel-invite': withZodFormData(
     cancelInviteSchema,
@@ -104,7 +104,10 @@ export const actions: Actions = {
       const session = await locals.auth.getSession({
         headers: request.headers,
       });
-      if (!session) return fail(401, { message: 'Unauthorized' });
+      if (!session)
+        return fail(constants.HTTP_STATUS_UNAUTHORIZED, {
+          message: 'Unauthorized',
+        });
 
       // Check permissions
       const hasPermission = await canManageMembers(
@@ -113,7 +116,9 @@ export const actions: Actions = {
       );
 
       if (!hasPermission) {
-        return fail(403, { message: 'Insufficient permissions' });
+        return fail(constants.HTTP_STATUS_FORBIDDEN, {
+          message: 'Insufficient permissions',
+        });
       }
 
       await locals.auth.cancelInvitation({
@@ -142,7 +147,10 @@ export const actions: Actions = {
       const session = await locals.auth.getSession({
         headers: request.headers,
       });
-      if (!session) return fail(401, { message: 'Unauthorized' });
+      if (!session)
+        return fail(constants.HTTP_STATUS_UNAUTHORIZED, {
+          message: 'Unauthorized',
+        });
 
       // Check permissions
       const hasPermission = await canManageMembers(
@@ -151,7 +159,9 @@ export const actions: Actions = {
       );
 
       if (!hasPermission) {
-        return fail(403, { message: 'Insufficient permissions' });
+        return fail(constants.HTTP_STATUS_FORBIDDEN, {
+          message: 'Insufficient permissions',
+        });
       }
 
       await locals.db
@@ -165,7 +175,10 @@ export const actions: Actions = {
       const session = await locals.auth.getSession({
         headers: request.headers,
       });
-      if (!session) return fail(401, { message: 'Unauthorized' });
+      if (!session)
+        return fail(constants.HTTP_STATUS_UNAUTHORIZED, {
+          message: 'Unauthorized',
+        });
 
       const [{ id: organizationId }] = await locals.db
         .select()
@@ -179,7 +192,9 @@ export const actions: Actions = {
       );
 
       if (!hasPermission) {
-        return fail(403, { message: 'Insufficient permissions' });
+        return fail(constants.HTTP_STATUS_FORBIDDEN, {
+          message: 'Insufficient permissions',
+        });
       }
 
       const invite = await locals.auth.getInvitation({
@@ -190,7 +205,10 @@ export const actions: Actions = {
       });
 
       if (!invite)
-        return fail(404, { success: false, message: 'invite not found' });
+        return fail(constants.HTTP_STATUS_NOT_FOUND, {
+          success: false,
+          message: 'invite not found',
+        });
 
       await locals.auth.createInvitation({
         headers: request.headers,
@@ -235,7 +253,10 @@ export const actions: Actions = {
       const session = await locals.auth.getSession({
         headers: request.headers,
       });
-      if (!session) return fail(401, { message: 'Unauthorized' });
+      if (!session)
+        return fail(constants.HTTP_STATUS_UNAUTHORIZED, {
+          message: 'Unauthorized',
+        });
 
       // Check permissions
       const hasPermission = await canManageMembers(
@@ -244,7 +265,9 @@ export const actions: Actions = {
       );
 
       if (!hasPermission) {
-        return fail(403, { message: 'Insufficient permissions' });
+        return fail(constants.HTTP_STATUS_FORBIDDEN, {
+          message: 'Insufficient permissions',
+        });
       }
 
       const requestToJoin = await locals.db
@@ -274,7 +297,10 @@ export const actions: Actions = {
       const session = await locals.auth.getSession({
         headers: request.headers,
       });
-      if (!session) return fail(401, { message: 'Unauthorized' });
+      if (!session)
+        return fail(constants.HTTP_STATUS_UNAUTHORIZED, {
+          message: 'Unauthorized',
+        });
 
       // Check permissions
       const hasPermission = await canManageMembers(
@@ -283,7 +309,9 @@ export const actions: Actions = {
       );
 
       if (!hasPermission) {
-        return fail(403, { message: 'Insufficient permissions' });
+        return fail(constants.HTTP_STATUS_FORBIDDEN, {
+          message: 'Insufficient permissions',
+        });
       }
 
       await locals.db
