@@ -1,5 +1,5 @@
 import { env } from '$env/dynamic/private';
-import { type AuthProvider, createAuth } from '$lib/auth';
+import { createAuth } from '$lib/server/auth/create-auth';
 import { createDbClient } from '$lib/server/db';
 import * as schema from '$lib/server/db/schema';
 import { requests } from '$lib/server/db/schema';
@@ -8,13 +8,12 @@ import * as Sentry from '@sentry/cloudflare';
 import { handleErrorWithSentry } from '@sentry/sveltekit';
 import { type Handle, redirect } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
-import type { Auth } from 'better-auth';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
 import { eq } from 'drizzle-orm';
 
 export const handle: Handle = sequence(
-  ( { event, resolve } ) => {
-    if ( !event.platform ) throw new Error( 'platform not found' );
+  ({ event, resolve }) => {
+    if (!event.platform) throw new Error('platform not found');
 
     return Sentry.wrapRequestHandler(
       {
@@ -29,7 +28,7 @@ export const handle: Handle = sequence(
         request: event.request,
         context: event.platform.context,
       },
-      () => resolve( event )
+      () => resolve(event)
     );
   },
   // initCloudflareSentryHandle({
@@ -39,35 +38,33 @@ export const handle: Handle = sequence(
   //   tracesSampleRate: 1,
   // }),
   // sentryHandle(),
-  async function ( { event, resolve } ) {
-    event.locals.db = await createDbClient( {
+  async function ({ event, resolve }) {
+    event.locals.db = await createDbClient({
       d1Database: event.platform?.env?.DB,
       dbUrl: env.DATABASE_URL,
       schema,
-    } );
+    });
 
     const isEmailDisabled =
       env.DISABLE_EMAIL === 'true' || env.DISABLE_EMAIL === '1';
 
-    if ( event.platform?.env?.RESEND_API_KEY && !event.locals.mailService ) {
+    if (event.platform?.env?.RESEND_API_KEY && !event.locals.mailService) {
       event.locals.mailService = createEmailService(
         event.platform?.env?.RESEND_API_KEY || 'dummy-key',
         event.platform?.env?.EMAIL_FROM ?? 'no-reply@jmidd.dev',
         isEmailDisabled
       );
-    }
-    else {
+    } else {
       throw new Error(
         'email service could not be configured. missing RESEND_API_KEY (or set DISABLE_EMAIL=true for development)'
       );
     }
 
-    if ( !( event.locals.auth && event.locals.authHandler
-    ) ) {
+    if (!(event.locals.auth && event.locals.authHandler)) {
       const { api, ...authHandler } = createAuth(
         event.locals.db,
         event.locals.mailService,
-        event.url.origin,
+        event.url.origin
       );
 
       event.locals.authHandler = authHandler;
@@ -76,40 +73,40 @@ export const handle: Handle = sequence(
     }
 
     // Check session for all authenticated routes
-    const session = await event.locals.auth.getSession( {
+    const session = await event.locals.auth.getSession({
       headers: event.request.headers,
-    } );
+    });
 
     // Admin route protection
-    if ( event.url.pathname.startsWith( '/admin' ) ) {
-      if ( !session ) {
-        throw redirect( 303, '/auth/login' );
+    if (event.url.pathname.startsWith('/admin')) {
+      if (!session) {
+        throw redirect(303, '/auth/login');
       }
     }
 
     // Check if user needs to complete profile
-    if ( session?.user ) {
+    if (session?.user) {
       const missingName = !session.user.name;
 
       // Check organization membership (requires active session)
-      const memberOfOrganizations = await event.locals.auth.listOrganizations( {
+      const memberOfOrganizations = await event.locals.auth.listOrganizations({
         headers: event.request.headers,
-      } );
+      });
 
       const missingOrganization = memberOfOrganizations.length === 0;
       const requestsToJoin = await event.locals.db
         .select()
-        .from( requests )
-        .where( eq( requests.userId, session.user.id ) );
+        .from(requests)
+        .where(eq(requests.userId, session.user.id));
 
       // If a user is missing organization membership and has requests to join, don't require org
       let orgRequired = missingOrganization;
-      if ( requestsToJoin.length > 0 && missingOrganization ) {
+      if (requestsToJoin.length > 0 && missingOrganization) {
         orgRequired = false;
       }
 
       // If user is missing name or organization membership
-      if ( missingName || orgRequired ) {
+      if (missingName || orgRequired) {
         // Define routes that don't require profile completion
         const allowedRoutes = [
           '/profile/complete',
@@ -118,28 +115,28 @@ export const handle: Handle = sequence(
           '/api/', // Allow API routes
         ];
 
-        const isAllowedRoute = allowedRoutes.some( route =>
-          event.url.pathname.startsWith( route )
+        const isAllowedRoute = allowedRoutes.some(route =>
+          event.url.pathname.startsWith(route)
         );
 
         // If not on an allowed route, redirect to profile completion
-        if ( !isAllowedRoute ) {
-          if ( missingName ) {
-            console.log( 'Redirecting to profile completion, missing name' );
+        if (!isAllowedRoute) {
+          if (missingName) {
+            console.log('Redirecting to profile completion, missing name');
           }
-          if ( missingOrganization ) {
-            console.log( 'Redirecting to profile completion, missing org' );
+          if (missingOrganization) {
+            console.log('Redirecting to profile completion, missing org');
           }
-          throw redirect( 303, '/profile/complete' );
+          throw redirect(303, '/profile/complete');
         }
       }
     }
 
-    return svelteKitHandler( {
+    return svelteKitHandler({
       event,
       resolve,
       auth: event.locals.authHandler,
-    } );
+    });
   }
 );
 

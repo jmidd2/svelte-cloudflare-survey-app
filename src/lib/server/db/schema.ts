@@ -13,7 +13,7 @@ import type { FormFieldType } from '../../types.d';
 import { ALL_FIELD_TYPES } from '../../utils/form-fields/constants';
 
 export type UserRoles = 'admin' | 'user';
-export type MemberRoles = 'owner' | 'admin' | 'member';
+export type OrganizationRoles = 'owner' | 'admin' | 'member';
 export type OrganizationMember = InferMember<{ teams: { enabled: false } }>;
 
 export const users = sqliteTable('users', {
@@ -110,7 +110,7 @@ export const members = sqliteTable('members', {
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
   role: text('role')
-    .$type<MemberRoles>()
+    .$type<OrganizationRoles>()
     .$default(() => 'member')
     .notNull(),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
@@ -123,7 +123,7 @@ export const invitations = sqliteTable('invitations', {
     .references(() => organizations.id, { onDelete: 'cascade' }),
   email: text('email').notNull(),
   role: text('role')
-    .$type<MemberRoles>()
+    .$type<OrganizationRoles>()
     .$default(() => 'member')
     .notNull(),
   status: text('status')
@@ -149,7 +149,7 @@ export const requests = sqliteTable(
         onDelete: 'cascade',
       }),
     role: text('role')
-      .$type<MemberRoles>()
+      .$type<OrganizationRoles>()
       .$default(() => 'member')
       .notNull(),
     status: text('status')

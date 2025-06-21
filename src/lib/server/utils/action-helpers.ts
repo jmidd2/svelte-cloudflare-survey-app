@@ -1,5 +1,8 @@
 // Wrapper function for actions that need sanitized form data
+
+import type { AuthApi } from '$lib/server/auth';
 import { sanitizeFormData } from '$lib/utils/sanitize';
+import { constants } from 'node:http2';
 import {
   type Action,
   type ActionFailure,
@@ -67,11 +70,8 @@ type ZodActionFn<T extends z.ZodSchema> = (
  * Returns either validation errors, success data, or void for redirects.
  */
 
-type SvelteActionFn = (event: RequestEvent) => Promise<
-  | ActionFailure<{
-      message: string;
-      errors: z.core.$ZodIssue[];
-    }>
+export type SvelteActionFn = (event: RequestEvent) => Promise<
+  | ActionFailure<Record<string, unknown>>
   | Record<string, unknown>
   // biome-ignore lint/suspicious/noConfusingVoidType: Svelte Actions return void
   | void
@@ -260,7 +260,7 @@ export function withSuperForm<T extends ZodValidationSchema>(
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     form: SuperValidated<Infer<T, 'zod4'>, any, Infer<T, 'zod4'>>
   ) => ReturnType<Action>
-) {
+): SvelteActionFn {
   console.log(options);
   return async (event: RequestEvent) => {
     const formData = await event.request.formData();
@@ -279,5 +279,47 @@ export function withSuperForm<T extends ZodValidationSchema>(
       result
     );
     return result;
+  };
+}
+
+/**
+ * Wraps an action function with a permission check, ensuring that the user has proper authentication
+ * and authorization before executing the action.
+ *
+ * @param {function(auth: AuthApi, headers: Headers): Promise<boolean>} permissionCheckFn
+ *   A function to check if the user has the necessary permissions. It receives the authentication API
+ *   object and request headers and returns a promise resolving to a boolean indicating whether the user
+ *   has the required permissions.
+ * @param {SvelteActionFn} actionFn
+ *   The action function to be executed if the user passes the authentication and permission checks.
+ * @return {SvelteActionFn}
+ *   A new Svelte action function that incorporates the permission check and user authentication logic,
+ *   calling the original action function if all requirements are met.
+ */
+export function requireActionPermission(
+  permissionCheckFn: (auth: AuthApi, headers: Headers) => Promise<boolean>,
+  actionFn: SvelteActionFn
+): SvelteActionFn {
+  return async (event: RequestEvent) => {
+    const session = await event.locals.auth.getSession({
+      headers: event.request.headers,
+    });
+
+    if (!session)
+      return fail(constants.HTTP_STATUS_UNAUTHORIZED, {
+        message: 'Unauthorized',
+      });
+
+    const hasPermission = await permissionCheckFn(
+      event.locals.auth,
+      event.request.headers
+    );
+
+    if (!hasPermission)
+      return fail(constants.HTTP_STATUS_FORBIDDEN, {
+        message: 'Insufficient permissions',
+      });
+
+    return actionFn(event);
   };
 }

@@ -1,13 +1,9 @@
-import type { EmailService } from '$lib/server/email';
-import {
-  type BetterAuthOptions,
-  type BetterAuthPlugin,
-  betterAuth,
-} from 'better-auth';
+import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin, emailOTP, organization } from 'better-auth/plugins';
-import { createDbClient, type DrizzleClient } from './server/db';
-import * as schema from './server/db/schema';
+import type { DrizzleClient } from '../db';
+import * as schema from '../db/schema';
+import type { EmailService } from '../email';
 
 export function createAuth(
   db: DrizzleClient,
@@ -91,7 +87,7 @@ export function createAuth(
         },
       }),
       organization({
-        async sendInvitationEmail(data, request) {
+        async sendInvitationEmail(data) {
           const inviteUrl = `${origin}/accept-invitation?id=${data.id}`;
           await emailService.sendEmail({
             to: data.email,
@@ -108,32 +104,3 @@ export function createAuth(
     ],
   });
 }
-
-/** Required for BetterAuth CLI to generate the schema **/
-// export const auth = betterAuth({
-//   database: drizzleAdapter(
-//     await createDbClient({ dbUrl: 'file:local-tenant.db', schema }),
-//     {
-//       schema,
-//       provider: 'sqlite',
-//       usePlural: true,
-//     }
-//   ),
-//   emailAndPassword: {
-//     enabled: true,
-//     disableSignUp: false,
-//   },
-//   plugins: [
-//     admin({
-//       defaultRole: 'user',
-//     }),
-//     emailOTP({
-//       async sendVerificationOTP({ otp, email, type }) {
-//         console.log(`send otp to ${email} for ${type} with OTP: ${otp}`);
-//       },
-//     }),
-//     organization(),
-//   ],
-// });
-export type AuthProvider = ReturnType<typeof createAuth>;
-// export type Session = ReturnType<typeof createAuth>.$Infer.Session;

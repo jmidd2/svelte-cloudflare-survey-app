@@ -33,3 +33,17 @@ export const sendInviteSchema = z.object({
   email: z.email(),
   role: z.enum(['owner', 'admin', 'member']).default('member'),
 });
+
+export const cancelInviteSchema = z.object({
+  inviteId: z.string().length(32),
+});
+
+export const resendInviteSchema = z.object({
+  inviteId: z.string().length(32),
+  email: z.email(),
+  role: z.enum(['admin', 'owner', 'member']).default('member'),
+});
+
+export const requestToJoinSchema = z.object({
+  requestId: z.string().length(32),
+});
