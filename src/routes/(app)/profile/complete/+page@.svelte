@@ -543,7 +543,7 @@ const handleJoinRequest: SubmitFunction = () => {
                 <CardContent class="p-4">
                   <div class="flex items-center gap-4">
                     <Avatar class="h-12 w-12">
-                      <AvatarImage src={org.logo || "/placeholder.svg"} alt={org.name} />
+                      <AvatarImage src={org.logo} alt={org.name} />
                       <AvatarFallback class="bg-primary/10 text-primary font-medium">
                         {getInitials(org.name)}
                       </AvatarFallback>

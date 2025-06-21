@@ -5,13 +5,30 @@ import {
   ShareDialog,
 } from '$lib/components/dialogs';
 import { FormFieldList } from '$lib/components/FormFieldList';
-import { PropertiesSidebar } from '$lib/components/PropertiesSidebar/index.js';
+import { PropertiesSidebar } from '$lib/components/PropertiesSidebar';
 import { ToolboxSidebar } from '$lib/components/ToolboxSidebar';
 import { Button } from '$lib/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '$lib/components/ui/dialog';
+import {
+  FieldErrors,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormLabel,
+} from '$lib/components/ui/form';
+import { Input } from '$lib/components/ui/input';
+import { Textarea } from '$lib/components/ui/textarea';
 import { surveyDialogManager } from '$lib/stores/SurveyDialog.svelte.js';
 import { editFormSchema } from '$lib/validation-schema';
 import { SurveyEditor, setSurveyEditor } from '$stores/survey-editor.svelte';
-import { PencilIcon, SettingsIcon, ShareIcon } from '@lucide/svelte';
+import { Menu, PencilIcon, SettingsIcon, ShareIcon } from '@lucide/svelte';
 import { slide } from 'svelte/transition';
 import { toast } from 'svelte-sonner';
 import { superForm } from 'sveltekit-superforms';
@@ -91,49 +108,83 @@ function openSettingsDialog() {
 }
 </script>
 
-<div class="flex flex-1 overflow-hidden">
-  <div class="w-64 border-r border-spark-secondary-600 flex flex-col h-full">
-    <ToolboxSidebar/>
+<svelte:head>
+  <title>Edit Form - {editor.survey?.title}</title>
+</svelte:head>
+
+<!-- 2-Column Layout that works within existing admin layout -->
+<div class="flex h-full bg-background overflow-hidden">
+  <!-- Left Sidebar: Toolbox (collapsible on mobile) -->
+  <div class="hidden lg:flex w-64 border-r border-border flex-col bg-card">
+    <ToolboxSidebar />
   </div>
-  <div class="flex flex-1 flex-col">
-    <div class="flex-1 p-6 overflow-auto bg-muted/10">
-      <div class="max-w-4xl xl:mx-auto p-6 rounded-lg shadow-sm border">
-        <div class="mb-3">
-          <h1 class="text-2xl">
-            {editor.survey?.title}
-          </h1>
-          <p>
-            {editor.survey?.description}</p>
-          <div class="text-muted-foreground text-sm flex items-center gap-2 my-1">
-            <p>
-              Last Update: {editor.survey ? new Date(editor.survey.updatedAt).toLocaleString() : ''}
-            </p>
-          </div>
-          <div class="flex items-center gap-2 mt-4">
-            <Button variant="outline" size="sm" onclick={openEditDialog}>
-              <PencilIcon class="w-4 h-4 mr-1" />
-              Edit Details
-            </Button>
-            <Button variant="outline" size="sm" onclick={openShareDialog}>
-              <ShareIcon class="w-4 h-4 mr-1" />
-              Share
-            </Button>
-            <Button variant="outline" size="sm" onclick={openSettingsDialog}>
-              <SettingsIcon class="w-4 h-4 mr-1" />
-              Settings
-            </Button>
+
+  <!-- Main Content Area -->
+  <div class="flex-1 flex flex-col min-w-0">
+    <!-- Mobile Toolbox Toggle -->
+    <div class="lg:hidden border-b border-border p-4 bg-card">
+      <Button variant="outline" onclick={() => { /* Add mobile toolbox toggle logic */ }}>
+        <Menu class="h-4 w-4 mr-2" />
+        Toolbox
+      </Button>
+    </div>
+
+    <!-- Form Editor Content -->
+    <div class="flex-1 flex overflow-hidden">
+      <!-- Center: Form Editor -->
+      <div class="flex-1 flex flex-col min-w-0">
+        <div class="flex-1 p-4 lg:p-6 overflow-auto">
+          <div class="max-w-4xl mx-auto">
+            <!-- Form Header -->
+            <div class="bg-background p-6 rounded-lg shadow-sm border mb-6">
+              <h1 class="text-2xl font-bold text-foreground mb-2">
+                {editor.survey?.title}
+              </h1>
+              <p class="text-muted-foreground mb-3">
+                {editor.survey?.description}
+              </p>
+              <div class="text-muted-foreground text-sm mb-4">
+                <p>
+                  Last Update: {editor.survey ? new Date(editor.survey.updatedAt).toLocaleString() : ''}
+                </p>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="flex flex-wrap items-center gap-2">
+                <Button variant="outline" size="sm" onclick={openEditDialog}>
+                  <PencilIcon class="w-4 h-4 mr-1" />
+                  Edit Details
+                </Button>
+                <Button variant="outline" size="sm" onclick={openShareDialog}>
+                  <ShareIcon class="w-4 h-4 mr-1" />
+                  Share
+                </Button>
+                <Button variant="outline" size="sm" onclick={openSettingsDialog}>
+                  <SettingsIcon class="w-4 h-4 mr-1" />
+                  Settings
+                </Button>
+              </div>
+            </div>
+
+            <!-- Form Fields -->
+            <div class="bg-background p-6 rounded-lg shadow-sm border">
+              <FormFieldList />
+            </div>
           </div>
         </div>
-
-        <FormFieldList/>
       </div>
+
+      <!-- Right Sidebar: Properties Panel (slides in when field selected) -->
+      {#if selectedField}
+        <div
+            transition:slide={{ axis: 'x', duration: 300 }}
+            class="fixed right-0 w-100 top-24 xl:top-0 bottom-0 xl:relative xl:bg-transparent bg-card border-l border-border flex-shrink-0"
+        >
+          <PropertiesSidebar />
+        </div>
+      {/if}
     </div>
   </div>
-  {#if selectedField}
-    <div transition:slide={{ axis: 'x' }} class="fixed right-0 w-100 top-35.25 xl:top-0 bottom-0 bg-spark-bg-dark xl:relative xl:bg-transparent">
-      <PropertiesSidebar />
-    </div>
-  {/if}
 </div>
 {#if editor.survey}
   <EditDialog {editForm} survey={{ formId: editor.survey.id, ...editor.survey }} />

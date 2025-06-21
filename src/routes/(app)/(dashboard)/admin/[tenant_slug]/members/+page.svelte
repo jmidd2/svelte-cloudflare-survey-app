@@ -275,7 +275,7 @@ function displayRole(role: string): string {
   <title>Manage Members - Admin</title>
 </svelte:head>
 
-<div class="container mx-auto px-4 py-8 max-w-7xl">
+<div class="p-6 space-y-6">
   <!-- Header Section -->
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
     <div>
