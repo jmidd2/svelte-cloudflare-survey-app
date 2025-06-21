@@ -13,23 +13,7 @@ import { ArrowRight, Building2, Plus, Users } from '@lucide/svelte';
 
 const { data } = $props();
 
-// Get organizations from the auth client
-const organizations = $derived([]); // data.organizations
-
-// Auto-redirect to first organization if user has any
-// TODO: Move to page.server or layout.server
-// onMount(() => {
-//   onAuthStateChange((user) => {
-//     if (!user) {
-//       goto('/login');
-//       return;
-//     }
-//   });
-//   if ($organizations.data && $organizations.data.length > 0) {
-//     // Redirect to the first organization
-//     goto(`/admin/${$organizations.data[0].slug}`);
-//   }
-// });
+const organizations = $derived(data.organizations);
 
 // TODO: Move to utils
 function getInitials(name: string): string {
@@ -52,13 +36,23 @@ const isLoading = $state(false);
 <div class="min-h-screen bg-background">
   <div class="container mx-auto px-4 py-8 max-w-4xl">
     <!-- Header -->
-    <div class="text-center mb-8">
+    <div class="text-center mb-8 space-y-4">
       <h1 class="text-3xl font-bold text-foreground mb-2">
         Welcome to Admin Dashboard
       </h1>
       <p class="text-muted-foreground">
         Select an organization to manage or create a new one
       </p>
+      <div class="flex flex-col sm:flex-row gap-3 justify-center">
+      <Button href="/onboarding">
+        <Plus class="h-4 w-4 mr-2" />
+        Create Organization
+      </Button>
+      <Button variant="outline" href="/onboarding">
+        <Users class="h-4 w-4 mr-2" />
+        Join Organization
+      </Button>
+    </div>
     </div>
 
     {#if isLoading}
@@ -78,22 +72,17 @@ const isLoading = $state(false);
           <p class="text-muted-foreground mb-6">
             You don't belong to any organizations yet. Create one to get started or request to join an existing organization.
           </p>
-          <div class="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button href="/onboarding">
-              <Plus class="h-4 w-4 mr-2" />
-              Create Organization
-            </Button>
-            <Button variant="outline" href="/onboarding">
-              <Users class="h-4 w-4 mr-2" />
-              Join Organization
-            </Button>
-          </div>
         </CardContent>
       </Card>
     {:else}
       <!-- Organizations List -->
       <div class="space-y-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Quick Actions -->
+        <Card class="border-none bg-transparent shadow-none p-0">
+          <CardContent class="p-0">
+          </CardContent>
+        </Card>
+        <div class="grid grid-cols-1 gap-6">
           {#each organizations as organization}
             <Card class="hover:shadow-lg transition-shadow cursor-pointer group">
               <CardHeader class="pb-4">
@@ -138,27 +127,6 @@ const isLoading = $state(false);
           {/each}
         </div>
 
-        <!-- Quick Actions -->
-        <Card>
-          <CardHeader>
-            <CardTitle class="text-lg">Quick Actions</CardTitle>
-            <CardDescription>
-              Common tasks you can perform
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div class="flex flex-col sm:flex-row gap-3">
-              <Button variant="outline" href="/onboarding">
-                <Plus class="h-4 w-4 mr-2" />
-                Create New Organization
-              </Button>
-              <Button variant="outline" href="/onboarding">
-                <Users class="h-4 w-4 mr-2" />
-                Request to Join Organization
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     {/if}
   </div>

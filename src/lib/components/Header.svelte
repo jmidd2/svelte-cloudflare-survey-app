@@ -1,9 +1,16 @@
 <script lang="ts">
 import { goto } from '$app/navigation';
-import { page } from '$app/state';
 import { type AuthUser, authClient } from '$lib/auth-client';
 import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 import { Button } from '$lib/components/ui/button';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '$lib/components/ui/command';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,42 +20,47 @@ import {
   DropdownMenuTrigger,
 } from '$lib/components/ui/dropdown-menu';
 import {
-  DropdownMenuGroup,
-  DropdownMenuGroupHeading,
-} from '$lib/components/ui/dropdown-menu/index.js';
-import { Input } from '$lib/components/ui/input';
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '$lib/components/ui/popover';
 import { Separator } from '$lib/components/ui/separator';
 import type { SelectOrganization } from '$lib/server/db/schema';
+import type { OrganizationListItem } from '$lib/types';
+import { cn } from '$lib/utils';
 import {
   Building2,
-  ChevronDownIcon,
-  ChevronUpIcon,
+  CheckIcon,
+  ChevronsUpDownIcon,
+  CrownIcon,
   FileText,
-  Home,
   LogOut,
   Moon,
   Search,
   Settings,
   Sun,
   User,
-  Users,
 } from '@lucide/svelte';
 import { toggleMode } from 'mode-watcher';
-import { onMount } from 'svelte';
+import { onMount, tick } from 'svelte';
 import { toast } from 'svelte-sonner';
 
 interface HeaderProps {
   user?: AuthUser | null;
   currentOrg?: SelectOrganization | null;
   showOrgContext?: boolean;
+  organizationList?: OrganizationListItem[];
 }
 
 let {
   user = null,
   currentOrg = null,
   showOrgContext = false,
+  organizationList = [],
 }: HeaderProps = $props();
-
+// organizationList = [
+//   { id: '2', name: 'Test Org', slug: 'test-org', logo: null },
+// ];
 let searchQuery = $state('');
 let isDarkMode = $state(false);
 let notifications = $state([
@@ -83,12 +95,6 @@ function getInitials(name: string): string {
   );
 }
 
-function toggleTheme() {
-  isDarkMode = !isDarkMode;
-  document.documentElement.classList.toggle('dark', isDarkMode);
-  localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
-}
-
 async function handleSignOut() {
   try {
     await authClient.signOut();
@@ -107,53 +113,34 @@ function handleSearch(event: Event) {
   }
 }
 
-// Generate breadcrumbs based on current path
-const breadcrumbs = $derived.by(() => {
-  const path = page.url.pathname;
-  const segments = path.split('/').filter(Boolean);
-  const crumbs = [];
-
-  if (segments[0] === 'admin' && segments[1] && currentOrg) {
-    // Admin section breadcrumbs
-    crumbs.push({
-      label: 'Dashboard',
-      href: `/admin/${currentOrg.slug}`,
-      icon: Home,
-    });
-
-    if (segments[2] === 'forms') {
-      crumbs.push({
-        label: 'Forms',
-        href: `/admin/${currentOrg.slug}/forms`,
-        icon: FileText,
-      });
-
-      if (segments[3] && segments[3] !== 'new') {
-        crumbs.push({
-          label: 'Edit Form',
-          href: null,
-          icon: FileText,
-        });
-      } else if (segments[3] === 'new') {
-        crumbs.push({
-          label: 'New Form',
-          href: null,
-          icon: FileText,
-        });
-      }
-    } else if (segments[2] === 'members') {
-      crumbs.push({
-        label: 'Members',
-        href: null,
-        icon: Users,
-      });
-    }
-  }
-
-  return crumbs;
-});
-
 const unreadCount = $derived(notifications.filter(n => n.unread).length);
+
+let open = $state(false);
+let value = $state(
+  organizationList[0] ?? {
+    name: 'Select Organization',
+    logo: '',
+    id: 'select-organization',
+    slug: 'select-organization',
+  }
+);
+let triggerRef = $state<HTMLButtonElement>(null!);
+
+const selectedValue = $derived(
+  organizationList.find(f => f.name === value.name)
+);
+
+// We want to refocus the trigger button when the user selects
+// an item from the list so users can continue navigating the
+// rest of the form with the keyboard.
+function closeAndFocusTrigger() {
+  open = false;
+  tick().then(() => {
+    triggerRef.focus();
+  });
+}
+
+$inspect(organizationList);
 </script>
 
 <header class="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -171,31 +158,73 @@ const unreadCount = $derived(notifications.filter(n => n.unread).length);
 
         <!-- Organization Context -->
         {#if showOrgContext && currentOrg}
-          <div class="">
-          <DropdownMenu>
-            <DropdownMenuTrigger class="hidden md:flex gap-2 items-center group">
-              <Separator orientation="vertical" class="data-[orientation=vertical]:h-10" />
-              <div class="flex items-center gap-2 ml-2">
-                <Avatar class="h-6 w-6">
-                  <AvatarImage src={currentOrg.logo} alt={currentOrg.name} />
-                  <AvatarFallback class="bg-primary/10 text-primary text-xs">
-                    {getInitials(currentOrg.name)}
-                  </AvatarFallback>
-                </Avatar>
-                <span class="text-sm font-medium text-foreground">{currentOrg.name}</span>
-              </div>
-              <ChevronDownIcon class="h-4 w-4 group-data-[state=open]:hidden" />
-              <ChevronUpIcon class="h-4 w-4 group-data-[state=open]:block hidden" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" class="w-56">
-              <DropdownMenuGroup>
-                <DropdownMenuGroupHeading>Your Organizations</DropdownMenuGroupHeading>
-                <DropdownMenuSeparator></DropdownMenuSeparator>
-                <DropdownMenuItem>Coming Soon</DropdownMenuItem>
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          </div>
+          {#if organizationList.length > 1}
+            <Popover bind:open>
+              <PopoverTrigger bind:ref={triggerRef}>
+                {#snippet child({ props })}
+                  <Button
+                      {...props}
+                      variant="ghost"
+                      class="justify-between"
+                      role="combobox"
+                      aria-expanded={open}
+                  >
+                    <Avatar class="h-6 w-6">
+                      <AvatarImage src={value.logo} alt={value.name} />
+                      <AvatarFallback class="bg-primary/10 text-primary text-xs">
+                        {getInitials(value.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span class="text-sm font-medium text-foreground">{value.name}</span>
+                    <ChevronsUpDownIcon class="opacity-50" />
+                  </Button>
+                {/snippet}
+              </PopoverTrigger>
+              <PopoverContent class="w-64 p-0">
+                <Command>
+                  <CommandInput class="focus-0 ring-0 focus:ring-0 focus:border-transparent" placeholder="Search organizations..." />
+                  <CommandList>
+                    <CommandEmpty>No framework found.</CommandEmpty>
+                    <CommandGroup value="frameworks">
+                      {#each organizationList as org (org.id)}
+                        <CommandItem
+                            value={org.name}
+                            onSelect={() => {
+                              closeAndFocusTrigger();
+                              if(org.id === 'select-organization') return;
+                              if(org.id === currentOrg.id) return;
+                              value = org;
+                              goto(`/admin/${org.slug}`);
+                            }}
+                        >
+                          <div class="flex items-center gap-2 w-full">
+                          <CheckIcon
+                              class={cn(value.name !== org.name && "text-transparent")}
+                          />
+                            <span class="flex-1">{org.name}</span>
+                          <CrownIcon
+                          class={cn(!(org.isOwner || org.isAdmin) && "text-transparent")}/>
+
+                          </div>
+                        </CommandItem>
+                      {/each}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          {:else}
+            <Separator orientation="vertical" class="data-[orientation=vertical]:h-10" />
+            <div class="flex items-center gap-2 ml-2">
+              <Avatar class="h-6 w-6">
+                <AvatarImage src={currentOrg.logo} alt={currentOrg.name} />
+                <AvatarFallback class="bg-primary/10 text-primary text-xs">
+                  {getInitials(currentOrg.name)}
+                </AvatarFallback>
+              </Avatar>
+              <span class="text-sm font-medium text-foreground">{currentOrg.name}</span>
+            </div>
+          {/if}
         {/if}
       </div>
 

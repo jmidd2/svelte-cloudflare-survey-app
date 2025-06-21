@@ -1,5 +1,10 @@
+import {
+  members,
+  organizations as organizationsTable,
+} from '$lib/server/db/schema';
 import { constants } from 'node:http2';
 import { redirect } from '@sveltejs/kit';
+import { eq } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async function ({
@@ -14,6 +19,14 @@ export const load: PageServerLoad = async function ({
   });
 
   if (!session) redirect(constants.HTTP_STATUS_SEE_OTHER, '/auth/login');
+
+  if (data.organizations && data.organizations.length > 0) {
+    // Redirect to the first organization
+    redirect(
+      constants.HTTP_STATUS_SEE_OTHER,
+      `/admin/${data.organizations[0].slug}`
+    );
+  }
 
   return {
     ...data,
