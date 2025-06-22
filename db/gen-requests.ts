@@ -58,4 +58,7 @@ export default async function main(num_to_create: number = REQUESTS_TO_CREATE) {
   }
 }
 
-main().catch(console.error);
+// Check if this file is being run directly (not imported)
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch(console.error);
+}
