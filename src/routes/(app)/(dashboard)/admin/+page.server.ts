@@ -13,7 +13,7 @@ export const load: PageServerLoad = async function ({
     headers: request.headers,
   });
 
-  if (!session) redirect(constants.HTTP_STATUS_SEE_OTHER, '/auth/login');
+  if (!session) redirect(constants.HTTP_STATUS_SEE_OTHER, '/login');
 
   if (data.organizations && data.organizations.length > 0) {
     // Redirect to the first organization

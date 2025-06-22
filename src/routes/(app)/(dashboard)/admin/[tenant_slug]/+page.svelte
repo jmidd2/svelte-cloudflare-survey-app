@@ -135,12 +135,12 @@ const recentActivity = $derived([
       </p>
     </div>
 
-    {#if isAdmin}
-      <Button onclick={openAddDialog} class="flex items-center gap-2">
-        <Plus class="h-4 w-4" />
-        Create Form
-      </Button>
-    {/if}
+    <!--{#if isAdmin}-->
+    <!--  <Button onclick={openAddDialog} class="flex items-center gap-2">-->
+    <!--    <Plus class="h-4 w-4" />-->
+    <!--    Create Form-->
+    <!--  </Button>-->
+    <!--{/if}-->
   </div>
 
 <!--  &lt;!&ndash; Stats Overview &ndash;&gt;-->
@@ -222,7 +222,7 @@ const recentActivity = $derived([
 <!--    </Card>-->
 <!--  </div>-->
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+  <div class="flex flex-col-reverse lg:grid lg:grid-cols-3 gap-8">
     <!-- Forms Section -->
     <div class="lg:col-span-2 space-y-6">
       <div class="flex items-center justify-between">
@@ -236,7 +236,7 @@ const recentActivity = $derived([
         <div class="space-y-4">
           {#each forms.slice(0, 5) as survey}
             <Card class="hover:shadow-md transition-shadow">
-              <CardContent class="p-6">
+              <CardContent class="px-6">
                 <div class="flex items-start justify-between">
                   <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-2 mb-2">
@@ -266,35 +266,41 @@ const recentActivity = $derived([
                     </div>
                   </div>
 
-                  <div class="flex items-center gap-2 ml-4">
-                    <Button variant="outline" size="sm" href={`/admin/${tenantSlug}/forms/${survey.slug}`}>
+                  <div class="flex flex-col gap-2 ml-4">
+                    <Button variant="secondary" size="sm" href={`/admin/${tenantSlug}/forms/${survey.slug}`}>
                       <PencilIcon class="w-4 h-4 mr-1" />
                       Edit
                     </Button>
+                    <Button variant="default" size="sm" onclick={() => openShareDialog(survey)}>
+                      <ShareIcon class="h-4 w-4 mr-2" />
+                      Share
+                    </Button>
+                    <Button variant="outline" size="sm" href={`/admin/${tenantSlug}/forms/${survey.slug}`}>
+                      <a class="inline-flex items-center" href={`/admin/${tenantSlug}/forms/${survey.slug}/results`}>
+                        <ChartColumnIcon class="h-4 w-4 mr-2" />
+                        View Results
+                      </a>
+                    </Button>
 
-                    <DropdownMenu>
-                      <DropdownMenuTrigger>
-                        <Button variant="ghost" size="sm" class="h-8 w-8 p-0">
-                          <MoreHorizontal class="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem class="hover:cursor-pointer" onclick={() => openShareDialog(survey)}>
-                          <ShareIcon class="h-4 w-4 mr-2" />
-                          Share
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <a class="inline-flex items-center" href={`/admin/${tenantSlug}/forms/${survey.slug}/results`}>
-                          <ChartColumnIcon class="h-4 w-4 mr-2" />
-                          View Results
-                          </a>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem class="text-destructive hover:cursor-pointer">
-                          Delete Form
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+<!--                    <DropdownMenu>-->
+<!--                      <DropdownMenuTrigger>-->
+<!--                        <Button variant="ghost" size="sm" class="h-8 w-8 p-0">-->
+<!--                          <MoreHorizontal class="h-4 w-4" />-->
+<!--                        </Button>-->
+<!--                      </DropdownMenuTrigger>-->
+<!--                      <DropdownMenuContent align="start">-->
+<!--                        <DropdownMenuItem class="hover:cursor-pointer" onclick={() => openShareDialog(survey)}> -->
+<!--                          <ShareIcon class="h-4 w-4 mr-2" />-->
+<!--                          Share-->
+<!--                        </DropdownMenuItem>-->
+<!--                        <DropdownMenuItem>-->
+<!--                          <a class="inline-flex items-center" href={`/admin/${tenantSlug}/forms/${survey.slug}/results`}> -->
+<!--                          <ChartColumnIcon class="h-4 w-4 mr-2" />-->
+<!--                          View Results-->
+<!--                          </a>-->
+<!--                        </DropdownMenuItem>-->
+<!--                      </DropdownMenuContent>-->
+<!--                    </DropdownMenu>-->
                   </div>
                 </div>
               </CardContent>
@@ -327,11 +333,12 @@ const recentActivity = $derived([
       <div>
         <h2 class="text-xl font-semibold text-foreground mb-4">Quick Actions</h2>
         <Card>
-          <CardContent class="p-4 space-y-3">
-            <Button variant="outline" class="w-full justify-start" href={`/admin/${tenantSlug}/forms/new`}>
+          <CardContent class="px-4 space-y-3">
+            <Button variant="outline" class="w-full justify-start" onclick={openAddDialog}>
               <Plus class="h-4 w-4 mr-2" />
               Create New Form
             </Button>
+            <!-- TODO: Change to invite members -->
             <Button variant="outline" class="w-full justify-start" href={`/admin/${tenantSlug}/members`}>
               <Users class="h-4 w-4 mr-2" />
               Manage Members

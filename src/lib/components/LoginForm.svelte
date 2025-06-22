@@ -55,7 +55,7 @@ async function verifyOtp(event: SubmitEvent) {
       return;
     }
 
-    goto('/', {
+    goto('/admin', {
       invalidateAll: true,
     });
   } else {
@@ -79,8 +79,6 @@ $effect(() => {
     replaceState: true,
   });
 });
-
-$inspect(redirect);
 </script>
 
 <div class={cn("flex flex-col gap-6", className)} {...restProps}>

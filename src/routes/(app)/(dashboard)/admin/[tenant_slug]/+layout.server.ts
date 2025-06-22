@@ -11,7 +11,7 @@ export const load = async function ({ locals, params, request }) {
     query: { organizationSlug: tenant_slug },
   });
 
-  if (!tenant) redirect(constants.HTTP_STATUS_SEE_OTHER, '/auth/login');
+  if (!tenant) redirect(constants.HTTP_STATUS_SEE_OTHER, '/login');
 
   await locals.auth.setActiveOrganization({
     headers: request.headers,

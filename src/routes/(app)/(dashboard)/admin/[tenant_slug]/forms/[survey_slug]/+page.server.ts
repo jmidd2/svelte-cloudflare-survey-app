@@ -33,7 +33,7 @@ export const load: PageServerLoad = async function ({
   const session = await locals.auth.getSession({
     headers: request.headers,
   });
-  if (!session) return redirect(constants.HTTP_STATUS_SEE_OTHER, '/auth/login');
+  if (!session) return redirect(constants.HTTP_STATUS_SEE_OTHER, '/login');
 
   if (!params.survey_slug) throw error(400, 'slug is required');
 

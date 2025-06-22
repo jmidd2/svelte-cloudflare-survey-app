@@ -1,5 +1,6 @@
 <script lang="ts">
 import { goto } from '$app/navigation';
+import { page } from '$app/state';
 import { type AuthUser, authClient } from '$lib/auth-client';
 import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 import { Button } from '$lib/components/ui/button';
@@ -50,6 +51,8 @@ interface HeaderProps {
   currentOrg?: SelectOrganization | null;
   showOrgContext?: boolean;
   organizationList?: OrganizationListItem[];
+  isOrgAdmin?: boolean;
+  isAdminRoute?: boolean;
 }
 
 let {
@@ -57,10 +60,13 @@ let {
   currentOrg = null,
   showOrgContext = false,
   organizationList = [],
+  isOrgAdmin = false,
+  isAdminRoute = false,
 }: HeaderProps = $props();
 // organizationList = [
 //   { id: '2', name: 'Test Org', slug: 'test-org', logo: null },
 // ];
+
 let searchQuery = $state('');
 let isDarkMode = $state(false);
 let notifications = $state([
@@ -99,7 +105,9 @@ async function handleSignOut() {
   try {
     await authClient.signOut();
     toast.success('Signed out successfully');
-    goto('/');
+    goto('/', {
+      invalidateAll: true,
+    });
   } catch (error) {
     toast.error('Failed to sign out');
   }
@@ -170,7 +178,7 @@ $inspect(organizationList);
                       aria-expanded={open}
                   >
                     <Avatar class="h-6 w-6">
-                      <AvatarImage src={value.logo} alt={value.name} />
+                      <AvatarImage src={value.logo || "/placeholder.svg"} alt={value.name} />
                       <AvatarFallback class="bg-primary/10 text-primary text-xs">
                         {getInitials(value.name)}
                       </AvatarFallback>
@@ -198,12 +206,12 @@ $inspect(organizationList);
                             }}
                         >
                           <div class="flex items-center gap-2 w-full">
-                          <CheckIcon
-                              class={cn(value.name !== org.name && "text-transparent")}
-                          />
+                            <CheckIcon
+                                class={cn(value.name !== org.name && "text-transparent")}
+                            />
                             <span class="flex-1">{org.name}</span>
-                          <CrownIcon
-                          class={cn(!(org.isOwner || org.isAdmin) && "text-transparent")}/>
+                            <CrownIcon
+                                class={cn(!(org.isOwner || org.isAdmin) && "text-transparent")}/>
 
                           </div>
                         </CommandItem>
@@ -217,7 +225,7 @@ $inspect(organizationList);
             <Separator orientation="vertical" class="data-[orientation=vertical]:h-10" />
             <div class="flex items-center gap-2 ml-2">
               <Avatar class="h-6 w-6">
-                <AvatarImage src={currentOrg.logo} alt={currentOrg.name} />
+                <AvatarImage src={currentOrg.logo || "/placeholder.svg"} alt={currentOrg.name} />
                 <AvatarFallback class="bg-primary/10 text-primary text-xs">
                   {getInitials(currentOrg.name)}
                 </AvatarFallback>
@@ -225,33 +233,107 @@ $inspect(organizationList);
               <span class="text-sm font-medium text-foreground">{currentOrg.name}</span>
             </div>
           {/if}
+        {:else}
+          <div class="hidden md:flex items-center gap-1 ml-4">
+            <a
+                href="/"
+                class={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+      page.url.pathname === '/'
+        ? 'bg-primary/10 text-primary font-semibold'
+        : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+    }`}
+            >
+              Home
+            </a>
+            <a
+                href="/pricing"
+                class={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+      page.url.pathname === '/pricing'
+        ? 'bg-primary/10 text-primary font-semibold'
+        : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+    }`}
+            >
+              Pricing
+            </a>
+            <a
+                href="/contact"
+                class={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+      page.url.pathname === '/contact'
+        ? 'bg-primary/10 text-primary font-semibold'
+        : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+    }`}
+            >
+              Contact
+            </a>
+            {#if user}
+              <a
+                  href="/admin"
+                  class={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+      page.url.pathname === '/admin'
+        ? 'bg-primary/10 text-primary font-semibold'
+        : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+    }`}
+              >
+                Dashboard
+              </a>
+              {/if}
+          </div>
+
+          <!-- Mobile Navigation Menu -->
+          <div class="md:hidden ml-4">
+            <DropdownMenu>
+              <DropdownMenuTrigger>
+                <Button variant="ghost" size="sm" class="h-8 w-8 p-0">
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" class="w-48">
+                <DropdownMenuItem>
+                  <a href="/" class="w-full">Home</a>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <a href="/pricing" class="w-full">Pricing</a>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <a href="/contact" class="w-full">Contact</a>
+                </DropdownMenuItem>
+                {#if user}
+                  <DropdownMenuItem>
+                  <a href="/admin" class="w-full">Dashboard</a>
+                  </DropdownMenuItem>
+                {/if}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         {/if}
       </div>
 
       <!-- Center Section: Search (on larger screens) -->
-<!--      <div class="hidden md:flex flex-1 max-w-md mx-8">-->
-<!--        <form onsubmit={handleSearch} class="relative w-full">-->
-<!--          <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />-->
-<!--          <Input-->
-<!--              type="search"-->
-<!--              placeholder="Search forms, members..."-->
-<!--              bind:value={searchQuery}-->
-<!--              class="pl-10 w-full"-->
-<!--          />-->
-<!--        </form>-->
-<!--      </div>-->
+      <!--      <div class="hidden md:flex flex-1 max-w-md mx-8">-->
+      <!--        <form onsubmit={handleSearch} class="relative w-full">-->
+      <!--          <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />-->
+      <!--          <Input-->
+      <!--              type="search"-->
+      <!--              placeholder="Search forms, members..."-->
+      <!--              bind:value={searchQuery}-->
+      <!--              class="pl-10 w-full"-->
+      <!--          />-->
+      <!--        </form>-->
+      <!--      </div>-->
 
       <!-- Right Section: Actions + User Menu -->
       <div class="flex items-center gap-2">
         <!-- Mobile Search -->
-        <Button variant="ghost" size="sm" class="md:hidden h-8 w-8 p-0">
-          <Search class="h-4 w-4" />
-        </Button>
+<!--        <Button variant="ghost" size="sm" class="md:hidden h-8 w-8 p-0">-->
+<!--          <Search class="h-4 w-4" />-->
+<!--        </Button>-->
 
         <!-- Theme Toggle -->
         <Button variant="ghost" size="sm" onclick={toggleMode} class="h-8 w-8 p-0 border">
-            <Sun class="h-4 w-4 dark:hidden" />
-            <Moon class="h-4 w-4 dark:block hidden" />
+          <Sun class="h-4 w-4 dark:hidden" />
+          <Moon class="h-4 w-4 dark:block hidden" />
         </Button>
 
         <!-- Notifications -->
@@ -309,7 +391,7 @@ $inspect(organizationList);
             <DropdownMenuTrigger>
               <Button variant="ghost" class="h-8 gap-2 px-2">
                 <Avatar class="h-6 w-6">
-                  <AvatarImage src={user.image} alt={user.name} />
+                  <AvatarImage src={user.image || "/placeholder.svg"} alt={user.name} />
                   <AvatarFallback class="bg-primary/10 text-primary text-xs">
                     {getInitials(user.name || user.email)}
                   </AvatarFallback>
@@ -327,21 +409,21 @@ $inspect(organizationList);
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <a class="flex items-center gap-2" href="/profile">
+              <DropdownMenuItem disabled>
+                <a class="flex items-center gap-2" href="/profile" aria-disabled="true">
                   <User class="mr-2 h-4 w-4" />
                   <span>Profile</span>
                 </a>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <a class="flex items-center gap-2" href="/settings">
+              <DropdownMenuItem disabled>
+                <a class="flex items-center gap-2" href="/settings" aria-disabled="true">
                   <Settings class="mr-2 h-4 w-4" />
                   <span>Settings</span>
                 </a>
               </DropdownMenuItem>
-              {#if currentOrg}
+              {#if isOrgAdmin}
                 <DropdownMenuItem>
-                  <a class="inline-flex items-center gap-2" href={`/admin/${currentOrg.slug}`}>
+                  <a class="inline-flex items-center gap-2" href={`/admin`}>
                     <Building2 class="mr-2 h-4 w-4" />
                     <span>Admin Dashboard</span>
                   </a>

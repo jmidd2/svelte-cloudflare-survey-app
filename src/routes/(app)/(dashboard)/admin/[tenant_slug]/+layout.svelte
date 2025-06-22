@@ -1,5 +1,6 @@
 <script lang="ts">
 import { page } from '$app/state';
+import { EditCreateFormDialog } from '$lib/components/dialogs';
 import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 import { Badge } from '$lib/components/ui/badge';
 import { Button } from '$lib/components/ui/button';
@@ -9,6 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '$lib/components/ui/dropdown-menu';
+import { formDialogManager } from '$stores/SurveyDialog.svelte';
 import {
   ChartColumnIcon,
   ChevronDown,
@@ -107,22 +109,26 @@ function getInitials(name: string): string {
 function closeSidebar() {
   sidebarOpen = false;
 }
+
+function openAddDialog() {
+  formDialogManager.openDialog('edit');
+}
 </script>
 
 <!-- This layout sits BELOW the Header component -->
-<div class="flex h-[calc(100vh-65px)] bg-background"> <!-- Subtract header height (64px = 4rem) -->
+<div class="flex bg-background"> <!-- Subtract header height (64px = 4rem) -->
   <!-- Mobile sidebar overlay -->
   {#if sidebarOpen}
-    <div class="fixed inset-0 z-40 lg:hidden top-24"> <!-- Account for header -->
+    <div class="fixed inset-0 z-40 lg:hidden top-[35px]"> <!-- Account for header -->
       <div class="fixed inset-0 bg-black/50" role="button" tabindex="0" onclick={closeSidebar} onkeydown={() => {}}></div>
     </div>
   {/if}
 
   <!-- Sidebar -->
   <div class={`
-    fixed left-0 top-24 h-[calc(100vh-65px)] z-50 w-72 bg-card border-r border-border transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0
+    fixed left-0 top-[65px] h-[calc(100vh-65px)] lg:h-auto lg:min-h-[calc(100vh-392px)] z-50 w-72 bg-card border-r border-border transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0
     ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-  `}> <!-- Position below header -->
+  `}>
     <div class="flex flex-col h-full">
       <!-- Organization Header -->
       <div class="p-6 border-b border-border">
@@ -154,36 +160,6 @@ function closeSidebar() {
             <X class="h-4 w-4" />
           </Button>
         </div>
-
-        <!-- Organization Switcher -->
-        {#if tenants && tenants.length > 1}
-          <DropdownMenu>
-            <DropdownMenuTrigger>
-              <Button variant="ghost" class="w-full justify-between mt-3 h-8 px-2">
-                <span class="text-sm">Switch Organization</span>
-                <ChevronDown class="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent class="w-64" align="start">
-              {#each tenants as org}
-                <DropdownMenuItem class={org.slug === tenant?.slug ? 'bg-accent' : ''}>
-                  <a href={`/admin/${org.slug}`} class="flex items-center gap-3 w-full">
-                    <Avatar class="h-6 w-6">
-                      <AvatarImage src={org.logo} alt={org.name} />
-                      <AvatarFallback class="bg-primary/10 text-primary text-xs">
-                        {getInitials(org.name)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span class="flex-1 truncate">{org.name}</span>
-                    {#if org.slug === tenant?.slug}
-                      <Badge variant="secondary" class="text-xs">Current</Badge>
-                    {/if}
-                  </a>
-                </DropdownMenuItem>
-              {/each}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        {/if}
       </div>
 
       <!-- Navigation -->
@@ -216,13 +192,13 @@ function closeSidebar() {
         {/each}
       </nav>
 
-      <!-- Quick Actions -->
-      <div class="p-4 border-t border-border">
-        <Button class="w-full justify-start gap-2" href={`/admin/${tenant?.slug}/forms/new`}>
-          <Plus class="h-4 w-4" />
-          Create Form
-        </Button>
-      </div>
+<!--      &lt;!&ndash; Quick Actions &ndash;&gt;-->
+<!--      <div class="p-4 border-t border-border">-->
+<!--        <Button class="w-full justify-start gap-2" onclick={openAddDialog}>-->
+<!--          <Plus class="h-4 w-4" />-->
+<!--          Create Form-->
+<!--        </Button>-->
+<!--      </div>-->
     </div>
   </div>
 
@@ -239,25 +215,15 @@ function closeSidebar() {
         <Menu class="h-4 w-4" />
       </Button>
 
-      <div class="flex items-center gap-2">
-        <Avatar class="h-6 w-6">
-          <AvatarImage src={tenant?.logo} alt={tenant?.name} />
-          <AvatarFallback class="bg-primary/10 text-primary text-xs">
-            {getInitials(tenant?.name || 'Org')}
-          </AvatarFallback>
-        </Avatar>
-        <span class="font-medium text-sm">{tenant?.name}</span>
-      </div>
-
-      <!-- Status indicator -->
-      <div class="flex items-center gap-2">
-        {#if status.isLoading}
-          <div class="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-        {/if}
-        {#if status.isSaved}
-          <div class="text-green-600 text-sm font-medium">Saved!</div>
-        {/if}
-      </div>
+<!--      <div class="flex items-center gap-2">-->
+<!--        <Avatar class="h-6 w-6">-->
+<!--          <AvatarImage src={tenant?.logo} alt={tenant?.name} />-->
+<!--          <AvatarFallback class="bg-primary/10 text-primary text-xs">-->
+<!--            {getInitials(tenant?.name || 'Org')}-->
+<!--          </AvatarFallback>-->
+<!--        </Avatar>-->
+<!--        <span class="font-medium text-sm">{tenant?.name}</span>-->
+<!--      </div>-->
     </div>
 
     <!-- Page Content -->
@@ -266,3 +232,5 @@ function closeSidebar() {
     </main>
   </div>
 </div>
+
+<!--<EditCreateFormDialog editForm={addForm} action={`${page.url.pathname}/forms?/add-form`}></EditCreateFormDialog>-->

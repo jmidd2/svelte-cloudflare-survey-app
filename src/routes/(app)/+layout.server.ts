@@ -43,6 +43,8 @@ export const load = async function ({ locals, params, request }) {
       };
     });
 
+    const isOrgAdmin = organizations.some(o => o.isAdmin || o.isOwner);
+
     if (tenant_slug) {
       // const tenant = await getTenantBySlug(locals.db, tenant_slug);
       const tenant = await locals.auth.getFullOrganization({
@@ -50,7 +52,7 @@ export const load = async function ({ locals, params, request }) {
         query: { organizationSlug: tenant_slug },
       });
 
-      if (!tenant) redirect(constants.HTTP_STATUS_SEE_OTHER, '/auth/login');
+      if (!tenant) redirect(constants.HTTP_STATUS_SEE_OTHER, '/login');
 
       await locals.auth.setActiveOrganization({
         headers: request.headers,
@@ -61,11 +63,13 @@ export const load = async function ({ locals, params, request }) {
 
       return {
         tenant,
+        isOrgAdmin,
         organizations,
       };
     }
 
     return {
+      isOrgAdmin,
       organizations,
     };
   }

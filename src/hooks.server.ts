@@ -80,7 +80,7 @@ export const handle: Handle = sequence(
     // Admin route protection
     if (event.url.pathname.startsWith('/admin')) {
       if (!session) {
-        throw redirect(303, '/auth/login');
+        throw redirect(303, '/login');
       }
     }
 

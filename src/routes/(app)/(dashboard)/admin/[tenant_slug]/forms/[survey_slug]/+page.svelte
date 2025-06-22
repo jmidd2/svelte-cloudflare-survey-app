@@ -12,7 +12,13 @@ import { formDialogManager } from '$lib/stores/SurveyDialog.svelte.js';
 import { editFormSchema } from '$lib/validation-schema';
 import { pageState } from '$stores/pageState.svelte';
 import { SurveyEditor, setSurveyEditor } from '$stores/survey-editor.svelte';
-import { Menu, PencilIcon, SettingsIcon, ShareIcon } from '@lucide/svelte';
+import {
+  Menu,
+  PencilIcon,
+  SettingsIcon,
+  ShareIcon,
+  XIcon,
+} from '@lucide/svelte';
 import { slide } from 'svelte/transition';
 import { toast } from 'svelte-sonner';
 import { superForm } from 'sveltekit-superforms';
@@ -89,6 +95,33 @@ function openShareDialog() {
 function openSettingsDialog() {
   formDialogManager.openDialog('settings');
 }
+
+let mobileToolboxShowing = $state(false);
+
+$effect(() => {
+  if (selectedField) mobileToolboxShowing = false;
+});
+
+import { onClickOutside } from 'runed';
+
+let toolboxContainer = $state<HTMLElement>()!;
+
+onClickOutside(
+  () => toolboxContainer,
+  () => {
+    mobileToolboxShowing = false;
+  }
+);
+
+let propertiesContainer = $state<HTMLElement>()!;
+
+onClickOutside(
+  () => propertiesContainer,
+  () => {
+    editor.selectedIndex = -1;
+  },
+  { immediate: false }
+);
 </script>
 
 <svelte:head>
@@ -98,7 +131,15 @@ function openSettingsDialog() {
 <!-- 2-Column Layout that works within existing admin layout -->
 <div class="flex h-full bg-background overflow-hidden">
   <!-- Left Sidebar: Toolbox (collapsible on mobile) -->
-  <div class="hidden lg:flex w-64 border-r border-border flex-col bg-card">
+  <div bind:this={toolboxContainer} class={["fixed z-50 h-[calc(100vh-65px)] left-0 lg:relative lg:translate-x-0 lg:flex w-64 border-r border-border flex-col bg-card", { '-translate-x-full': !mobileToolboxShowing, 'translate-x-0': mobileToolboxShowing }]}>
+    {#if mobileToolboxShowing}
+      <div class="flex items-center justify-between p-4 border-b border-border">
+        <h2 class="font-semibold">Toolbox</h2>
+        <Button onclick={() => { mobileToolboxShowing = false }} variant="ghost" size="icon" class="size-8">
+          <XIcon class="h-4 w-4" />
+        </Button>
+      </div>
+    {/if}
     <ToolboxSidebar />
   </div>
 
@@ -106,7 +147,7 @@ function openSettingsDialog() {
   <div class="flex-1 flex flex-col min-w-0">
     <!-- Mobile Toolbox Toggle -->
     <div class="lg:hidden border-b border-border p-4 bg-card">
-      <Button variant="outline" onclick={() => { /* Add mobile toolbox toggle logic */ }}>
+      <Button variant="outline" onclick={() => { mobileToolboxShowing = true }}>
         <Menu class="h-4 w-4 mr-2" />
         Toolbox
       </Button>
@@ -159,7 +200,7 @@ function openSettingsDialog() {
 
       <!-- Right Sidebar: Properties Panel (slides in when field selected) -->
       {#if selectedField}
-        <div
+        <div bind:this={propertiesContainer}
             transition:slide={{ axis: 'x', duration: 300 }}
             class="fixed right-0 w-100 top-[65px] xl:top-0 bottom-0 xl:relative xl:bg-transparent bg-card border-l border-border flex-shrink-0"
         >

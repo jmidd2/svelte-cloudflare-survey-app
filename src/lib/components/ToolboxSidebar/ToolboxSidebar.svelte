@@ -15,7 +15,7 @@ import {
   <Accordion type="multiple" value={['toolbox', 'form-elements']} class="flex-1">
     <AccordionItem value="toolbox" class="border-b">
       <AccordionTrigger class="rounded-none px-4 py-3 hover:bg-muted/50 text-sm font-medium">
-        Toolbox
+        Fields
       </AccordionTrigger>
       <AccordionContent class="px-4 pb-4">
         <ToolboxElementList />

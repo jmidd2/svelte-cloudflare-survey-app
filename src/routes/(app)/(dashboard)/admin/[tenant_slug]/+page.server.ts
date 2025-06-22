@@ -7,7 +7,7 @@ import { zod4 } from 'sveltekit-superforms/adapters';
 
 export const load = async function ({ locals, parent }) {
   const { tenant, user } = await parent();
-  if (!user) redirect(constants.HTTP_STATUS_SEE_OTHER, '/auth/login');
+  if (!user) redirect(constants.HTTP_STATUS_SEE_OTHER, '/login');
 
   const forms = await getFormsByTenant(locals.db, tenant.id);
 

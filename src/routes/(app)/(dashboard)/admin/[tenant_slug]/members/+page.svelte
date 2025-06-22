@@ -300,7 +300,7 @@ function displayRole(role: string): string {
   </div>
 
   <!-- Stats Overview -->
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
     <Card>
       <CardContent class="py-6 px-4">
         <h2 class="text-base font-medium text-muted-foreground mb-2 text-center">Total Members</h2>

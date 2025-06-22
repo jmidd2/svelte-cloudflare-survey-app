@@ -1,7 +1,8 @@
 <script lang="ts">
 import { applyAction, enhance } from '$app/forms';
 import { goto } from '$app/navigation';
-import { ShareDialog } from '$lib/components/dialogs';
+import { page } from '$app/state';
+import { EditCreateFormDialog, ShareDialog } from '$lib/components/dialogs';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,6 +40,8 @@ import {
   SelectTrigger,
 } from '$lib/components/ui/select';
 import type { SelectForm } from '$lib/server/db/schema';
+import { addFormSchema } from '$lib/validation-schema';
+import { pageState } from '$stores/pageState.svelte';
 import { formDialogManager } from '$stores/SurveyDialog.svelte';
 import {
   Calendar,
@@ -53,6 +56,8 @@ import {
   ShareIcon,
 } from '@lucide/svelte';
 import { toast } from 'svelte-sonner';
+import { superForm } from 'sveltekit-superforms';
+import { zod4Client } from 'sveltekit-superforms/adapters';
 
 const { data } = $props();
 
@@ -66,9 +71,48 @@ let currentSurvey = $state<SelectForm | null>(null);
 let searchQuery = $state('');
 let selectedStatus = $state<FormStates>('all');
 
+const addForm = superForm(data.addForm, {
+  id: 'add-form',
+  resetForm: false,
+  validators: zod4Client(addFormSchema),
+  validationMethod: 'oninput',
+  onError({ result }) {
+    pageState.isLoading = false;
+    toast.error(result.error.message);
+  },
+  onSubmit: () => {
+    pageState.isLoading = true;
+  },
+  onResult: ({ result: { type, status } }) => {
+    if (type === 'redirect' && status === 303) {
+      pageState.isLoading = false;
+      pageState.isSaved = true;
+      formDialogManager.closeDialog();
+      // toast.success('Form Saved!');
+    }
+    console.log('onResult', type, status);
+  },
+  onUpdated: ({ form: { valid, message, data } }) => {
+    pageState.isLoading = false;
+    formDialogManager.closeDialog();
+    if (valid) {
+      pageState.isSaved = true;
+      // toast.success('Form Saved!');
+    }
+
+    if (!valid && message?.type === 'error' && message.text) {
+      toast.error(message.text);
+    }
+  },
+});
+
 function openShareDialog(survey: SelectForm) {
   currentSurvey = survey;
   formDialogManager.openDialog('share');
+}
+
+function openAddDialog() {
+  formDialogManager.openDialog('edit');
 }
 
 function formatDate(date: string | Date): string {
@@ -129,7 +173,7 @@ let confirmFormTitle = $derived.by(() => {
     </div>
 
     {#if isAdmin}
-      <Button href={`/admin/${tenantSlug}/forms/new`} class="flex items-center gap-2">
+      <Button onclick={openAddDialog} class="flex items-center gap-2">
         <Plus class="h-4 w-4" />
         Create Form
       </Button>
@@ -265,6 +309,7 @@ let confirmFormTitle = $derived.by(() => {
   <ShareDialog survey={currentSurvey} />
 {/if}
 
+<EditCreateFormDialog editForm={addForm} action={`?/add-form`}></EditCreateFormDialog>
 
 <AlertDialog bind:open={confirmAlertOpen}>
     <AlertDialogContent>

@@ -18,7 +18,7 @@ export const load: PageServerLoad = async ({ locals, parent, request }) => {
 
   // If no user, redirect to log in
   if (!user) {
-    redirect(303, '/auth/login');
+    redirect(303, '/login');
   }
 
   // Check if the user is already complete (has name AND is member of an organization)

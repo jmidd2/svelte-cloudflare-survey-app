@@ -52,7 +52,7 @@ export const load: PageServerLoad = async function ({
     user,
   } = await parent();
 
-  if (!user) redirect(constants.HTTP_STATUS_SEE_OTHER, '/auth/login');
+  if (!user) redirect(constants.HTTP_STATUS_SEE_OTHER, '/login');
 
   // Check if the user can manage members of this organization
   const hasManagePermission = await canManageMembers(
