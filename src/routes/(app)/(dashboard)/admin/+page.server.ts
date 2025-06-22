@@ -1,10 +1,5 @@
-import {
-  members,
-  organizations as organizationsTable,
-} from '$lib/server/db/schema';
 import { constants } from 'node:http2';
 import { redirect } from '@sveltejs/kit';
-import { eq } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async function ({

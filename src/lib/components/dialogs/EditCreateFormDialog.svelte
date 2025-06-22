@@ -17,16 +17,19 @@ import {
 } from '$lib/components/ui/form';
 import { Input } from '$lib/components/ui/input';
 import { Textarea } from '$lib/components/ui/textarea';
-import { surveyDialogManager } from '$lib/stores/SurveyDialog.svelte.js';
-import type { EditFormSchema } from '$lib/validation-schema';
+import { formDialogManager } from '$lib/stores/SurveyDialog.svelte.js';
+import type { CreateFormSchema, EditFormSchema } from '$lib/validation-schema';
 import type { SuperForm } from 'sveltekit-superforms';
 
 interface Props {
-  editForm: SuperForm<EditFormSchema['_zod']['output']>;
+  editForm: SuperForm<
+    EditFormSchema['_zod']['output'] | CreateFormSchema['_zod']['output']
+  >;
   survey?: { formId: string; title: string; description: string };
+  action: string;
 }
 
-const { editForm, survey }: Props = $props();
+const { editForm, survey, action = '?/edit' }: Props = $props();
 
 const { form: editFormData, enhance } = editForm;
 $effect(() => {
@@ -38,7 +41,7 @@ $effect(() => {
 });
 </script>
 
-<Dialog bind:open={() => surveyDialogManager.isDialogOpen('edit'), () => surveyDialogManager.closeDialog()}>
+<Dialog bind:open={() => formDialogManager.isDialogOpen('edit'), () => formDialogManager.closeDialog()}>
   <DialogContent class="sm:max-w-xl">
     <DialogHeader>
       <DialogTitle>Edit Form Details</DialogTitle>
@@ -46,7 +49,7 @@ $effect(() => {
         Make changes to your title or description here. Click save when you're done.
       </DialogDescription>
     </DialogHeader>
-    <form action="?/edit" method="post" class="space-y-4" use:enhance>
+    <form action={action} method="post" class="space-y-4" use:enhance>
       <input type="hidden" value={$editFormData.formId} id="formId" name="formId">
       <FormField form={editForm} name="title">
         <FormControl>

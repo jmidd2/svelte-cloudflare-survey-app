@@ -1,6 +1,6 @@
 <script lang="ts">
 import {
-  EditDialog,
+  EditCreateFormDialog,
   SettingsDialog,
   ShareDialog,
 } from '$lib/components/dialogs';
@@ -8,7 +8,7 @@ import { FormFieldList } from '$lib/components/FormFieldList';
 import { PropertiesSidebar } from '$lib/components/PropertiesSidebar';
 import { ToolboxSidebar } from '$lib/components/ToolboxSidebar';
 import { Button } from '$lib/components/ui/button';
-import { surveyDialogManager } from '$lib/stores/SurveyDialog.svelte.js';
+import { formDialogManager } from '$lib/stores/SurveyDialog.svelte.js';
 import { editFormSchema } from '$lib/validation-schema';
 import { pageState } from '$stores/pageState.svelte';
 import { SurveyEditor, setSurveyEditor } from '$stores/survey-editor.svelte';
@@ -57,8 +57,7 @@ const editForm = superForm(data.editForm, {
     if (type === 'redirect' && status === 303) {
       pageState.isLoading = false;
       pageState.isSaved = true;
-      pageState.isSaved = true;
-      surveyDialogManager.closeDialog();
+      formDialogManager.closeDialog();
       // toast.success('Form Saved!');
     }
     console.log('onResult', type, status);
@@ -66,8 +65,7 @@ const editForm = superForm(data.editForm, {
   onUpdated: ({ form: { valid, message, data } }) => {
     pageState.isLoading = false;
     if (valid) {
-      surveyDialogManager.closeDialog();
-      pageState.isSaved = true;
+      formDialogManager.closeDialog();
       pageState.isSaved = true;
       // toast.success('Form Saved!');
     }
@@ -81,15 +79,15 @@ const editForm = superForm(data.editForm, {
 const selectedField = $derived(editor.selectedField);
 
 function openEditDialog() {
-  surveyDialogManager.openDialog('edit');
+  formDialogManager.openDialog('edit');
 }
 
 function openShareDialog() {
-  surveyDialogManager.openDialog('share');
+  formDialogManager.openDialog('share');
 }
 
 function openSettingsDialog() {
-  surveyDialogManager.openDialog('settings');
+  formDialogManager.openDialog('settings');
 }
 </script>
 
@@ -172,7 +170,7 @@ function openSettingsDialog() {
   </div>
 </div>
 {#if editor.survey}
-  <EditDialog {editForm} survey={{ formId: editor.survey.id, ...editor.survey }} />
+  <EditCreateFormDialog {editForm} survey={{ formId: editor.survey.id, ...editor.survey }} />
 
   <ShareDialog survey={editor.survey} />
 

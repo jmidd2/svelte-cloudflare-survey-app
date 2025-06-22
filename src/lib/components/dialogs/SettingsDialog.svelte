@@ -6,10 +6,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '$lib/components/ui/dialog';
-import { surveyDialogManager } from '$lib/stores/SurveyDialog.svelte.js';
+import { formDialogManager } from '$lib/stores/SurveyDialog.svelte.js';
 </script>
 
-<Dialog bind:open={() => surveyDialogManager.isDialogOpen('settings'), () => surveyDialogManager.closeDialog()}>
+<Dialog bind:open={() => formDialogManager.isDialogOpen('settings'), () => formDialogManager.closeDialog()}>
   <DialogContent class="sm:max-w-xl">
     <DialogHeader>
       <DialogTitle>Form Settings</DialogTitle>

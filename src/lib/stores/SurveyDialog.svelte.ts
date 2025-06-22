@@ -59,10 +59,10 @@ export function getDialogContext<T extends string>(): DialogManager<T> {
 }
 
 // Type-specific implementation for your survey dialogs
-type SurveyDialogType = 'edit' | 'settings' | 'share';
-export type SurveyDialogManager = DialogManager<SurveyDialogType>;
+type FormDialogType = 'edit' | 'settings' | 'share';
+export type SurveyDialogManager = DialogManager<FormDialogType>;
 
-export const surveyDialogManager = new DialogManager([
+export const formDialogManager = new DialogManager([
   'edit',
   'settings',
   'share',

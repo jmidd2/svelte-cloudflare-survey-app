@@ -39,7 +39,7 @@ import {
   SelectTrigger,
 } from '$lib/components/ui/select';
 import type { SelectForm } from '$lib/server/db/schema';
-import { surveyDialogManager } from '$stores/SurveyDialog.svelte';
+import { formDialogManager } from '$stores/SurveyDialog.svelte';
 import {
   Calendar,
   ChartColumnIcon,
@@ -68,7 +68,7 @@ let selectedStatus = $state<FormStates>('all');
 
 function openShareDialog(survey: SelectForm) {
   currentSurvey = survey;
-  surveyDialogManager.openDialog('share');
+  formDialogManager.openDialog('share');
 }
 
 function formatDate(date: string | Date): string {
@@ -199,7 +199,7 @@ let confirmFormTitle = $derived.by(() => {
                     </a>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem class="text-destructive" onclick={() => { selectedForm = survey; open = true;}}>
+                  <DropdownMenuItem class="text-destructive" onclick={() => { selectedForm = survey; confirmAlertOpen = true;}}>
                     Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -295,7 +295,7 @@ let confirmFormTitle = $derived.by(() => {
 
                 toast.error('There was an error deleting the form. Please try again.')
               } else if (result.type === 'success') {
-                open = false; selectedForm = null;
+                confirmAlertOpen = false; selectedForm = null; confirmFormTitleValue = '';
                 update()
                 toast.success('Form deleted successfully');
               }

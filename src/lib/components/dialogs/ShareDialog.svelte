@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from '$lib/components/ui/dialog';
 import type { SelectForm } from '$lib/server/db/schema';
-import { surveyDialogManager } from '$lib/stores/SurveyDialog.svelte.js';
+import { formDialogManager } from '$lib/stores/SurveyDialog.svelte.js';
 import {
   CheckIcon,
   CopyIcon,
@@ -49,7 +49,7 @@ async function copyToClipboard() {
 }
 </script>
 
-<Dialog bind:open={() => surveyDialogManager.isDialogOpen('share'), () => surveyDialogManager.closeDialog()}>
+<Dialog bind:open={() => formDialogManager.isDialogOpen('share'), () => formDialogManager.closeDialog()}>
   <DialogContent class="max-w-svw w-svw md:w-[unset] sm:max-w-3xl">
     <DialogHeader>
       <DialogTitle class="flex items-center gap-2">

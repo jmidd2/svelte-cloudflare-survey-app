@@ -28,6 +28,7 @@ export const editFormSchema = z.object({
 });
 
 export type EditFormSchema = typeof editFormSchema;
+export type CreateFormSchema = typeof addFormSchema;
 
 export const sendInviteSchema = z.object({
   email: z.email(),
@@ -46,4 +47,9 @@ export const resendInviteSchema = z.object({
 
 export const requestToJoinSchema = z.object({
   requestId: z.string().length(32),
+});
+
+export const addFormSchema = z.object({
+  title: z.string().min(3),
+  description: z.string().min(3),
 });
