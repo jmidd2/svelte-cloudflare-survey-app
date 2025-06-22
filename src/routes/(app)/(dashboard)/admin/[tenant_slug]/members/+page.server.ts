@@ -30,6 +30,8 @@ import { message, superValidate } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
 import type { PageServerLoad } from './$types';
 
+// TODO: Resend Invites
+// TODO: At a minimum edit user's role and remove from organization
 const flattenMembers = (member: OrganizationMember) => {
   const {
     id,

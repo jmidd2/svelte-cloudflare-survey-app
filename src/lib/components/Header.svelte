@@ -12,6 +12,7 @@ import {
   CommandItem,
   CommandList,
 } from '$lib/components/ui/command';
+import { CommandSeparator } from '$lib/components/ui/command/index.js';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,6 +38,7 @@ import {
   FileText,
   LogOut,
   Moon,
+  PlusIcon,
   Search,
   Settings,
   Sun,
@@ -217,6 +219,14 @@ $inspect(organizationList);
                         </CommandItem>
                       {/each}
                     </CommandGroup>
+                    <CommandSeparator/>
+                    <!-- TODO: Finish create a new organization -->
+                    <CommandGroup>
+                      <CommandItem value="create-organization" class="flex items-center gap-2">
+                        <PlusIcon class="" />
+                        Create New Organization
+                      </CommandItem>
+                    </CommandGroup>
                   </CommandList>
                 </Command>
               </PopoverContent>
@@ -232,6 +242,7 @@ $inspect(organizationList);
               </Avatar>
               <span class="text-sm font-medium text-foreground">{currentOrg.name}</span>
             </div>
+            <Button variant="ghost" class="hidden md:flex gap-2 ml-2">Create New Organization</Button>
           {/if}
         {:else}
           <div class="hidden md:flex items-center gap-1 ml-4">

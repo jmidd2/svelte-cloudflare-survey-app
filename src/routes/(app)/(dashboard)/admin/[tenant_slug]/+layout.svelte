@@ -113,6 +113,8 @@ function closeSidebar() {
 function openAddDialog() {
   formDialogManager.openDialog('edit');
 }
+
+// TODO: Make Settings Page
 </script>
 
 <!-- This layout sits BELOW the Header component -->
