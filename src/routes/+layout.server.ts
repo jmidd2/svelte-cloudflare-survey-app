@@ -18,3 +18,5 @@ export const load: LayoutServerLoad = async function ({
     flashMessage,
   };
 };
+
+// TODO: Add prerender where needed like the pricing, contact, etc.

@@ -1,28 +1,17 @@
 <script lang="ts">
 import { page } from '$app/state';
-import { EditCreateFormDialog } from '$lib/components/dialogs';
 import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 import { Badge } from '$lib/components/ui/badge';
 import { Button } from '$lib/components/ui/button';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '$lib/components/ui/dropdown-menu';
-import { formDialogManager } from '$stores/SurveyDialog.svelte';
-import {
   ChartColumnIcon,
-  ChevronDown,
   FileText,
   Menu,
-  Plus,
   Settings,
   Users,
   X,
 } from '@lucide/svelte';
-import type { Component, Snippet, SvelteComponent } from 'svelte';
-import { setDataStatusContext } from '../breadcrumbContext.svelte';
+import type { Component } from 'svelte';
 
 const { children, data } = $props();
 
@@ -33,8 +22,6 @@ const isAdmin = $derived(data.isAdmin);
 
 let status = $state({ isSaved: false, isLoading: false });
 let sidebarOpen = $state(false);
-
-setDataStatusContext(status);
 
 $effect(() => {
   let timeout: NodeJS.Timeout | null = null;
@@ -109,11 +96,6 @@ function getInitials(name: string): string {
 function closeSidebar() {
   sidebarOpen = false;
 }
-
-function openAddDialog() {
-  formDialogManager.openDialog('edit');
-}
-
 // TODO: Make Settings Page
 </script>
 

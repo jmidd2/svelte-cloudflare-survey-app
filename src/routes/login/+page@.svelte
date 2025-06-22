@@ -12,7 +12,7 @@ import GalleryVerticalEndIcon from '@lucide/svelte/icons/gallery-vertical-end';
       >
         <GalleryVerticalEndIcon class="size-4" />
       </div>
-      Acme Inc.
+      FormBuilder
     </a>
     <LoginForm />
   </div>

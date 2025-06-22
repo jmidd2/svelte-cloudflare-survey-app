@@ -27,3 +27,4 @@ export const load: PageServerLoad = async function ({
     ...data,
   };
 };
+// TODO: Show an requests to join the user has made and show the status

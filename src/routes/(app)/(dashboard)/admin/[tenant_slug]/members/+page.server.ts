@@ -171,6 +171,7 @@ export const actions: Actions = {
         .where(eq(invitations.id, formData.inviteId));
     }
   ),
+  // TODO: Make sure resend works
   'resend-invite': withZodFormData(
     resendInviteSchema,
     async ({ locals, request, params }, { inviteId, email, role }) => {
