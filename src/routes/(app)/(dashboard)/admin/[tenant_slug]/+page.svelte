@@ -59,21 +59,20 @@ const stats = $derived({
 });
 
 const recentActivity = $derived([
-  // Mock data - replace with real activity feed
-  {
-    type: 'form_created',
-    title: 'New form created',
-    description: 'Contact Form was created',
-    time: '2 hours ago',
-    icon: FileText,
-  },
-  {
-    type: 'member_joined',
-    title: 'New member joined',
-    description: 'John Doe joined the organization',
-    time: '1 day ago',
-    icon: Users,
-  },
+  // {
+  //   type: 'form_created',
+  //   title: 'New form created',
+  //   description: 'Contact Form was created',
+  //   time: '2 hours ago',
+  //   icon: FileText,
+  // },
+  // {
+  //   type: 'member_joined',
+  //   title: 'New member joined',
+  //   description: 'John Doe joined the organization',
+  //   time: '1 day ago',
+  //   icon: Users,
+  // },
 ]);
 </script>
 
@@ -99,84 +98,84 @@ const recentActivity = $derived([
     {/if}
   </div>
 
-  <!-- Stats Overview -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-    <Card>
-      <CardContent class="p-6">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm font-medium text-muted-foreground">Total Forms</p>
-            <p class="text-3xl font-bold text-foreground">{stats.totalForms}</p>
-          </div>
-          <div class="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center">
-            <FileText class="h-6 w-6 text-primary" />
-          </div>
-        </div>
-        <div class="mt-4 flex items-center text-sm">
-          <TrendingUp class="h-4 w-4 text-green-600 mr-1" />
-          <span class="text-green-600 font-medium">+2</span>
-          <span class="text-muted-foreground ml-1">this month</span>
-        </div>
-      </CardContent>
-    </Card>
+<!--  &lt;!&ndash; Stats Overview &ndash;&gt;-->
+<!--  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">-->
+<!--    <Card>-->
+<!--      <CardContent class="p-6">-->
+<!--        <div class="flex items-center justify-between">-->
+<!--          <div>-->
+<!--            <p class="text-sm font-medium text-muted-foreground">Total Forms</p>-->
+<!--            <p class="text-3xl font-bold text-foreground">{stats.totalForms}</p>-->
+<!--          </div>-->
+<!--          <div class="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center">-->
+<!--            <FileText class="h-6 w-6 text-primary" />-->
+<!--          </div>-->
+<!--        </div>-->
+<!--        <div class="mt-4 flex items-center text-sm">-->
+<!--          <TrendingUp class="h-4 w-4 text-green-600 mr-1" />-->
+<!--          <span class="text-green-600 font-medium">+2</span>-->
+<!--          <span class="text-muted-foreground ml-1">this month</span>-->
+<!--        </div>-->
+<!--      </CardContent>-->
+<!--    </Card>-->
 
-    <Card>
-      <CardContent class="p-6">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm font-medium text-muted-foreground">Total Submissions</p>
-            <p class="text-3xl font-bold text-foreground">{stats.totalSubmissions}</p>
-          </div>
-          <div class="h-12 w-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
-            <ChartColumnIcon class="h-6 w-6 text-blue-600 dark:text-blue-400" />
-          </div>
-        </div>
-        <div class="mt-4 flex items-center text-sm">
-          <TrendingUp class="h-4 w-4 text-green-600 mr-1" />
-          <span class="text-green-600 font-medium">+12%</span>
-          <span class="text-muted-foreground ml-1">vs last month</span>
-        </div>
-      </CardContent>
-    </Card>
+<!--    <Card>-->
+<!--      <CardContent class="p-6">-->
+<!--        <div class="flex items-center justify-between">-->
+<!--          <div>-->
+<!--            <p class="text-sm font-medium text-muted-foreground">Total Submissions</p>-->
+<!--            <p class="text-3xl font-bold text-foreground">{stats.totalSubmissions}</p>-->
+<!--          </div>-->
+<!--          <div class="h-12 w-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">-->
+<!--            <ChartColumnIcon class="h-6 w-6 text-blue-600 dark:text-blue-400" />-->
+<!--          </div>-->
+<!--        </div>-->
+<!--        <div class="mt-4 flex items-center text-sm">-->
+<!--          <TrendingUp class="h-4 w-4 text-green-600 mr-1" />-->
+<!--          <span class="text-green-600 font-medium">+12%</span>-->
+<!--          <span class="text-muted-foreground ml-1">vs last month</span>-->
+<!--        </div>-->
+<!--      </CardContent>-->
+<!--    </Card>-->
 
-    <Card>
-      <CardContent class="p-6">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm font-medium text-muted-foreground">Team Members</p>
-            <p class="text-3xl font-bold text-foreground">{stats.totalMembers}</p>
-          </div>
-          <div class="h-12 w-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
-            <Users class="h-6 w-6 text-green-600 dark:text-green-400" />
-          </div>
-        </div>
-        <div class="mt-4 flex items-center text-sm">
-          <span class="text-muted-foreground">
-            <a href={`/admin/${tenantSlug}/members`} class="text-primary hover:underline">
-              Manage team →
-            </a>
-          </span>
-        </div>
-      </CardContent>
-    </Card>
+<!--    <Card>-->
+<!--      <CardContent class="p-6">-->
+<!--        <div class="flex items-center justify-between">-->
+<!--          <div>-->
+<!--            <p class="text-sm font-medium text-muted-foreground">Team Members</p>-->
+<!--            <p class="text-3xl font-bold text-foreground">{stats.totalMembers}</p>-->
+<!--          </div>-->
+<!--          <div class="h-12 w-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">-->
+<!--            <Users class="h-6 w-6 text-green-600 dark:text-green-400" />-->
+<!--          </div>-->
+<!--        </div>-->
+<!--        <div class="mt-4 flex items-center text-sm">-->
+<!--          <span class="text-muted-foreground">-->
+<!--            <a href={`/admin/${tenantSlug}/members`} class="text-primary hover:underline">-->
+<!--              Manage team →-->
+<!--            </a>-->
+<!--          </span>-->
+<!--        </div>-->
+<!--      </CardContent>-->
+<!--    </Card>-->
 
-    <Card>
-      <CardContent class="p-6">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm font-medium text-muted-foreground">Active This Month</p>
-            <p class="text-3xl font-bold text-foreground">{stats.activeThisMonth}</p>
-          </div>
-          <div class="h-12 w-12 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center">
-            <Clock class="h-6 w-6 text-purple-600 dark:text-purple-400" />
-          </div>
-        </div>
-        <div class="mt-4 flex items-center text-sm">
-          <span class="text-muted-foreground">Forms with recent activity</span>
-        </div>
-      </CardContent>
-    </Card>
-  </div>
+<!--    <Card>-->
+<!--      <CardContent class="p-6">-->
+<!--        <div class="flex items-center justify-between">-->
+<!--          <div>-->
+<!--            <p class="text-sm font-medium text-muted-foreground">Active This Month</p>-->
+<!--            <p class="text-3xl font-bold text-foreground">{stats.activeThisMonth}</p>-->
+<!--          </div>-->
+<!--          <div class="h-12 w-12 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center">-->
+<!--            <Clock class="h-6 w-6 text-purple-600 dark:text-purple-400" />-->
+<!--          </div>-->
+<!--        </div>-->
+<!--        <div class="mt-4 flex items-center text-sm">-->
+<!--          <span class="text-muted-foreground">Forms with recent activity</span>-->
+<!--        </div>-->
+<!--      </CardContent>-->
+<!--    </Card>-->
+<!--  </div>-->
 
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
     <!-- Forms Section -->
@@ -278,43 +277,6 @@ const recentActivity = $derived([
 
     <!-- Activity Sidebar -->
     <div class="space-y-6">
-      <div>
-        <h2 class="text-xl font-semibold text-foreground mb-4">Recent Activity</h2>
-
-        {#if recentActivity.length > 0}
-          <Card>
-            <CardContent class="p-0">
-              <div class="divide-y divide-border">
-                {#each recentActivity as activity}
-                  <div class="p-4 flex items-start gap-3">
-                    <div class="h-8 w-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <activity.icon class="h-4 w-4 text-primary" />
-                    </div>
-                    <div class="flex-1 min-w-0">
-                      <p class="text-sm font-medium text-foreground">
-                        {activity.title}
-                      </p>
-                      <p class="text-sm text-muted-foreground">
-                        {activity.description}
-                      </p>
-                      <p class="text-xs text-muted-foreground mt-1">
-                        {activity.time}
-                      </p>
-                    </div>
-                  </div>
-                {/each}
-              </div>
-            </CardContent>
-          </Card>
-        {:else}
-          <Card>
-            <CardContent class="p-8 text-center">
-              <Clock class="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-              <p class="text-sm text-muted-foreground">No recent activity</p>
-            </CardContent>
-          </Card>
-        {/if}
-      </div>
 
       <!-- Quick Actions -->
       <div>
@@ -336,6 +298,45 @@ const recentActivity = $derived([
           </CardContent>
         </Card>
       </div>
+
+<!--      <div>-->
+<!--        <h2 class="text-xl font-semibold text-foreground mb-4">Recent Activity</h2>-->
+
+<!--        {#if recentActivity.length > 0}-->
+<!--          <Card>-->
+<!--            <CardContent class="p-0">-->
+<!--              <div class="divide-y divide-border">-->
+<!--                {#each recentActivity as activity}-->
+<!--                  <div class="p-4 flex items-start gap-3">-->
+<!--                    <div class="h-8 w-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">-->
+<!--                      <activity.icon class="h-4 w-4 text-primary" />-->
+<!--                    </div>-->
+<!--                    <div class="flex-1 min-w-0">-->
+<!--                      <p class="text-sm font-medium text-foreground">-->
+<!--                        {activity.title}-->
+<!--                      </p>-->
+<!--                      <p class="text-sm text-muted-foreground">-->
+<!--                        {activity.description}-->
+<!--                      </p>-->
+<!--                      <p class="text-xs text-muted-foreground mt-1">-->
+<!--                        {activity.time}-->
+<!--                      </p>-->
+<!--                    </div>-->
+<!--                  </div>-->
+<!--                {/each}-->
+<!--              </div>-->
+<!--            </CardContent>-->
+<!--          </Card>-->
+<!--        {:else}-->
+<!--          <Card>-->
+<!--            <CardContent class="p-8 text-center">-->
+<!--              <Clock class="h-8 w-8 text-muted-foreground mx-auto mb-2" />-->
+<!--              <p class="text-sm text-muted-foreground">No recent activity</p>-->
+<!--            </CardContent>-->
+<!--          </Card>-->
+<!--        {/if}-->
+<!--      </div>-->
+
     </div>
   </div>
 </div>

@@ -23,16 +23,19 @@ import type { SuperForm } from 'sveltekit-superforms';
 
 interface Props {
   editForm: SuperForm<EditFormSchema['_zod']['output']>;
-  survey: { formId: string; title: string; description: string };
+  survey?: { formId: string; title: string; description: string };
 }
 
 const { editForm, survey }: Props = $props();
 
 const { form: editFormData, enhance } = editForm;
-
-$editFormData.formId = survey.formId;
-$editFormData.title = survey.title;
-$editFormData.description = survey.description;
+$effect(() => {
+  if (survey) {
+    $editFormData.formId = survey.formId;
+    $editFormData.title = survey.title;
+    $editFormData.description = survey.description;
+  }
+});
 </script>
 
 <Dialog bind:open={() => surveyDialogManager.isDialogOpen('edit'), () => surveyDialogManager.closeDialog()}>
@@ -49,7 +52,7 @@ $editFormData.description = survey.description;
         <FormControl>
           {#snippet children({props})}
             <FormLabel>Title</FormLabel>
-            <Input {...props} placeholder={survey.title} bind:value={$editFormData.title} />
+            <Input {...props} placeholder={survey?.title ?? 'Form Title'} bind:value={$editFormData.title} />
             <FieldErrors />
           {/snippet}
         </FormControl>
@@ -58,7 +61,7 @@ $editFormData.description = survey.description;
         <FormControl>
           {#snippet children({props})}
             <FormLabel>Description</FormLabel>
-            <Textarea {...props} placeholder={survey.description} bind:value={$editFormData.description} />
+            <Textarea {...props} placeholder={survey?.description ?? 'A brief description'} bind:value={$editFormData.description} />
             <DialogDescription>A short description of or instructions for the form.</DialogDescription>
             <FieldErrors />
           {/snippet}

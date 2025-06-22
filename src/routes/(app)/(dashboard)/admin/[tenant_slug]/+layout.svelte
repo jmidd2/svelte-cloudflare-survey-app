@@ -20,7 +20,7 @@ import {
   X,
 } from '@lucide/svelte';
 import type { Component, Snippet, SvelteComponent } from 'svelte';
-import { setBreadcrumbContext } from '../breadcrumbContext.svelte';
+import { setDataStatusContext } from '../breadcrumbContext.svelte';
 
 const { children, data } = $props();
 
@@ -32,7 +32,7 @@ const isAdmin = $derived(data.isAdmin);
 let status = $state({ isSaved: false, isLoading: false });
 let sidebarOpen = $state(false);
 
-setBreadcrumbContext(status);
+setDataStatusContext(status);
 
 $effect(() => {
   let timeout: NodeJS.Timeout | null = null;

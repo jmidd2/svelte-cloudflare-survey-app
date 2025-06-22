@@ -1,5 +1,20 @@
 <script lang="ts">
+import { applyAction, enhance } from '$app/forms';
+import { goto } from '$app/navigation';
 import { ShareDialog } from '$lib/components/dialogs';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogOverlay,
+  AlertDialogTitle,
+} from '$lib/components/ui/alert-dialog';
+import {
+  AlertDialogFooter,
+  AlertDialogHeader,
+} from '$lib/components/ui/alert-dialog/index.js';
 import { Badge } from '$lib/components/ui/badge';
 import { Button } from '$lib/components/ui/button';
 import {
@@ -37,6 +52,7 @@ import {
   Search,
   ShareIcon,
 } from '@lucide/svelte';
+import { toast } from 'svelte-sonner';
 
 const { data } = $props();
 
@@ -44,11 +60,11 @@ const tenantSlug = $derived(data.tenant.slug);
 const tenantName = $derived(data.tenant.name);
 const forms = $derived(data.forms);
 const isAdmin = $derived(data.isAdmin);
-
+type FormStates = 'all' | 'active' | 'draft' | 'archived';
 // Track which survey is being shared
 let currentSurvey = $state<SelectForm | null>(null);
 let searchQuery = $state('');
-let selectedStatus = $state('all');
+let selectedStatus = $state<FormStates>('all');
 
 function openShareDialog(survey: SelectForm) {
   currentSurvey = survey;
@@ -83,6 +99,19 @@ const filteredForms = $derived.by(() => {
 
   return filtered;
 });
+
+function wait(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+let confirmAlertOpen = $state(false);
+let selectedForm = $state<SelectForm | null>(null);
+let confirmFormTitleValue = $state('');
+let confirmFormTitle = $derived.by(() => {
+  if (!selectedForm) return false;
+
+  return confirmFormTitleValue === selectedForm?.title;
+});
 </script>
 
 <svelte:head>
@@ -109,7 +138,7 @@ const filteredForms = $derived.by(() => {
 
   <!-- Search and Filter -->
   <Card>
-    <CardContent class="p-6">
+    <CardContent class="px-6">
       <div class="flex flex-col sm:flex-row gap-4">
         <div class="relative flex-1">
           <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -120,7 +149,7 @@ const filteredForms = $derived.by(() => {
           />
         </div>
 
-        <Select bind:value={selectedStatus}>
+        <Select type="single" bind:value={selectedStatus} disabled>
           <SelectTrigger class="w-full sm:w-48">
             <Filter class="h-4 w-4 mr-2" />
             {selectedStatus === 'all' ? 'All Status' : selectedStatus}
@@ -138,13 +167,13 @@ const filteredForms = $derived.by(() => {
 
   <!-- Forms Grid -->
   {#if filteredForms?.length > 0}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 gap-4">
       {#each filteredForms as survey}
-        <Card class="hover:shadow-lg transition-shadow group">
-          <CardHeader class="pb-4">
+        <Card class="hover:shadow-lg transition-shadow gap-0">
+          <CardHeader class="">
             <div class="flex items-start justify-between">
-              <div class="flex-1 min-w-0">
-                <CardTitle class="text-lg truncate mb-1">{survey.title}</CardTitle>
+              <div class="flex-1 min-w-0 flex items-center gap-4">
+                <CardTitle class="text-lg truncate">{survey.title}</CardTitle>
                 <div class="flex items-center gap-2">
                   <Badge variant="secondary" class="text-xs">
                     {survey.status || 'Active'}
@@ -154,22 +183,24 @@ const filteredForms = $derived.by(() => {
 
               <DropdownMenu>
                 <DropdownMenuTrigger>
-                  <Button variant="ghost" size="sm" class="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button variant="ghost" size="sm" class="h-8 w-8 p-0">
                     <MoreHorizontal class="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onclick={() => openShareDialog(survey)}>
+                  <DropdownMenuItem class="hover:cursor-pointer" onclick={() => openShareDialog(survey)}>
                     <ShareIcon class="h-4 w-4 mr-2" />
                     Share
                   </DropdownMenuItem>
-                  <DropdownMenuItem href={`/admin/${tenantSlug}/forms/${survey.slug}/results`}>
-                    <ChartColumnIcon class="h-4 w-4 mr-2" />
-                    View Results
+                  <DropdownMenuItem>
+                    <a class="inline-flex items-center gap-2" href={`/admin/${tenantSlug}/forms/${survey.slug}/results`}>
+                      <ChartColumnIcon class="h-4 w-4 mr-2" />
+                      View Results
+                    </a>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem class="text-destructive">
-                    Delete Form
+                  <DropdownMenuItem class="text-destructive" onclick={() => { selectedForm = survey; open = true;}}>
+                    Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -233,3 +264,50 @@ const filteredForms = $derived.by(() => {
 {#if currentSurvey}
   <ShareDialog survey={currentSurvey} />
 {/if}
+
+
+<AlertDialog bind:open={confirmAlertOpen}>
+    <AlertDialogContent>
+      <AlertDialogHeader>
+        <AlertDialogTitle>Confirm deletion</AlertDialogTitle>
+        <AlertDialogDescription class="space-y-2">
+          <p>Are you sure you want to delete {selectedForm?.title}?</p>
+          <p>This action cannot be undone.</p>
+          <p class="text-destructive font-bold">Please enter the name of the form to confirm deletion:</p>
+          <Input placeholder={selectedForm?.title} bind:value={confirmFormTitleValue} />
+        </AlertDialogDescription>
+      </AlertDialogHeader>
+      <AlertDialogFooter>
+
+      <form
+          method="POST"
+          action="?/delete-form"
+          use:enhance={()=>{
+            return ({result, update}) => {
+              if (result.type === 'redirect') {
+                goto(result.location);
+              } else if (result.type === 'error' || result.type === 'failure') {
+                if (result.type === 'error') {
+                  console.error('There was an error deleting the form, ',result.error);
+                } else {
+                  console.error('There was an error deleting the form, ', result.data);
+                }
+
+                toast.error('There was an error deleting the form. Please try again.')
+              } else if (result.type === 'success') {
+                open = false; selectedForm = null;
+                update()
+                toast.success('Form deleted successfully');
+              }
+
+              applyAction(result);
+            }
+          }}
+      >
+        <input type="hidden" name="formId" value={selectedForm?.slug} />
+        <AlertDialogCancel type="button">No, cancel</AlertDialogCancel>
+        <AlertDialogAction type="submit" disabled={!confirmFormTitle}>Yes, delete</AlertDialogAction>
+      </form>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+</AlertDialog>

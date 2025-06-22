@@ -75,6 +75,31 @@ export async function canManageMembers(
 }
 
 /**
+ * Checks if the current user has permission to manage the organization.
+ *
+ * This is a convenience function that checks for all organization-related permissions
+ * (update, delete).
+ *
+ * @param {AuthApi} auth - The authentication API instance
+ * @param {Headers} headers - Request headers containing authentication tokens
+ * @returns {Promise<boolean>} Promise resolving to true if user can manage members
+ *
+ * @example
+ * ```typescript
+ * const canManage = await canManageOrganization(auth.api, request.headers);
+ * if (canManage) {
+ *   // Allow organization management operations
+ * }
+ * ```
+ */
+export async function canManageOrganization(
+  auth: AuthApi,
+  headers: Headers
+): Promise<boolean> {
+  return await checkOrgPermissions(auth, headers, { organization: true });
+}
+
+/**
  * Checks if the current user has permission to invite new members to the organization.
  *
  * This function specifically checks for invitation creation permissions.

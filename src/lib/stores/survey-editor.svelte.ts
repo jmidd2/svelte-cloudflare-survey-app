@@ -53,6 +53,7 @@ export class SurveyEditor {
     operation: () => Promise<T>,
     delay = 1000
   ): Promise<T> {
+    console.log('performing async action');
     this.performingAsyncAction = true;
     try {
       return await operation();

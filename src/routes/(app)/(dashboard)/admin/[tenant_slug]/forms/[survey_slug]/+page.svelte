@@ -8,32 +8,15 @@ import { FormFieldList } from '$lib/components/FormFieldList';
 import { PropertiesSidebar } from '$lib/components/PropertiesSidebar';
 import { ToolboxSidebar } from '$lib/components/ToolboxSidebar';
 import { Button } from '$lib/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '$lib/components/ui/dialog';
-import {
-  FieldErrors,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormLabel,
-} from '$lib/components/ui/form';
-import { Input } from '$lib/components/ui/input';
-import { Textarea } from '$lib/components/ui/textarea';
 import { surveyDialogManager } from '$lib/stores/SurveyDialog.svelte.js';
 import { editFormSchema } from '$lib/validation-schema';
+import { pageState } from '$stores/pageState.svelte';
 import { SurveyEditor, setSurveyEditor } from '$stores/survey-editor.svelte';
 import { Menu, PencilIcon, SettingsIcon, ShareIcon } from '@lucide/svelte';
 import { slide } from 'svelte/transition';
 import { toast } from 'svelte-sonner';
 import { superForm } from 'sveltekit-superforms';
 import { zod4Client } from 'sveltekit-superforms/adapters';
-import { getBreadcrumbContext } from '../../../breadcrumbContext.svelte';
 import type { PageProps } from './$types';
 
 const { data, form }: PageProps = $props();
@@ -42,16 +25,14 @@ const { data, form }: PageProps = $props();
 const editor = new SurveyEditor(data.survey, data.fields);
 setSurveyEditor(editor);
 
-const breadcrumbStatus = getBreadcrumbContext();
-
 $effect(() => {
-  if (!breadcrumbStatus) return;
-  if (editor.isLoading !== null) breadcrumbStatus.isLoading = editor.isLoading;
+  if (!pageState) return;
+  if (editor.isLoading !== null) pageState.isLoading = editor.isLoading;
 });
 
 $effect(() => {
-  if (!breadcrumbStatus) return;
-  if (editor.isSaved) breadcrumbStatus.isSaved = editor.isSaved;
+  if (!pageState) return;
+  pageState.isSaved = editor.isSaved;
 });
 
 // Update editor data when server data changes
@@ -66,25 +47,29 @@ const editForm = superForm(data.editForm, {
   validators: zod4Client(editFormSchema),
   validationMethod: 'oninput',
   onError({ result }) {
-    breadcrumbStatus.isLoading = false;
+    pageState.isLoading = false;
     toast.error(result.error.message);
   },
   onSubmit: () => {
-    breadcrumbStatus.isLoading = true;
+    pageState.isLoading = true;
   },
   onResult: ({ result: { type, status } }) => {
     if (type === 'redirect' && status === 303) {
-      breadcrumbStatus.isLoading = false;
-      breadcrumbStatus.isSaved = true;
+      pageState.isLoading = false;
+      pageState.isSaved = true;
+      pageState.isSaved = true;
       surveyDialogManager.closeDialog();
+      // toast.success('Form Saved!');
     }
     console.log('onResult', type, status);
   },
   onUpdated: ({ form: { valid, message, data } }) => {
-    breadcrumbStatus.isLoading = false;
+    pageState.isLoading = false;
     if (valid) {
       surveyDialogManager.closeDialog();
-      breadcrumbStatus.isSaved = true;
+      pageState.isSaved = true;
+      pageState.isSaved = true;
+      // toast.success('Form Saved!');
     }
 
     if (!valid && message?.type === 'error' && message.text) {
@@ -178,7 +163,7 @@ function openSettingsDialog() {
       {#if selectedField}
         <div
             transition:slide={{ axis: 'x', duration: 300 }}
-            class="fixed right-0 w-100 top-24 xl:top-0 bottom-0 xl:relative xl:bg-transparent bg-card border-l border-border flex-shrink-0"
+            class="fixed right-0 w-100 top-[65px] xl:top-0 bottom-0 xl:relative xl:bg-transparent bg-card border-l border-border flex-shrink-0"
         >
           <PropertiesSidebar />
         </div>

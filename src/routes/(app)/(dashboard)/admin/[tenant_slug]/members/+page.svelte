@@ -302,10 +302,10 @@ function displayRole(role: string): string {
   <!-- Stats Overview -->
   <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
     <Card>
-      <CardContent class="p-6">
-        <div class="flex items-center justify-between">
+      <CardContent class="py-6 px-4">
+        <h2 class="text-base font-medium text-muted-foreground mb-2 text-center">Total Members</h2>
+        <div class="flex items-center justify-around">
           <div>
-            <p class="text-sm font-medium text-muted-foreground">Total Members</p>
             <p class="text-3xl font-bold text-foreground">{totalMembers}</p>
           </div>
           <div class="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center">
@@ -316,10 +316,10 @@ function displayRole(role: string): string {
     </Card>
 
     <Card>
-      <CardContent class="p-6">
-        <div class="flex items-center justify-between">
+      <CardContent class="py-6 px-4">
+        <h2 class="text-base font-medium text-muted-foreground mb-2 text-center">Pending Requests</h2>
+        <div class="flex items-center justify-around">
           <div>
-            <p class="text-sm font-medium text-muted-foreground">Pending Requests</p>
             <p class="text-3xl font-bold text-foreground">{pendingRequests}</p>
           </div>
           <div class="h-12 w-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
@@ -330,10 +330,10 @@ function displayRole(role: string): string {
     </Card>
 
     <Card>
-      <CardContent class="p-6">
-        <div class="flex items-center justify-between">
+      <CardContent class="py-6 px-4">
+        <h2 class="text-base font-medium text-muted-foreground mb-2 text-center">Pending Invites</h2>
+        <div class="flex items-center justify-around">
           <div>
-            <p class="text-sm font-medium text-muted-foreground">Pending Invites</p>
             <p class="text-3xl font-bold text-foreground">{pendingInvites}</p>
           </div>
           <div class="h-12 w-12 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg flex items-center justify-center">
@@ -344,10 +344,10 @@ function displayRole(role: string): string {
     </Card>
 
     <Card>
-      <CardContent class="p-6">
-        <div class="flex items-center justify-between">
+      <CardContent class="py-6 px-4">
+        <h2 class="text-base font-medium text-muted-foreground mb-2 text-center">Total Invites</h2>
+        <div class="flex items-center justify-around">
           <div>
-            <p class="text-sm font-medium text-muted-foreground">Total Invites</p>
             <p class="text-3xl font-bold text-foreground">{totalInvites}</p>
           </div>
           <div class="h-12 w-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
