@@ -139,5 +139,17 @@ export const handle: Handle = sequence(
     });
   }
 );
+export const handleError: HandleServerError = async ({ error, event, status, message }) => {
+  console.error(error)
+  const errorId = crypto.randomUUID();
 
-export const handleError = handleErrorWithSentry();
+  // example integration with https://sentry.io/
+  Sentry.captureException(error, {
+    extra: { event, errorId, status }
+  });
+
+  return {
+    message: 'Whoops!',
+    errorId
+  };
+};

@@ -14,11 +14,15 @@ function generateShortHash(length = 6): string {
     .slice(0, length);
 }
 
-export function generateUrlSlug(name: string): string {
+export function generateUrlSlug(name: string, withHash?: boolean): string {
+  if (withHash === undefined) {
+    withHash = true;
+  }
+
   const baseSlug = name
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
-  const hash = generateShortHash();
-  return `${baseSlug}-${hash}`;
+  const hash = withHash ? `-${generateShortHash()}` : '';
+  return `${baseSlug}${hash}`;
 }

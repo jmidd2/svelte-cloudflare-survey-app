@@ -242,7 +242,7 @@ $inspect(organizationList);
               </Avatar>
               <span class="text-sm font-medium text-foreground">{currentOrg.name}</span>
             </div>
-            <Button variant="ghost" class="hidden md:flex gap-2 ml-2">Create New Organization</Button>
+            <Button variant="ghost" href="/admin/organization/create" class="hidden md:flex gap-2 ml-2">Create New Organization</Button>
           {/if}
         {:else}
           <div class="hidden md:flex items-center gap-1 ml-4">
