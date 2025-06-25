@@ -21,8 +21,6 @@ binding = "ASSETS"
 [vars]
 #ENVIRONMENT = "development"
 #APP_URL = "http://localhost:8788"
-# Replace with your Auth0 domain
-AUTH_AUTH0_ISSUER = "https://dev-f7wd881wsk8er6ir.us.auth0.com"
 AUTH_MAX_AGE = 86400
 EMAIL_FROM = "noreply@jmidd.dev"
 
