@@ -20,7 +20,6 @@ export const load: LayoutServerLoad = async function ({
   };
 };
 
-// TODO: Add a way to create organizations even if they are already a part of one, maybe a part of quick actions too
 // TODO: Make User Profile page
 // TODO: Move admin -> dashboard (replace (dashboard))
 // TODO: Make register page

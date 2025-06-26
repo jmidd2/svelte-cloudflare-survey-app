@@ -17,7 +17,7 @@ export const load = async function ({ locals, parent }) {
     forms,
     tenant,
     user,
-    isAdmin: user.role === 'admin',
+    isSiteAdmin: user.role === 'admin',
     addForm: await superValidate(zod4(addFormSchema)),
   };
 };

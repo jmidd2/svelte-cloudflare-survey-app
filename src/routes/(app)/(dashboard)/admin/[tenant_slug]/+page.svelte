@@ -4,29 +4,18 @@ import { EditCreateFormDialog, ShareDialog } from '$lib/components/dialogs';
 import { Badge } from '$lib/components/ui/badge';
 import { Button } from '$lib/components/ui/button';
 import { Card, CardContent } from '$lib/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '$lib/components/ui/dropdown-menu';
 import type { SelectForm } from '$lib/server/db/schema';
 import { addFormSchema } from '$lib/validation-schema';
 import { pageState } from '$stores/pageState.svelte';
 import { formDialogManager } from '$stores/SurveyDialog.svelte';
 import {
-  ArrowRight,
   Calendar,
   ChartColumnIcon,
-  Clock,
   Eye,
   FileText,
-  MoreHorizontal,
   PencilIcon,
   Plus,
   ShareIcon,
-  TrendingUp,
   Users,
 } from '@lucide/svelte';
 import { toast } from 'svelte-sonner';
@@ -38,7 +27,7 @@ const { data } = $props();
 const tenantSlug = $derived(data.tenant.slug);
 const tenantName = $derived(data.tenant.name);
 const forms = $derived(data.forms);
-const isAdmin = $derived(data.isAdmin);
+const isOrgAdmin = $derived(data.isOrgOwner || data.isOrgAdmin);
 
 const addForm = superForm(data.addForm, {
   id: 'add-form',
@@ -61,7 +50,7 @@ const addForm = superForm(data.addForm, {
     }
     console.log('onResult', type, status);
   },
-  onUpdated: ({ form: { valid, message, data } }) => {
+  onUpdated: ({ form: { valid, message } }) => {
     pageState.isLoading = false;
     formDialogManager.closeDialog();
     if (valid) {
@@ -99,6 +88,7 @@ function formatDate(date: string | Date): string {
 const stats = $derived({
   totalForms: forms.length,
   totalSubmissions: 0, // Replace with actual data
+  // @ts-expect-error
   totalMembers: data.memberCount || 0,
   activeThisMonth: 0, // Replace with actual data
 });
@@ -243,9 +233,9 @@ const recentActivity = $derived([
                       <h3 class="text-lg font-semibold text-foreground truncate">
                         {survey.title}
                       </h3>
-                      <Badge variant="secondary" class="text-xs">
-                        {survey.status || 'Active'}
-                      </Badge>
+<!--                      <Badge variant="secondary" class="text-xs">-->
+<!--                        {survey.status || 'Active'}-->
+<!--                      </Badge>-->
                     </div>
 
                     {#if survey.description}
@@ -315,7 +305,7 @@ const recentActivity = $derived([
             <p class="text-muted-foreground mb-4">
               Get started by creating your first form to collect responses from your audience.
             </p>
-            {#if isAdmin}
+            {#if isOrgAdmin}
               <Button href={`/admin/${tenantSlug}/forms/new`}>
                 <Plus class="h-4 w-4 mr-2" />
                 Create Your First Form
@@ -334,14 +324,13 @@ const recentActivity = $derived([
         <h2 class="text-xl font-semibold text-foreground mb-4">Quick Actions</h2>
         <Card>
           <CardContent class="px-4 space-y-3">
-            <Button variant="outline" class="w-full justify-start" onclick={openAddDialog}>
-              <Plus class="h-4 w-4 mr-2" />
+            <Button variant="outline" class="w-full justify-start" onclick={openAddDialog} disabled={!isOrgAdmin}>
+              <FileText class="h-4 w-4 mr-2" />
               Create New Form
             </Button>
-            <!-- TODO: Change to invite members -->
-            <Button variant="outline" class="w-full justify-start" href={`/admin/${tenantSlug}/members`}>
+            <Button variant="outline" class="w-full justify-start" disabled>
               <Users class="h-4 w-4 mr-2" />
-              Manage Members
+              Invite New Members
             </Button>
             <Button variant="outline" class="w-full justify-start" disabled>
               <ChartColumnIcon class="h-4 w-4 mr-2" />

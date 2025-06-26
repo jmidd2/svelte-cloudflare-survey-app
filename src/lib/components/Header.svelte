@@ -151,6 +151,17 @@ onMount(() => {
   }
 });
 
+function buildUrl(url: URL, slug: string): string {
+  const basePath = `/admin/${slug}`;
+  const pathname = url.pathname;
+
+  const split = pathname.split('/').slice(3);
+
+  if (split.length > 0) return `${basePath}/${split.join('/')}`;
+
+  return basePath;
+}
+
 $inspect(organizationList);
 </script>
 
@@ -185,7 +196,7 @@ $inspect(organizationList);
                         {getInitials(currentOrg.name)}
                       </AvatarFallback>
                     </Avatar>
-                    <span class="text-sm font-medium text-foreground w-32 truncate">{currentOrg.name}</span>
+                    <span class="text-sm font-medium text-foreground max-w-32 truncate">{currentOrg.name}</span>
                     <ChevronsUpDownIcon class="opacity-50" />
                   </Button>
                 {/snippet}
@@ -205,7 +216,7 @@ $inspect(organizationList);
                               selectedOrg = org;
                               closeAndFocusTrigger();
                             }}
-                            href={`/admin/${org.slug}`}
+                            href={buildUrl(page.url, org.slug)}
                         >
                           <div class="flex items-center gap-2 w-full">
                             <CheckIcon
@@ -220,7 +231,6 @@ $inspect(organizationList);
                       {/each}
                     </CommandGroup>
                     <CommandSeparator/>
-                    <!-- TODO: Finish create a new organization -->
                     <CommandGroup>
                       <CommandLinkItem onSelect={closeAndFocusTrigger} keywords={['create organization', 'create']} href="/admin/organization/create" value="create-organization" class="flex items-center gap-2">
                         <PlusIcon class="" />

@@ -1,28 +1,23 @@
+import { members } from '$lib/server/db/schema';
 import { constants } from 'node:http2';
 import { redirect } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
+import { and, eq } from 'drizzle-orm';
 
-export const load = async function ({ locals, params, request, parent }) {
-  const data = await parent();
+export const load = async function ({ locals, parent }) {
+  const { tenant, user } = await parent();
 
-  const { tenant_slug } = params;
+  if (!user) redirect(constants.HTTP_STATUS_SEE_OTHER, '/login');
+  if (!tenant) redirect(constants.HTTP_STATUS_SEE_OTHER, '/admin');
 
-  // const tenant = await getTenantBySlug(locals.db, tenant_slug);
-  // const tenant = await locals.auth.getFullOrganization({
-  //   headers: request.headers,
-  //   query: { organizationSlug: tenant_slug },
-  // });
-  //
-  // if (!tenant) redirect(constants.HTTP_STATUS_SEE_OTHER, '/login');
-  //
-  // await locals.auth.setActiveOrganization({
-  //   headers: request.headers,
-  //   body: {
-  //     organizationId: tenant.id,
-  //   },
-  // });
-  //
-  // return {
-  //   tenant,
-  // };
+  const [currentMember] = await locals.db
+    .select()
+    .from(members)
+    .where(
+      and(eq(members.organizationId, tenant.id), eq(members.userId, user.id))
+    );
+
+  return {
+    isOrgAdmin: currentMember.role === 'admin',
+    isOrgOwner: currentMember.role === 'owner',
+  };
 };

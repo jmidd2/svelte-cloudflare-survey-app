@@ -8,10 +8,19 @@ import type { EmailService } from '../email';
 export function createAuth(
   db: DrizzleClient,
   emailService: EmailService,
-  origin: string
+  origin: string,
+  platformEnv: App.Platform['env']
 ) {
   console.log('base path', origin);
   return betterAuth({
+    socialProviders: {
+      google: platformEnv
+        ? {
+            clientId: platformEnv.GOOGLE_CLIENT_ID,
+            clientSecret: platformEnv.GOOGLE_CLIENT_SECRET,
+          }
+        : undefined,
+    },
     database: drizzleAdapter(db, {
       schema,
       provider: 'sqlite',
@@ -28,7 +37,6 @@ export function createAuth(
     },
     emailVerification: {
       async sendVerificationEmail({ user, token, url }) {
-        console.log(`TODO:send verification email to ${user.email}`, url);
         try {
           await emailService.sendOTPEmail({
             to: user.email,
@@ -48,10 +56,6 @@ export function createAuth(
     emailAndPassword: {
       enabled: true,
       async sendResetPassword({ user, token, url }) {
-        console.log(
-          `TODO:send password reset to ${user.email} for password reset`,
-          url
-        );
         try {
           await emailService.sendEmail({
             to: user.email,

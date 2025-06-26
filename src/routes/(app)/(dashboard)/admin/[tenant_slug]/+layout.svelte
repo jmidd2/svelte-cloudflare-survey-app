@@ -17,10 +17,9 @@ import type { Component } from 'svelte';
 const { children, data } = $props();
 
 const tenant = $derived(data.tenant);
-const tenants = $derived(data.tenants);
-const user = $derived(data.user);
-const isAdmin = $derived(data.isAdmin);
-
+const isAdmin = $derived(data.isOrgAdmin);
+const isOwner = $derived(data.isOrgOwner);
+$inspect(data);
 let status = $state({ isSaved: false, isLoading: false });
 let sidebarOpen = $state(false);
 
@@ -59,6 +58,7 @@ const navigationItems = $derived<NavigationItem[]>([
     href: `/admin/${tenant?.slug}/forms`,
     icon: FileText,
     current: page.url.pathname.includes('/forms'),
+    // @ts-expect-error
     badge: data.forms?.length || 0,
   },
   {
@@ -66,6 +66,7 @@ const navigationItems = $derived<NavigationItem[]>([
     href: `/admin/${tenant?.slug}/members`,
     icon: Users,
     current: page.url.pathname.includes('/members'),
+    // @ts-expect-error
     badge: data.memberCount || 0,
   },
   {
@@ -120,7 +121,13 @@ function closeSidebar() {
                 {tenant?.name}
               </h2>
               <p class="text-sm text-muted-foreground">
-                {isAdmin ? 'Admin' : 'Member'}
+                {#if isOwner}
+                  Owner
+                  {:else if isAdmin}
+                  Admin
+                  {:else}
+                  Member
+                  {/if}
               </p>
             </div>
           </div>

@@ -1,7 +1,6 @@
 <script lang="ts">
 import { applyAction, enhance } from '$app/forms';
 import { goto } from '$app/navigation';
-import { page } from '$app/state';
 import { EditCreateFormDialog, ShareDialog } from '$lib/components/dialogs';
 import {
   AlertDialog,
@@ -61,8 +60,8 @@ import { zod4Client } from 'sveltekit-superforms/adapters';
 
 const { data } = $props();
 
-const tenantSlug = $derived(data.tenant.slug);
-const tenantName = $derived(data.tenant.name);
+const tenantSlug = $derived(data.tenant?.slug ?? '');
+const tenantName = $derived(data.tenant?.name ?? '');
 const forms = $derived(data.forms);
 const isAdmin = $derived(data.isAdmin);
 type FormStates = 'all' | 'active' | 'draft' | 'archived';
@@ -218,11 +217,11 @@ let confirmFormTitle = $derived.by(() => {
             <div class="flex items-start justify-between">
               <div class="flex-1 min-w-0 flex items-center gap-4">
                 <CardTitle class="text-lg truncate">{survey.title}</CardTitle>
-                <div class="flex items-center gap-2">
-                  <Badge variant="secondary" class="text-xs">
-                    {survey.status || 'Active'}
-                  </Badge>
-                </div>
+<!--                <div class="flex items-center gap-2">-->
+<!--                  <Badge variant="secondary" class="text-xs">-->
+<!--                    {survey.status || 'Active'}-->
+<!--                  </Badge>-->
+<!--                </div>-->
               </div>
 
               <DropdownMenu>

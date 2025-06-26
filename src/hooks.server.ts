@@ -6,7 +6,7 @@ import { requests } from '$lib/server/db/schema';
 import { createEmailService } from '$lib/server/email';
 import * as Sentry from '@sentry/cloudflare';
 import { handleErrorWithSentry } from '@sentry/sveltekit';
-import { type Handle, redirect } from '@sveltejs/kit';
+import { type Handle, type HandleServerError, redirect } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
 import { eq } from 'drizzle-orm';
@@ -50,7 +50,7 @@ export const handle: Handle = sequence(
 
     if (event.platform?.env?.RESEND_API_KEY && !event.locals.mailService) {
       event.locals.mailService = createEmailService(
-        event.platform?.env?.RESEND_API_KEY || 'dummy-key',
+        event.platform?.env?.RESEND_API_KEY ?? 'dummy-key',
         event.platform?.env?.EMAIL_FROM ?? 'no-reply@jmidd.dev',
         isEmailDisabled
       );
@@ -64,7 +64,8 @@ export const handle: Handle = sequence(
       const { api, ...authHandler } = createAuth(
         event.locals.db,
         event.locals.mailService,
-        event.url.origin
+        event.url.origin,
+        event.platform?.env
       );
 
       event.locals.authHandler = authHandler;
@@ -139,17 +140,22 @@ export const handle: Handle = sequence(
     });
   }
 );
-export const handleError: HandleServerError = async ({ error, event, status, message }) => {
-  console.error(error)
+export const handleError: HandleServerError = async ({
+  error,
+  event,
+  status,
+  message,
+}) => {
+  console.error(error);
   const errorId = crypto.randomUUID();
 
   // example integration with https://sentry.io/
   Sentry.captureException(error, {
-    extra: { event, errorId, status }
+    extra: { event, errorId, status },
   });
 
   return {
     message: 'Whoops!',
-    errorId
+    errorId,
   };
 };

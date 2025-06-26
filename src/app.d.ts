@@ -41,6 +41,8 @@ declare global {
         AUTH_MAX_AGE: string;
         RESEND_API_KEY: string;
         EMAIL_FROM: string;
+        GOOGLE_CLIENT_ID: string;
+        GOOGLE_CLIENT_SECRET: string;
       };
       context: {
         // biome-ignore lint/suspicious/noExplicitAny: <explanation>
