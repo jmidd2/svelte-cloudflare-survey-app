@@ -1,113 +1,131 @@
 <script lang="ts">
-    import { goto } from '$app/navigation';
-    import { Button } from '$lib/components/ui/button';
-    import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '$lib/components/ui/card';
-    import { Input } from '$lib/components/ui/input';
-    import { Label } from '$lib/components/ui/label';
-    import { Textarea } from '$lib/components/ui/textarea';
-    import { Separator } from '$lib/components/ui/separator';
-    import { Badge } from '$lib/components/ui/badge';
-    import { Building2, Upload, Globe, Mail, Phone, MapPin, ArrowLeft, Loader2 } from '@lucide/svelte';
-    import { toast } from 'svelte-sonner';
-    import SuperDebug, {superForm} from "sveltekit-superforms";
-    import {zod4Client} from "sveltekit-superforms/adapters";
-    import {addFormSchema, createOrganizationSchema} from "$lib/validation-schema";
-    import {pageState} from "$stores/pageState.svelte";
-    import {formDialogManager} from "$stores/SurveyDialog.svelte";
-    import {FormField, FormLabel, FormControl, FieldErrors} from "$lib/components/ui/form";
+import { goto } from '$app/navigation';
+import { Badge } from '$lib/components/ui/badge';
+import { Button } from '$lib/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '$lib/components/ui/card';
+import {
+  FieldErrors,
+  FormControl,
+  FormField,
+  FormLabel,
+} from '$lib/components/ui/form';
+import { Input } from '$lib/components/ui/input';
+import { Label } from '$lib/components/ui/label';
+import { Separator } from '$lib/components/ui/separator';
+import { Textarea } from '$lib/components/ui/textarea';
+import { createOrganizationSchema } from '$lib/validation-schema';
+import { pageState } from '$stores/pageState.svelte';
+import { formDialogManager } from '$stores/SurveyDialog.svelte';
+import {
+  ArrowLeft,
+  Building2,
+  Globe,
+  Loader2,
+  Mail,
+  MapPin,
+  Phone,
+  Upload,
+} from '@lucide/svelte';
+import { toast } from 'svelte-sonner';
+import SuperDebug, { superForm } from 'sveltekit-superforms';
+import { zod4Client } from 'sveltekit-superforms/adapters';
 
-    const { data } = $props();
+const { data } = $props();
 
-    const errors = []
+const createForm = superForm(data.form, {
+  resetForm: false,
+  validators: zod4Client(createOrganizationSchema),
+  validationMethod: 'oninput',
+  onError({ result }) {
+    pageState.isLoading = false;
+    toast.error(result.error.message);
+  },
+  onSubmit: () => {
+    pageState.isLoading = true;
+  },
+  onResult: ({ result: { type, status, data } }) => {
+    console.log('onResult', type, status);
+    if (type === 'redirect' && status === 303) {
+      pageState.isLoading = false;
+      // pageState.isSaved = true;
 
-    const createForm = superForm(data.form, {
-        resetForm: false,
-        validators: zod4Client(createOrganizationSchema),
-        validationMethod: 'oninput',
-        onError({ result }) {
-            pageState.isLoading = false;
-            toast.error(result.error.message);
-        },
-        onSubmit: () => {
-            pageState.isLoading = true;
-        },
-        onResult: ({ result: { type, status, data } }) => {
-            console.log('onResult', type, status);
-            if (type === 'redirect' && status === 303) {
-                pageState.isLoading = false;
-                pageState.isSaved = true;
-
-                // toast.success('Form Saved!');
-            }
-            if (type === 'failure') {
-                pageState.isLoading = false;
-                if (data?.message) toast.error(data.message)
-                else toast.error('There was an error')
-            }
-        },
-        onUpdated: ({ form: { valid, message, data } }) => {
-            pageState.isLoading = false;
-            formDialogManager.closeDialog();
-            if (valid) {
-                pageState.isSaved = true;
-                // toast.success('Form Saved!');
-            }
-
-            if (!valid && message?.type === 'error' && message.text) {
-                toast.error(message.text);
-            }
-        },
-    });
-    const {form: formData, enhance} = createForm;
-
-    let isSubmitting = $state(false);
-    // let logoPreview = $state('');
-    let slugManuallyEdited = $state(false);
-
-    // Handle logo upload
-    // function handleLogoUpload(event: Event) {
-    //     const target = event.target as HTMLInputElement;
-    //     const file = target.files?.[0];
-    //
-    //     if (file) {
-    //         // Validate file type
-    //         if (!file.type.startsWith('image/')) {
-    //             toast.error('Please select an image file');
-    //             return;
-    //         }
-    //
-    //         // Validate file size (max 5MB)
-    //         if (file.size > 5 * 1024 * 1024) {
-    //             toast.error('Image size must be less than 5MB');
-    //             return;
-    //         }
-    //
-    //         formData.logo = file;
-    //
-    //         // Create preview
-    //         const reader = new FileReader();
-    //         reader.onload = (e) => {
-    //             logoPreview = e.target?.result as string;
-    //         };
-    //         reader.readAsDataURL(file);
-    //     }
-    // }
-
-    // Handle form submission
-
-    // Handle slug manual editing
-    function handleSlugChange() {
-        slugManuallyEdited = true;
+      // toast.success('Form Saved!');
+    }
+    if (type === 'failure') {
+      pageState.isLoading = false;
+      if (data?.message) toast.error(data.message);
+      else toast.error('There was an error');
+    }
+  },
+  onUpdated: ({ form: { valid, message, data } }) => {
+    pageState.isLoading = false;
+    formDialogManager.closeDialog();
+    if (valid) {
+      pageState.isSaved = true;
+      // toast.success('Form Saved!');
     }
 
-    function handleNameChange() {
-        if (!slugManuallyEdited && $formData.name) {
-            $formData.slug = $formData.name
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/^-+|-+$/g, '');
-        }
+    if (!valid && message?.type === 'error' && message.text) {
+      toast.error(message.text);
     }
+  },
+});
+const { form: formData, enhance } = createForm;
+
+let isSubmitting = $state(false);
+// let logoPreview = $state('');
+let slugManuallyEdited = $state(false);
+
+// Handle logo upload
+// function handleLogoUpload(event: Event) {
+//     const target = event.target as HTMLInputElement;
+//     const file = target.files?.[0];
+//
+//     if (file) {
+//         // Validate file type
+//         if (!file.type.startsWith('image/')) {
+//             toast.error('Please select an image file');
+//             return;
+//         }
+//
+//         // Validate file size (max 5MB)
+//         if (file.size > 5 * 1024 * 1024) {
+//             toast.error('Image size must be less than 5MB');
+//             return;
+//         }
+//
+//         formData.logo = file;
+//
+//         // Create preview
+//         const reader = new FileReader();
+//         reader.onload = (e) => {
+//             logoPreview = e.target?.result as string;
+//         };
+//         reader.readAsDataURL(file);
+//     }
+// }
+
+// Handle form submission
+
+// Handle slug manual editing
+function handleSlugChange() {
+  slugManuallyEdited = true;
+}
+
+function handleNameChange() {
+  if (!slugManuallyEdited && $formData.name) {
+    $formData.slug = $formData.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+}
 </script>
 
 <svelte:head>
@@ -170,7 +188,7 @@
                             {#snippet children({props})}
                                 <FormLabel>Organization Slug *</FormLabel>
                                 <div class="flex items-center gap-2">
-                                    <span class="text-sm text-muted-foreground">formbuilder.com/org/</span>
+                                    <span class="text-sm text-muted-foreground">form.travisspark.com/org/</span>
                                     <Input
                                             {...props}
                                             oninput={() => { handleSlugChange(); }}

@@ -9,22 +9,12 @@ import {
   CardHeader,
   CardTitle,
 } from '$lib/components/ui/card';
+import { getInitials } from '$lib/utils';
 import { ArrowRight, Building2, Plus, Users } from '@lucide/svelte';
 
 const { data } = $props();
 
 const organizations = $derived(data.organizations);
-
-// TODO: Move to utils
-function getInitials(name: string): string {
-  return (
-    name
-      ?.split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase() || '?'
-  );
-}
 
 const isLoading = $state(false);
 </script>

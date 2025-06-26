@@ -347,6 +347,10 @@ const recentActivity = $derived([
               <ChartColumnIcon class="h-4 w-4 mr-2" />
               View Analytics
             </Button>
+            <Button variant="outline" class="w-full justify-start" href="/admin/organization/create">
+              <Plus class="h-4 w-4 mr-2" />
+              Create New Organization
+            </Button>
           </CardContent>
         </Card>
       </div>

@@ -3,6 +3,7 @@ import { page } from '$app/state';
 import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 import { Badge } from '$lib/components/ui/badge';
 import { Button } from '$lib/components/ui/button';
+import { getInitials } from '$lib/utils';
 import {
   ChartColumnIcon,
   FileText,
@@ -83,16 +84,6 @@ const navigationItems = $derived<NavigationItem[]>([
   },
 ]);
 
-function getInitials(name: string): string {
-  return (
-    name
-      ?.split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase() || '?'
-  );
-}
-
 function closeSidebar() {
   sidebarOpen = false;
 }
@@ -117,7 +108,7 @@ function closeSidebar() {
       <!-- Organization Header -->
       <div class="p-6 border-b border-border">
         <div class="flex items-center justify-between">
-          <div class="flex items-center gap-3">
+          <div class="flex items-center gap-3 w-full">
             <Avatar class="h-10 w-10">
               <AvatarImage src={tenant?.logo} alt={tenant?.name} />
               <AvatarFallback class="bg-primary/10 text-primary font-medium">
@@ -125,7 +116,7 @@ function closeSidebar() {
               </AvatarFallback>
             </Avatar>
             <div class="flex-1 min-w-0">
-              <h2 class="text-lg font-semibold text-foreground truncate">
+              <h2 class="text-lg font-semibold text-foreground truncate w-full">
                 {tenant?.name}
               </h2>
               <p class="text-sm text-muted-foreground">

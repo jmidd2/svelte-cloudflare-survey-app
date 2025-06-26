@@ -14,20 +14,20 @@ const showOrgContext = $derived(isAdminRoute && currentOrg);
 
 let toastId: string | number | undefined;
 
-$effect(() => {
-  if (pageState) {
-    if (pageState.isLoading || pageState.isSaved) {
-      if (pageState.isLoading) {
-        toastId = toast.loading('Saving...');
-      }
-
-      if (pageState.isSaved) {
-        if (toastId) toast.dismiss(toastId);
-        toast.success('Saved');
-      }
-    }
-  }
-});
+// $effect(() => {
+//   if (pageState) {
+//     if (pageState.isLoading || pageState.isSaved) {
+//       if (pageState.isLoading) {
+//         toastId = toast.loading('Saving...');
+//       }
+//
+//       if (pageState.isSaved) {
+//         if (toastId) toast.dismiss(toastId);
+//         toast.success('Saved');
+//       }
+//     }
+//   }
+// });
 </script>
 <Header     {user}
             {organizationList}

@@ -9,7 +9,7 @@ import {
   CommandEmpty,
   CommandGroup,
   CommandInput,
-  CommandItem,
+  CommandLinkItem,
   CommandList,
 } from '$lib/components/ui/command';
 import { CommandSeparator } from '$lib/components/ui/command/index.js';
@@ -26,10 +26,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '$lib/components/ui/popover';
-import { Separator } from '$lib/components/ui/separator';
 import type { SelectOrganization } from '$lib/server/db/schema';
 import type { OrganizationListItem } from '$lib/types';
-import { cn } from '$lib/utils';
+import { cn, getInitials } from '$lib/utils';
 import {
   Building2,
   CheckIcon,
@@ -39,7 +38,6 @@ import {
   LogOut,
   Moon,
   PlusIcon,
-  Search,
   Settings,
   Sun,
   User,
@@ -70,7 +68,6 @@ let {
 // ];
 
 let searchQuery = $state('');
-let isDarkMode = $state(false);
 let notifications = $state([
   {
     id: '1',
@@ -87,21 +84,6 @@ let notifications = $state([
     unread: true,
   },
 ]);
-
-// Initialize theme
-onMount(() => {
-  isDarkMode = document.documentElement.classList.contains('dark');
-});
-
-function getInitials(name: string): string {
-  return (
-    name
-      ?.split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase() || '?'
-  );
-}
 
 async function handleSignOut() {
   try {
@@ -126,8 +108,25 @@ function handleSearch(event: Event) {
 const unreadCount = $derived(notifications.filter(n => n.unread).length);
 
 let open = $state(false);
-let value = $state(
-  organizationList[0] ?? {
+let selectedId = $state('');
+// let selectedValue = $derived.by(() => {
+//   if (selectedId) {
+//     const result = organizationList.find(o => o.id === selectedId);
+//     if (result) return result;
+//   }
+//
+//   return (
+//     organizationList.find(o => o.id === currentOrg?.id) ?? {
+//       name: 'Select Organization',
+//       logo: '',
+//       id: 'select-organization',
+//       slug: 'select-organization',
+//     }
+//   );
+// });
+
+let selectedOrg = $derived(
+  organizationList.find(o => o.id === currentOrg?.id) ?? {
     name: 'Select Organization',
     logo: '',
     id: 'select-organization',
@@ -135,10 +134,6 @@ let value = $state(
   }
 );
 let triggerRef = $state<HTMLButtonElement>(null!);
-
-const selectedValue = $derived(
-  organizationList.find(f => f.name === value.name)
-);
 
 // We want to refocus the trigger button when the user selects
 // an item from the list so users can continue navigating the
@@ -149,6 +144,12 @@ function closeAndFocusTrigger() {
     triggerRef.focus();
   });
 }
+
+onMount(() => {
+  if (currentOrg) {
+    open = false;
+  }
+});
 
 $inspect(organizationList);
 </script>
@@ -168,7 +169,6 @@ $inspect(organizationList);
 
         <!-- Organization Context -->
         {#if showOrgContext && currentOrg}
-          {#if organizationList.length > 1}
             <Popover bind:open>
               <PopoverTrigger bind:ref={triggerRef}>
                 {#snippet child({ props })}
@@ -180,70 +180,57 @@ $inspect(organizationList);
                       aria-expanded={open}
                   >
                     <Avatar class="h-6 w-6">
-                      <AvatarImage src={value.logo || "/placeholder.svg"} alt={value.name} />
+                      <AvatarImage src={currentOrg.logo} alt={currentOrg.name} />
                       <AvatarFallback class="bg-primary/10 text-primary text-xs">
-                        {getInitials(value.name)}
+                        {getInitials(currentOrg.name)}
                       </AvatarFallback>
                     </Avatar>
-                    <span class="text-sm font-medium text-foreground">{value.name}</span>
+                    <span class="text-sm font-medium text-foreground w-32 truncate">{currentOrg.name}</span>
                     <ChevronsUpDownIcon class="opacity-50" />
                   </Button>
                 {/snippet}
               </PopoverTrigger>
-              <PopoverContent class="w-64 p-0">
+              <PopoverContent class="min-w-64 max-w-xl p-0" align="start">
                 <Command>
-                  <CommandInput class="focus-0 ring-0 focus:ring-0 focus:border-transparent" placeholder="Search organizations..." />
-                  <CommandList>
+                  {#if organizationList.length > 1}
+                    <CommandInput class="focus-0 ring-0 focus:ring-0 focus:border-transparent" placeholder="Search organizations..." />
+                  {/if}
+                  <CommandList >
                     <CommandEmpty>No framework found.</CommandEmpty>
                     <CommandGroup value="frameworks">
                       {#each organizationList as org (org.id)}
-                        <CommandItem
-                            value={org.name}
+                        <CommandLinkItem
+                            value={org.id}
                             onSelect={() => {
+                              selectedOrg = org;
                               closeAndFocusTrigger();
-                              if(org.id === 'select-organization') return;
-                              if(org.id === currentOrg.id) return;
-                              value = org;
-                              goto(`/admin/${org.slug}`);
                             }}
+                            href={`/admin/${org.slug}`}
                         >
                           <div class="flex items-center gap-2 w-full">
                             <CheckIcon
-                                class={cn(value.name !== org.name && "text-transparent")}
+                                class={cn(selectedOrg?.name !== org.name && "text-transparent")}
                             />
                             <span class="flex-1">{org.name}</span>
                             <CrownIcon
                                 class={cn(!(org.isOwner || org.isAdmin) && "text-transparent")}/>
 
                           </div>
-                        </CommandItem>
+                        </CommandLinkItem>
                       {/each}
                     </CommandGroup>
                     <CommandSeparator/>
                     <!-- TODO: Finish create a new organization -->
                     <CommandGroup>
-                      <CommandItem value="create-organization" class="flex items-center gap-2">
+                      <CommandLinkItem onSelect={closeAndFocusTrigger} keywords={['create organization', 'create']} href="/admin/organization/create" value="create-organization" class="flex items-center gap-2">
                         <PlusIcon class="" />
                         Create New Organization
-                      </CommandItem>
+                      </CommandLinkItem>
                     </CommandGroup>
                   </CommandList>
                 </Command>
               </PopoverContent>
             </Popover>
-          {:else}
-            <Separator orientation="vertical" class="data-[orientation=vertical]:h-10" />
-            <div class="flex items-center gap-2 ml-2">
-              <Avatar class="h-6 w-6">
-                <AvatarImage src={currentOrg.logo || "/placeholder.svg"} alt={currentOrg.name} />
-                <AvatarFallback class="bg-primary/10 text-primary text-xs">
-                  {getInitials(currentOrg.name)}
-                </AvatarFallback>
-              </Avatar>
-              <span class="text-sm font-medium text-foreground">{currentOrg.name}</span>
-            </div>
-            <Button variant="ghost" href="/admin/organization/create" class="hidden md:flex gap-2 ml-2">Create New Organization</Button>
-          {/if}
         {:else}
           <div class="hidden md:flex items-center gap-1 ml-4">
             <a
@@ -280,7 +267,7 @@ $inspect(organizationList);
               <a
                   href="/admin"
                   class={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-      page.url.pathname === '/admin'
+      page.url.pathname.startsWith('/admin')
         ? 'bg-primary/10 text-primary font-semibold'
         : 'text-muted-foreground hover:text-foreground hover:bg-accent'
     }`}

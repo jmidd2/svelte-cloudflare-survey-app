@@ -55,6 +55,7 @@ import {
   TabsList,
   TabsTrigger,
 } from '$lib/components/ui/tabs';
+import { getInitials } from '$lib/utils';
 import { sendInviteSchema } from '$lib/validation-schema';
 import {
   Calendar,
@@ -208,17 +209,6 @@ const filteredRequests = $derived.by(() => {
 
   return filtered;
 });
-
-// Helper functions
-function getInitials(name: string): string {
-  return (
-    name
-      ?.split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase() || '?'
-  );
-}
 
 function formatDate(date: string | Date): string {
   return new Date(date).toLocaleDateString('en-US', {

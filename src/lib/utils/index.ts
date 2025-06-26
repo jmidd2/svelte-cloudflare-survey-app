@@ -26,3 +26,14 @@ export function generateUrlSlug(name: string, withHash?: boolean): string {
   const hash = withHash ? `-${generateShortHash()}` : '';
   return `${baseSlug}${hash}`;
 }
+
+export function getInitials(name: string): string {
+  const allInitials = name
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase();
+  if (allInitials.length === 0) return '?';
+  if (allInitials.length === 1) return allInitials[0];
+  return `${allInitials[0]}${allInitials[allInitials.length - 1]}`;
+}

@@ -16,6 +16,7 @@ import { Input } from '$lib/components/ui/input';
 import { Label } from '$lib/components/ui/label';
 import { ScrollArea } from '$lib/components/ui/scroll-area';
 import { Separator } from '$lib/components/ui/separator';
+import { getInitials } from '$lib/utils';
 import {
   ArrowLeft,
   ArrowRight,
@@ -102,17 +103,6 @@ const filteredOrganizations = $derived.by(() => {
     org.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 });
-
-// Helper functions
-function getInitials(name: string) {
-  return (
-    name
-      ?.split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase() || '?'
-  );
-}
 
 function nextStep() {
   // Skip to organization step if profile is already complete
