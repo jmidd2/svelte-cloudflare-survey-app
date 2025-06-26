@@ -14,6 +14,7 @@ const showOrgContext = $derived(isAdminRoute && currentOrg);
 
 let toastId: string | number | undefined;
 
+// TODO: Fix showing toasts on async tasks and handling errors
 // $effect(() => {
 //   if (pageState) {
 //     if (pageState.isLoading || pageState.isSaved) {

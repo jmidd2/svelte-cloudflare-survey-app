@@ -22,5 +22,3 @@ export const load: LayoutServerLoad = async function ({
 
 // TODO: Make User Profile page
 // TODO: Move admin -> dashboard (replace (dashboard))
-// TODO: Make register page
-// TODO: Finish email/password and Google Login

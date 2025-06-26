@@ -392,8 +392,8 @@ function displayRole(role: string): string {
   </Card>
 
   <!-- Tabbed Interface -->
-  <Tabs bind:value={activeTab} class="w-full gap-y-0 bg-spark-bg-dark">
-    <TabsList class="grid w-full grid-cols-3 rounded-b-none bg-muted/20 px-4 py-2 h-auto gap-2">
+  <Tabs bind:value={activeTab} class="w-full gap-y-0 dark:bg-spark-bg-dark">
+    <TabsList class="grid w-full grid-cols-3 rounded-b-none dark:bg-muted/20 px-4 py-2 h-auto gap-2">
       <TabsTrigger value="members" class="flex items-center gap-2">
         <Users class="h-4 w-4"/>
         Members ({totalMembers})

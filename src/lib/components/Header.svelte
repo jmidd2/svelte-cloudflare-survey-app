@@ -220,7 +220,7 @@ $inspect(organizationList);
                         >
                           <div class="flex items-center gap-2 w-full">
                             <CheckIcon
-                                class={cn(selectedOrg?.name !== org.name && "text-transparent")}
+                                class={cn(selectedOrg?.id !== org.id && "text-transparent")}
                             />
                             <span class="flex-1">{org.name}</span>
                             <CrownIcon

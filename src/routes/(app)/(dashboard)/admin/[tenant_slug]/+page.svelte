@@ -306,7 +306,7 @@ const recentActivity = $derived([
               Get started by creating your first form to collect responses from your audience.
             </p>
             {#if isOrgAdmin}
-              <Button href={`/admin/${tenantSlug}/forms/new`}>
+              <Button onclick={openAddDialog}>
                 <Plus class="h-4 w-4 mr-2" />
                 Create Your First Form
               </Button>
@@ -324,7 +324,7 @@ const recentActivity = $derived([
         <h2 class="text-xl font-semibold text-foreground mb-4">Quick Actions</h2>
         <Card>
           <CardContent class="px-4 space-y-3">
-            <Button variant="outline" class="w-full justify-start" onclick={openAddDialog} disabled={!isOrgAdmin}>
+            <Button variant="outline" class="w-full justify-start" onclick={openAddDialog}>
               <FileText class="h-4 w-4 mr-2" />
               Create New Form
             </Button>

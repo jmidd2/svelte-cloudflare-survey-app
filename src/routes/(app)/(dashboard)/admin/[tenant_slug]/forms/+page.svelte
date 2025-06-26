@@ -63,7 +63,8 @@ const { data } = $props();
 const tenantSlug = $derived(data.tenant?.slug ?? '');
 const tenantName = $derived(data.tenant?.name ?? '');
 const forms = $derived(data.forms);
-const isAdmin = $derived(data.isAdmin);
+const isOrgAdmin = $derived(data.isOrgAdmin);
+const isOrgOwner = $derived(data.isOrgOwner);
 type FormStates = 'all' | 'active' | 'draft' | 'archived';
 // Track which survey is being shared
 let currentSurvey = $state<SelectForm | null>(null);
@@ -170,13 +171,10 @@ let confirmFormTitle = $derived.by(() => {
         Create and manage forms for {tenantName}
       </p>
     </div>
-
-    {#if isAdmin}
-      <Button onclick={openAddDialog} class="flex items-center gap-2">
-        <Plus class="h-4 w-4" />
-        Create Form
-      </Button>
-    {/if}
+    <Button onclick={openAddDialog} class="flex items-center gap-2">
+      <Plus class="h-4 w-4" />
+      Create Form
+    </Button>
   </div>
 
   <!-- Search and Filter -->
@@ -292,8 +290,8 @@ let confirmFormTitle = $derived.by(() => {
               ? 'Try adjusting your search or filter criteria.'
               : 'Get started by creating your first form to collect responses from your audience.'}
         </p>
-        {#if isAdmin && !searchQuery && selectedStatus === 'all'}
-          <Button href={`/admin/${tenantSlug}/forms/new`}>
+        {#if (isOrgAdmin || isOrgOwner) && !searchQuery && selectedStatus === 'all'}
+          <Button onclick={openAddDialog}>
             <Plus class="h-4 w-4 mr-2" />
             Create Your First Form
           </Button>
