@@ -38,10 +38,11 @@ export function createAuth(
     emailVerification: {
       async sendVerificationEmail({ user, token, url }) {
         try {
-          await emailService.sendOTPEmail({
+          await emailService.sendVerificationEmail({
             to: user.email,
-            otp: token,
-            type: 'forget-password',
+            token,
+            url,
+            name: user.name,
           });
           console.log(`Verification email sent successfully to ${user.email}`);
         } catch (error) {
@@ -60,8 +61,9 @@ export function createAuth(
           await emailService.sendEmail({
             to: user.email,
             template: {
-              type: 'forget-password',
-              otp: token,
+              type: 'email-forget-password',
+              url,
+              name: user.name,
             },
           });
           console.log(

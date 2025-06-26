@@ -14,8 +14,8 @@ type EmailTemplateOptions =
   | { type: 'welcome'; name?: string }
   | { type: 'normal-email-verification'; url: string; name: string }
   | { type: 'email-forget-password'; url: string; name: string }
+  | { type: 'email-verification'; token: string; name: string; url: string }
   /** OTP Plugin Types **/
-  | { type: 'email-verification'; otp: string }
   | { type: 'forget-password'; otp: string }
   | { type: 'sign-in'; otp: string }
   | ({ type: 'organization-invite' } & OrganizationInvitationOptions);
@@ -34,13 +34,17 @@ export type SendEmailOptions =
       template: EmailTemplateOptions;
     };
 
+export type SendEmailVerificationOptions = {
+  to: string;
+  token: string;
+  url: string;
+  name: string;
+};
+
 export type OTPEmailOptions = {
   to: string;
   otp: string;
-  type: Extract<
-    EmailTypes,
-    'email-verification' | 'forget-password' | 'sign-in'
-  >;
+  type: Extract<EmailTypes, 'forget-password' | 'sign-in'>;
 };
 
 type EmailTypes =
@@ -117,14 +121,14 @@ export class EmailService {
         };
       }
 
-      case 'normal-email-verification':
+      case 'email-verification':
         // TypeScript knows options.url is available here
         return {
           subject: 'Verify your email address',
           html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2>Email Verification</h2>
-            <p>Please click the link below to verify your email address:</p>
+            <p>${options.name}, please click the link below to verify your email address:</p>
             <p><a href="${options.url}" style="background-color: #007cba; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">Verify Email</a></p>
             <p>Or copy and paste this URL into your browser: ${options.url}</p>
             <p>This link will expire in 24 hours.</p>
@@ -136,11 +140,11 @@ export class EmailService {
       case 'email-forget-password':
         // TypeScript knows options.url is available here
         return {
-          subject: 'Verify your email address',
+          subject: 'Reset your password',
           html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2>Password Reset</h2>
-            <p>Please click the link below to reset your password:</p>
+            <p>${options.name}, please click the link below to reset your password:</p>
             <p><a href="${options.url}" style="background-color: #007cba; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">Verify Email</a></p>
             <p>Or copy and paste this URL into your browser: ${options.url}</p>
             <p>This link will expire in 10 minutes.</p>
@@ -149,22 +153,21 @@ export class EmailService {
         `,
         };
 
-      case 'email-verification':
-        // TypeScript knows options.url is available here
-        return {
-          subject: 'Verify your email address',
-          html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2>Email Verification</h2>
-            <p>Please use the following code to verify your email address:</p>
-            <div style="background-color: #f5f5f5; padding: 20px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 3px; margin: 20px 0;">
-              ${options.otp}
-            </div>
-            <p>This code will expire in 10 minutes.</p>
-            <p>If you didn't request this verification, please contact us.</p>
-          </div>
-        `,
-        };
+      // case 'email-verification':
+      //   // TypeScript knows options.url is available here
+      //   return {
+      //     subject: 'Verify your email address',
+      //     html: `
+      //     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      //       <h2>Password Reset</h2>
+      //       <p>Please click the link below to reset your password:</p>
+      //       <p><a href="${options.url}" style="background-color: #007cba; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">Verify Email</a></p>
+      //       <p>Or copy and paste this URL into your browser: ${options.url}</p>
+      //       <p>This link will expire in 10 minutes.</p>
+      //       <p>If you didn't request a password reset, please contact us.</p>
+      //     </div>
+      //   `,
+      //   };
 
       case 'forget-password':
         // TypeScript knows options.otp is available here
@@ -379,6 +382,18 @@ export class EmailService {
     await this.sendEmail({
       to,
       template: { type, otp },
+    });
+  }
+
+  async sendVerificationEmail({
+    to,
+    token,
+    url,
+    name,
+  }: SendEmailVerificationOptions): Promise<void> {
+    await this.sendEmail({
+      to,
+      template: { type: 'email-verification', token, url, name },
     });
   }
 

@@ -138,7 +138,7 @@ $effect(() => {
           </div>
           <div class="text-center text-sm">
             Don&apos;t have an account?
-            <a href="#" class="underline underline-offset-4"> Sign up </a>
+            <a href="/register" class="underline underline-offset-4"> Sign up </a>
           </div>
         </div>
       </form>

@@ -450,7 +450,7 @@ $inspect(organizationList);
             <Button variant="ghost" size="sm" href="/login">
               Sign In
             </Button>
-            <Button size="sm" href="/register">
+            <Button size="sm" href="/register?step=signup">
               Sign Up
             </Button>
           </div>
