@@ -129,7 +129,7 @@ onClickOutside(
 </svelte:head>
 
 <!-- 2-Column Layout that works within existing admin layout -->
-<div class="flex h-full bg-background overflow-hidden">
+<div class="flex h-full bg-background overflow-hidden max-h-[calc(100vh_-_65px)]">
   <!-- Left Sidebar: Toolbox (collapsible on mobile) -->
   <div bind:this={toolboxContainer} class={["fixed z-50 h-[calc(100vh-65px)] left-0 lg:relative lg:translate-x-0 lg:flex w-64 border-r border-border flex-col bg-card", { '-translate-x-full': !mobileToolboxShowing, 'translate-x-0': mobileToolboxShowing }]}>
     {#if mobileToolboxShowing}
