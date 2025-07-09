@@ -1,17 +1,18 @@
-import { betterAuth } from 'better-auth';
+import { type Auth, type BetterAuthOptions, betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin, emailOTP, organization } from 'better-auth/plugins';
 import type { DrizzleClient } from '../db';
 import * as schema from '../db/schema';
 import type { EmailService } from '../email';
 
-export function createAuth(
+const authClientCache = new Map<symbol, ReturnType<typeof createBetterAuth>>();
+
+function createBetterAuth(
   db: DrizzleClient,
   emailService: EmailService,
   origin: string,
   platformEnv: App.Platform['env']
 ) {
-  console.log('base path', origin);
   return betterAuth({
     socialProviders: {
       google: platformEnv
@@ -109,4 +110,22 @@ export function createAuth(
       }),
     ],
   });
+}
+
+export function createAuth(
+  db: DrizzleClient,
+  emailService: EmailService,
+  origin: string,
+  platformEnv: App.Platform['env']
+) {
+  const key = Symbol.for('better-auth');
+  if (authClientCache.has(key)) {
+    // biome-ignore lint/style/noNonNullAssertion: <has() does the null check>
+    return authClientCache.get(key)!;
+  }
+
+  const auth = createBetterAuth(db, emailService, origin, platformEnv);
+
+  authClientCache.set(key, auth);
+  return auth;
 }

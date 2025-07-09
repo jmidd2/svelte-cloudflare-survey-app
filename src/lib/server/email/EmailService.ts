@@ -408,11 +408,22 @@ export class EmailService {
   }
 }
 
+const emailServiceCache = new Map<symbol, EmailService>();
+
 // Factory function to create email service instance
 export function createEmailService(
   apiKey: string,
   defaultFrom: string,
   isDisabled = false
 ): EmailService {
-  return new EmailService(apiKey, defaultFrom, isDisabled);
+  const key = Symbol.for('email-service');
+
+  if (emailServiceCache.has(key)) {
+    return emailServiceCache.get(key)!;
+  }
+
+  const emailService = new EmailService(apiKey, defaultFrom, isDisabled);
+  emailServiceCache.set(key, emailService);
+
+  return emailService;
 }

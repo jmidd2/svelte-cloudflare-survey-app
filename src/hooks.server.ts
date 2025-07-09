@@ -11,6 +11,7 @@ import { sequence } from '@sveltejs/kit/hooks';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
 import { eq } from 'drizzle-orm';
 
+let isBuilding: boolean | undefined;
 export const handle: Handle = sequence(
   ({ event, resolve }) => {
     if (!event.platform) throw new Error('platform not found');
@@ -39,96 +40,109 @@ export const handle: Handle = sequence(
   // }),
   // sentryHandle(),
   async function ({ event, resolve }) {
-    event.locals.db = await createDbClient({
-      d1Database: event.platform?.env?.DB,
-      dbUrl: env.DATABASE_URL,
-      schema,
-    });
+    // Only check building state once and cache it to skip steps during SSR
+    if (isBuilding === undefined) {
+      //@ts-expect-error
+      const { building } = await import('$app/environment')
+        .catch(e => {})
+        .then(m => m || {});
 
-    const isEmailDisabled =
-      env.DISABLE_EMAIL === 'true' || env.DISABLE_EMAIL === '1';
-
-    if (event.platform?.env?.RESEND_API_KEY && !event.locals.mailService) {
-      event.locals.mailService = createEmailService(
-        event.platform?.env?.RESEND_API_KEY ?? 'dummy-key',
-        event.platform?.env?.EMAIL_FROM ?? 'no-reply@jmidd.dev',
-        isEmailDisabled
-      );
-    } else {
-      throw new Error(
-        'email service could not be configured. missing RESEND_API_KEY (or set DISABLE_EMAIL=true for development)'
-      );
+      isBuilding = building;
     }
+    if (!isBuilding) {
+      event.locals.db = await createDbClient({
+        d1Database: event.platform?.env?.DB,
+        dbUrl: env.DATABASE_URL,
+        schema,
+      });
 
-    if (!(event.locals.auth && event.locals.authHandler)) {
-      const { api, ...authHandler } = createAuth(
-        event.locals.db,
-        event.locals.mailService,
-        event.url.origin,
-        event.platform?.env
-      );
+      const isEmailDisabled =
+        env.DISABLE_EMAIL === 'true' || env.DISABLE_EMAIL === '1';
 
-      event.locals.authHandler = authHandler;
-
-      event.locals.auth = api;
-    }
-
-    // Check session for all authenticated routes
-    const session = await event.locals.auth.getSession({
-      headers: event.request.headers,
-    });
-
-    // Admin route protection
-    if (event.url.pathname.startsWith('/admin')) {
-      if (!session) {
-        throw redirect(303, '/login');
+      if (event.platform?.env?.RESEND_API_KEY && !event.locals.mailService) {
+        event.locals.mailService = createEmailService(
+          event.platform?.env?.RESEND_API_KEY ?? 'dummy-key',
+          event.platform?.env?.EMAIL_FROM ?? 'no-reply@jmidd.dev',
+          isEmailDisabled
+        );
+      } else {
+        throw new Error(
+          'email service could not be configured. missing RESEND_API_KEY (or set DISABLE_EMAIL=true for development)'
+        );
       }
-    }
 
-    // Check if user needs to complete profile
-    if (session?.user) {
-      const missingName = !session.user.name;
+      if (!(event.locals.auth && event.locals.authHandler)) {
+        const { api, ...authHandler } = createAuth(
+          event.locals.db,
+          event.locals.mailService,
+          event.url.origin,
+          event.platform?.env
+        );
 
-      // Check organization membership (requires active session)
-      const memberOfOrganizations = await event.locals.auth.listOrganizations({
+        event.locals.authHandler = authHandler;
+
+        event.locals.auth = api;
+      }
+
+      // Check session for all authenticated routes
+      const session = await event.locals.auth.getSession({
         headers: event.request.headers,
       });
 
-      const missingOrganization = memberOfOrganizations.length === 0;
-      const requestsToJoin = await event.locals.db
-        .select()
-        .from(requests)
-        .where(eq(requests.userId, session.user.id));
-
-      // If a user is missing organization membership and has requests to join, don't require org
-      let orgRequired = missingOrganization;
-      if (requestsToJoin.length > 0 && missingOrganization) {
-        orgRequired = false;
+      // Admin route protection
+      if (event.url.pathname.startsWith('/admin')) {
+        if (!session) {
+          throw redirect(303, '/login');
+        }
       }
 
-      // If user is missing name or organization membership
-      if (missingName || orgRequired) {
-        // Define routes that don't require profile completion
-        const allowedRoutes = [
-          '/profile/complete',
-          '/auth/logout',
-          '/accept-invitation',
-          '/api/', // Allow API routes
-        ];
+      // Check if user needs to complete profile
+      if (session?.user) {
+        const missingName = !session.user.name;
 
-        const isAllowedRoute = allowedRoutes.some(route =>
-          event.url.pathname.startsWith(route)
+        // Check organization membership (requires active session)
+        const memberOfOrganizations = await event.locals.auth.listOrganizations(
+          {
+            headers: event.request.headers,
+          }
         );
 
-        // If not on an allowed route, redirect to profile completion
-        if (!isAllowedRoute) {
-          if (missingName) {
-            console.log('Redirecting to profile completion, missing name');
+        const missingOrganization = memberOfOrganizations.length === 0;
+        const requestsToJoin = await event.locals.db
+          .select()
+          .from(requests)
+          .where(eq(requests.userId, session.user.id));
+
+        // If a user is missing organization membership and has requests to join, don't require org
+        let orgRequired = missingOrganization;
+        if (requestsToJoin.length > 0 && missingOrganization) {
+          orgRequired = false;
+        }
+
+        // If user is missing name or organization membership
+        if (missingName || orgRequired) {
+          // Define routes that don't require profile completion
+          const allowedRoutes = [
+            '/profile/complete',
+            '/auth/logout',
+            '/accept-invitation',
+            '/api/', // Allow API routes
+          ];
+
+          const isAllowedRoute = allowedRoutes.some(route =>
+            event.url.pathname.startsWith(route)
+          );
+
+          // If not on an allowed route, redirect to profile completion
+          if (!isAllowedRoute) {
+            if (missingName) {
+              console.log('Redirecting to profile completion, missing name');
+            }
+            if (missingOrganization) {
+              console.log('Redirecting to profile completion, missing org');
+            }
+            throw redirect(303, '/profile/complete');
           }
-          if (missingOrganization) {
-            console.log('Redirecting to profile completion, missing org');
-          }
-          throw redirect(303, '/profile/complete');
         }
       }
     }
