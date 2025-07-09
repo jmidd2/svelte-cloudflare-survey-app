@@ -221,7 +221,11 @@ const recentActivity = $derived([
           View All
         </Button>
       </div>
-
+      {#await forms}
+        <div class="space-y-4">
+          <p>Loading...</p>
+        </div>
+      {:then forms}
       {#if forms.length > 0}
         <div class="space-y-4">
           {#each forms.slice(0, 5) as survey}
@@ -314,6 +318,7 @@ const recentActivity = $derived([
           </CardContent>
         </Card>
       {/if}
+      {/await}
     </div>
 
     <!-- Activity Sidebar -->

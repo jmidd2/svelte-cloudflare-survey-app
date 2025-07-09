@@ -11,7 +11,7 @@ export const load = async function ({ locals, parent }) {
 
   if (!tenant) redirect(constants.HTTP_STATUS_SEE_OTHER, '/admin');
 
-  const forms = await getFormsByTenant(locals.db, tenant.id);
+  const forms = getFormsByTenant(locals.db, tenant.id);
 
   return {
     forms,
