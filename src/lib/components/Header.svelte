@@ -1,4 +1,20 @@
 <script lang="ts">
+import {
+  Building2,
+  CheckIcon,
+  ChevronsUpDownIcon,
+  CrownIcon,
+  FileText,
+  LogOut,
+  Moon,
+  PlusIcon,
+  Settings,
+  Sun,
+  User,
+} from '@lucide/svelte';
+import { toggleMode } from 'mode-watcher';
+import { onMount, tick } from 'svelte';
+import { toast } from 'svelte-sonner';
 import { goto } from '$app/navigation';
 import { page } from '$app/state';
 import { type AuthUser, authClient } from '$lib/auth-client';
@@ -29,22 +45,6 @@ import {
 import type { SelectOrganization } from '$lib/server/db/schema';
 import type { OrganizationListItem } from '$lib/types';
 import { cn, getInitials } from '$lib/utils';
-import {
-  Building2,
-  CheckIcon,
-  ChevronsUpDownIcon,
-  CrownIcon,
-  FileText,
-  LogOut,
-  Moon,
-  PlusIcon,
-  Settings,
-  Sun,
-  User,
-} from '@lucide/svelte';
-import { toggleMode } from 'mode-watcher';
-import { onMount, tick } from 'svelte';
-import { toast } from 'svelte-sonner';
 
 interface HeaderProps {
   user?: AuthUser | null;
@@ -165,7 +165,7 @@ function buildUrl(url: URL, slug: string): string {
 $inspect(organizationList);
 </script>
 
-<header class="sticky top-0 z-9999 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+<header class="sticky top-0 z-25 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
   <div class="px-4">
     <div class="flex h-16 items-center justify-between">
       <!-- Left Section: Logo + Breadcrumbs -->
