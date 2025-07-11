@@ -291,11 +291,11 @@ $inspect(organizationList);
           <div class="md:hidden ml-4">
             <DropdownMenu>
               <DropdownMenuTrigger>
-                <Button variant="ghost" size="sm" class="h-8 w-8 p-0">
+<!--                <Button variant="ghost" size="sm" class="h-8 w-8 p-0">-->
                   <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                   </svg>
-                </Button>
+<!--                </Button>-->
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" class="w-48">
                 <DropdownMenuItem>
@@ -396,10 +396,10 @@ $inspect(organizationList);
         <!-- User Menu -->
         {#if user}
           <DropdownMenu>
-            <DropdownMenuTrigger>
-              <Button variant="ghost" class="h-8 gap-2 px-2">
+            <DropdownMenuTrigger class="py-2 has-[>svg]:px-3 h-8 gap-2 px-2 focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-md text-sm font-medium outline-none transition-all focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50">
+<!--              <Button variant="ghost" class="h-8 gap-2 px-2">-->
                 <Avatar class="h-6 w-6">
-                  <AvatarImage src={user.image || "/placeholder.svg"} alt={user.name} />
+                  <AvatarImage src={user.image} alt={user.name} />
                   <AvatarFallback class="bg-primary/10 text-primary text-xs">
                     {getInitials(user.name || user.email)}
                   </AvatarFallback>
@@ -407,7 +407,7 @@ $inspect(organizationList);
                 <span class="hidden sm:block text-sm font-medium">
                   {user.name || user.email}
                 </span>
-              </Button>
+<!--              </Button>-->
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" class="w-56">
               <DropdownMenuLabel class="font-normal">
