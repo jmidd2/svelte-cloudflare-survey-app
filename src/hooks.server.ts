@@ -1,15 +1,16 @@
+import * as Sentry from '@sentry/cloudflare';
+import { handleErrorWithSentry } from '@sentry/sveltekit';
+import { type Handle, type HandleServerError, redirect } from '@sveltejs/kit';
+import { sequence } from '@sveltejs/kit/hooks';
+import { svelteKitHandler } from 'better-auth/svelte-kit';
+import { consola } from 'consola';
+import { eq } from 'drizzle-orm';
 import { env } from '$env/dynamic/private';
 import { createAuth } from '$lib/server/auth/create-auth';
 import { createDbClient } from '$lib/server/db';
 import * as schema from '$lib/server/db/schema';
 import { requests } from '$lib/server/db/schema';
 import { createEmailService } from '$lib/server/email';
-import * as Sentry from '@sentry/cloudflare';
-import { handleErrorWithSentry } from '@sentry/sveltekit';
-import { type Handle, type HandleServerError, redirect } from '@sveltejs/kit';
-import { sequence } from '@sveltejs/kit/hooks';
-import { svelteKitHandler } from 'better-auth/svelte-kit';
-import { eq } from 'drizzle-orm';
 
 let isBuilding: boolean | undefined;
 export const handle: Handle = sequence(
