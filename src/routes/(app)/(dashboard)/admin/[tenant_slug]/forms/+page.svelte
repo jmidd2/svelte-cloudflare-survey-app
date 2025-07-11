@@ -60,11 +60,14 @@ import { zod4Client } from 'sveltekit-superforms/adapters';
 
 const { data } = $props();
 
+console.log('data: ', data);
+
 const tenantSlug = $derived(data.tenant?.slug ?? '');
 const tenantName = $derived(data.tenant?.name ?? '');
 const forms = $derived(data.forms);
 const isOrgAdmin = $derived(data.isOrgAdmin);
 const isOrgOwner = $derived(data.isOrgOwner);
+const responses = $derived(data.responses ?? []);
 type FormStates = 'all' | 'active' | 'draft' | 'archived';
 // Track which survey is being shared
 let currentSurvey = $state<SelectForm | null>(null);
@@ -262,7 +265,7 @@ let confirmFormTitle = $derived.by(() => {
               </div>
               <div class="flex items-center gap-1">
                 <Eye class="h-4 w-4" />
-                <span>0 responses</span> <!-- Replace with actual data -->
+                <span>{data.responses[survey.id].length} responses</span> <!-- Replace with actual data -->
               </div>
             </div>
 

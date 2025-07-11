@@ -1,5 +1,5 @@
 import { canManageOrganization } from '$lib/server/auth';
-import { getFormsByTenant } from '$lib/server/db';
+import { getFormsByTenant, getResponsesByFormId } from '$lib/server/db';
 import { forms, organizations } from '$lib/server/db/schema';
 import { requireActionPermission } from '$lib/server/utils/';
 import {
@@ -25,8 +25,26 @@ export const load: PageServerLoad = async ({ parent, locals, request }) => {
 
   const forms = await getFormsByTenant(locals.db, data.tenant.id);
 
+  const formIds = forms.map(form => form.id);
+
+  const responsesPromises = formIds.map(async (formId) => {
+    const responses = await getResponsesByFormId(locals.db, formId);
+    return {
+      formId,
+      responses
+    };
+  });
+
+  const responseData = await Promise.all(responsesPromises);
+
+  const responsesByFormId = responseData.reduce((acc, { formId, responses }) => {
+    acc[formId] = responses;
+    return acc;
+  }, {});
+
   return {
     forms,
+    responses: responsesByFormId,
     isAdmin,
     addForm: await superValidate(zod4(addFormSchema)),
   };

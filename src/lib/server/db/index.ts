@@ -79,6 +79,20 @@ export async function createDbClient({
 }
 
 /**
+ * Get responses for form
+ */
+export async function getResponsesByFormId(
+  db: DrizzleClient,
+  formId: string
+){
+  return db
+    .select().from(schema.submissions)
+    .where(eq(schema.submissions.formId, formId))
+    .orderBy(desc(schema.submissions.createdAt));
+}
+
+
+/**
  * Get forms for a tenant
  */
 export async function getFormsByTenant(
