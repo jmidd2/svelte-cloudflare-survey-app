@@ -1,9 +1,4 @@
 <script lang="ts">
-import { page } from '$app/state';
-import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
-import { Badge } from '$lib/components/ui/badge';
-import { Button } from '$lib/components/ui/button';
-import { getInitials } from '$lib/utils';
 import {
   ChartColumnIcon,
   FileText,
@@ -13,12 +8,18 @@ import {
   X,
 } from '@lucide/svelte';
 import type { Component } from 'svelte';
+import { page } from '$app/state';
+import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
+import { Badge } from '$lib/components/ui/badge';
+import { Button } from '$lib/components/ui/button';
+import { getInitials } from '$lib/utils';
 
 const { children, data } = $props();
 
 const tenant = $derived(data.tenant);
 const isAdmin = $derived(data.isOrgAdmin);
 const isOwner = $derived(data.isOrgOwner);
+
 $inspect(data);
 let status = $state({ isSaved: false, isLoading: false });
 let sidebarOpen = $state(false);
@@ -43,6 +44,7 @@ interface NavigationItem {
   current: boolean;
   disabled?: boolean;
   badge?: number;
+  items?: Partial<NavigationItem>[];
 }
 
 // Navigation items
@@ -63,11 +65,30 @@ const navigationItems = $derived<NavigationItem[]>([
   },
   {
     name: 'Members',
-    href: `/admin/${tenant?.slug}/members`,
+    href: '', //`/admin/${tenant?.slug}/members`,
     icon: Users,
-    current: page.url.pathname.includes('/members'),
-    // @ts-expect-error
-    badge: data.memberCount || 0,
+    current: false, //page.url.pathname.endsWith('/members'),
+    // badge: data.memberCount || 0,
+    items: [
+      {
+        name: 'Active',
+        href: `/admin/${tenant?.slug}/members/active`,
+        current: page.url.pathname.endsWith('/members/active'),
+        badge: data.currentMemberCount || 0,
+      },
+      {
+        name: 'Invitations',
+        href: `/admin/${tenant?.slug}/members/invitations`,
+        current: page.url.pathname.endsWith('/members/invitations'),
+        badge: data.pendingInvitations || 0,
+      },
+      {
+        name: 'Requests',
+        href: `/admin/${tenant?.slug}/members/requests`,
+        current: page.url.pathname.endsWith('/members/requests'),
+        badge: data.pendingRequests || 0,
+      },
+    ],
   },
   {
     name: 'Analytics',
@@ -100,7 +121,7 @@ function closeSidebar() {
     </div>
   {/if}
 
-  <!-- Sidebar -->
+  <!-- Sidebar //TODO: Use Sidebar from shadcn -->
   <div class={`
     fixed left-0 top-[65px] h-[calc(100vh-65px)] lg:h-auto lg:min-h-[calc(100vh-392px)] z-50 w-72 bg-card border-r border-border transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0
     ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
@@ -151,9 +172,9 @@ function closeSidebar() {
               href={item.disabled ? undefined : item.href}
               class={`
               flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
-              ${item.current 
-                ? 'bg-primary text-primary-foreground' 
-                : item.disabled 
+              ${item.current
+                ? 'bg-primary text-primary-foreground'
+                : item.disabled
                   ? 'text-muted-foreground cursor-not-allowed opacity-50'
                   : 'text-foreground hover:bg-accent hover:text-accent-foreground'
               }
@@ -171,6 +192,37 @@ function closeSidebar() {
               <Badge variant="outline" class="text-xs">Soon</Badge>
             {/if}
           </a>
+          {#if item.items}
+            <ul class="pl-6 border-l border-border space-y-1">
+              {#each item.items as subItem}
+                <li>
+                  <a
+                      href={subItem.disabled ? undefined : subItem.href}
+                      class={`
+                        flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                        ${subItem.current
+                          ? 'bg-primary text-primary-foreground'
+                          : subItem.disabled
+                            ? 'text-muted-foreground cursor-not-allowed opacity-50'
+                            : 'text-foreground hover:bg-accent hover:text-accent-foreground'
+                        }
+                      `}
+                      onclick={subItem.disabled ? undefined : closeSidebar}
+                  >
+                    <span class="flex-1">{subItem.name}</span>
+                    {#if subItem.badge !== undefined}
+                      <Badge variant={subItem.current ? "secondary" : "outline"} class="text-xs">
+                        {subItem.badge}
+                      </Badge>
+                    {/if}
+                    {#if subItem.disabled}
+                      <Badge variant="outline" class="text-xs">Soon</Badge>
+                    {/if}
+                  </a>
+                </li>
+              {/each}
+            </ul>
+          {/if}
         {/each}
       </nav>
 

@@ -1,62 +1,4 @@
 <script lang="ts">
-import { applyAction, enhance as stdEnhance } from '$app/forms';
-import { goto } from '$app/navigation';
-import { Alert, AlertDescription } from '$lib/components/ui/alert';
-import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
-import { Badge } from '$lib/components/ui/badge';
-import { Button } from '$lib/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '$lib/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '$lib/components/ui/dialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '$lib/components/ui/dropdown-menu';
-import {
-  FieldErrors,
-  FormControl,
-  FormField,
-  FormLabel,
-} from '$lib/components/ui/form';
-import { Input } from '$lib/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-} from '$lib/components/ui/select';
-import { Separator } from '$lib/components/ui/separator';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '$lib/components/ui/table';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '$lib/components/ui/tabs';
-import { getInitials } from '$lib/utils';
-import { sendInviteSchema } from '$lib/validation-schema';
 import {
   Calendar,
   CheckCircle,
@@ -76,15 +18,51 @@ import {
 import { toast } from 'svelte-sonner';
 import { superForm } from 'sveltekit-superforms';
 import { zod4Client } from 'sveltekit-superforms/adapters';
+import { applyAction, enhance as stdEnhance } from '$app/forms';
+import { goto } from '$app/navigation';
+import { page } from '$app/state';
+import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
+import { Badge } from '$lib/components/ui/badge';
+import { Button } from '$lib/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '$lib/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '$lib/components/ui/dropdown-menu';
+import { Input } from '$lib/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from '$lib/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '$lib/components/ui/table';
+import { Tabs, TabsContent } from '$lib/components/ui/tabs';
+import { getInitials } from '$lib/utils';
+import { sendInviteSchema } from '$lib/validation-schema';
 
 const { data } = $props();
 
 const isSiteAdmin = $derived(data.isSiteAdmin);
 const canManageMembers = $derived(isSiteAdmin ? true : data.canManageMembers);
 const canManageInvites = $derived(isSiteAdmin ? true : data.canManageInvites);
-const canManageBoth = $derived(
-  isSiteAdmin ? true : canManageMembers && canManageInvites
-);
+
 const members = $derived(data.members);
 const invites = $derived(data.invitations);
 const requests = $derived(data.requests);
@@ -108,11 +86,8 @@ const sendInviteForm = superForm(data.sendInviteForm, {
   },
 });
 
-const { form: sendInviteData, enhance } = sendInviteForm;
-
 // UI State
-let sendDialogOpen = $state(false);
-let activeTab = $state('members');
+let activeTab = $derived(page.params.tab || 'active');
 let searchQuery = $state('');
 let selectedRole = $state<'all' | keyof typeof OrganizationRoles>('all');
 let selectedStatus = $state<'all' | keyof typeof InviteStatus>('all');
@@ -138,16 +113,6 @@ const InviteStatus = {
   canceled: 'Cancelled',
   rejected: 'Rejected',
 };
-
-// Computed values
-const totalMembers = $derived(members.length);
-const totalInvites = $derived(invites.length);
-const pendingInvites = $derived(
-  invites.filter(invite => invite.status === 'pending').length
-);
-const pendingRequests = $derived(
-  requests.filter(request => request.status === 'pending').length
-);
 
 // Filter functions
 const filteredMembers = $derived.by(() => {
@@ -261,92 +226,6 @@ function displayRole(role: string): string {
 }
 </script>
 
-<svelte:head>
-  <title>Manage Members - Admin</title>
-</svelte:head>
-
-<div class="p-6 space-y-6">
-  <!-- Header Section -->
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-    <div>
-      <h1 class="text-3xl font-bold text-foreground flex items-center gap-3">
-        <Users class="h-8 w-8 text-primary"/>
-        Team Management
-      </h1>
-      <p class="text-muted-foreground mt-1">
-        Manage your organization members, invitations, and join requests
-      </p>
-    </div>
-
-    {#if isSiteAdmin}
-      <Button
-          onclick={() => { sendDialogOpen = true; }}
-          class="flex items-center gap-2"
-      >
-        <UserPlus class="h-4 w-4"/>
-        Invite Member
-      </Button>
-    {/if}
-  </div>
-
-  <!-- Stats Overview -->
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-    <Card>
-      <CardContent class="py-6 px-4">
-        <h2 class="text-base font-medium text-muted-foreground mb-2 text-center">Total Members</h2>
-        <div class="flex items-center justify-around">
-          <div>
-            <p class="text-3xl font-bold text-foreground">{totalMembers}</p>
-          </div>
-          <div class="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center">
-            <Users class="h-6 w-6 text-primary"/>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-
-    <Card>
-      <CardContent class="py-6 px-4">
-        <h2 class="text-base font-medium text-muted-foreground mb-2 text-center">Pending Requests</h2>
-        <div class="flex items-center justify-around">
-          <div>
-            <p class="text-3xl font-bold text-foreground">{pendingRequests}</p>
-          </div>
-          <div class="h-12 w-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
-            <UserCheck class="h-6 w-6 text-green-600 dark:text-green-400"/>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-
-    <Card>
-      <CardContent class="py-6 px-4">
-        <h2 class="text-base font-medium text-muted-foreground mb-2 text-center">Pending Invites</h2>
-        <div class="flex items-center justify-around">
-          <div>
-            <p class="text-3xl font-bold text-foreground">{pendingInvites}</p>
-          </div>
-          <div class="h-12 w-12 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg flex items-center justify-center">
-            <Clock class="h-6 w-6 text-yellow-600 dark:text-yellow-400"/>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-
-    <Card>
-      <CardContent class="py-6 px-4">
-        <h2 class="text-base font-medium text-muted-foreground mb-2 text-center">Total Invites</h2>
-        <div class="flex items-center justify-around">
-          <div>
-            <p class="text-3xl font-bold text-foreground">{totalInvites}</p>
-          </div>
-          <div class="h-12 w-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
-            <Mail class="h-6 w-6 text-blue-600 dark:text-blue-400"/>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  </div>
   <!-- Search and Filter for Members -->
   <Card class="mb-4">
     <CardContent class="px-6">
@@ -373,7 +252,7 @@ function displayRole(role: string): string {
           </SelectContent>
         </Select>
 
-        {#if activeTab !== 'members'}
+        {#if activeTab !== 'active'}
           <Select type="single" bind:value={selectedStatus}>
             <SelectTrigger class="w-full sm:w-48">
               <Filter class="h-4 w-4 mr-2"/>
@@ -382,8 +261,8 @@ function displayRole(role: string): string {
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
               {#each Object.entries(InviteStatus) as [value, label]}
-              <SelectItem {value}>{label}</SelectItem>
-                {/each}
+                <SelectItem {value}>{label}</SelectItem>
+              {/each}
             </SelectContent>
           </Select>
         {/if}
@@ -393,34 +272,10 @@ function displayRole(role: string): string {
 
   <!-- Tabbed Interface -->
   <Tabs bind:value={activeTab} class="w-full gap-y-0 dark:bg-spark-bg-dark">
-    <TabsList class="grid w-full grid-cols-3 rounded-b-none dark:bg-muted/20 px-4 py-2 h-auto gap-2">
-      <TabsTrigger value="members" class="flex items-center gap-2">
-        <Users class="h-4 w-4"/>
-        Members ({totalMembers})
-      </TabsTrigger>
-      <TabsTrigger value="invitations" class="flex items-center gap-2">
-        <Mail class="h-4 w-4"/>
-        Invitations ({pendingInvites})
-        {#if pendingInvites > 0}
-          <Badge variant="secondary" class="ml-1 h-5 w-5 rounded-full p-0 text-xs">
-            {pendingInvites}
-          </Badge>
-        {/if}
-      </TabsTrigger>
-      <TabsTrigger value="requests" class="flex items-center gap-2">
-        <UserCheck class="h-4 w-4"/>
-        Requests ({pendingRequests})
-        {#if pendingRequests > 0}
-          <Badge variant="destructive" class="ml-1 h-5 w-5 rounded-full p-0 text-xs">
-            {pendingRequests}
-          </Badge>
-        {/if}
-      </TabsTrigger>
-    </TabsList>
     <!-- Members Tab -->
-    <TabsContent value="members" class="space-y-6 rounded-t-none">
+    <TabsContent value="active" class="space-y-6">
       <!-- Members Table -->
-      <Card class="rounded-t-none">
+      <Card class="">
         <CardHeader>
           <CardTitle class="flex items-center gap-2">
             <Users class="h-5 w-5"/>
@@ -430,7 +285,7 @@ function displayRole(role: string): string {
             Current members of your organization
           </CardDescription>
         </CardHeader>
-        <CardContent class="p-0">
+        <CardContent class="px-4">
           {#if filteredMembers.length > 0}
             <Table>
               <TableHeader>
@@ -469,14 +324,14 @@ function displayRole(role: string): string {
                           if (b.includes('admin')) return 1;
                           return 0;
                         }) as r}
-                        <Badge variant="outline" class={getRoleColor(r)}>
-                          {#if r.includes('owner') || r.includes('admin')}
-                            <Crown class="h-3 w-3 mr-1"/>
-                          {:else}
-                            <User class="h-3 w-3 mr-1"/>
-                          {/if}
-                          {displayRole(r)}
-                        </Badge>
+                          <Badge variant="outline" class={getRoleColor(r)}>
+                            {#if r.includes('owner') || r.includes('admin')}
+                              <Crown class="h-3 w-3 mr-1"/>
+                            {:else}
+                              <User class="h-3 w-3 mr-1"/>
+                            {/if}
+                            {displayRole(r)}
+                          </Badge>
                         {/each}
                       </div>
                     </TableCell>
@@ -501,6 +356,8 @@ function displayRole(role: string): string {
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
+                    {:else}
+                      <TableCell/>
                     {/if}
                   </TableRow>
                 {/each}
@@ -522,9 +379,9 @@ function displayRole(role: string): string {
     </TabsContent>
 
     <!-- Invitations Tab -->
-    <TabsContent value="invitations" class="space-y-6 rounded-t-none">
+    <TabsContent value="invitations" class="space-y-6">
       <!-- Invitations Table -->
-      <Card class="rounded-t-none">
+      <Card class="">
         <CardHeader>
           <CardTitle class="flex items-center gap-2">
             <Mail class="h-5 w-5"/>
@@ -534,7 +391,7 @@ function displayRole(role: string): string {
             Invitations sent to join your organization
           </CardDescription>
         </CardHeader>
-        <CardContent class="p-0">
+        <CardContent class="px-4">
           {#if filteredInvites.length > 0}
             <Table>
               <TableHeader>
@@ -647,6 +504,8 @@ function displayRole(role: string): string {
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
+                    {:else}
+                      <TableCell/>
                     {/if}
                   </TableRow>
                 {/each}
@@ -674,9 +533,9 @@ function displayRole(role: string): string {
     </TabsContent>
 
     <!-- Requests Tab -->
-    <TabsContent value="requests" class="space-y-6 rounded-t-none">
+    <TabsContent value="requests" class="space-y-6">
       <!-- Requests Table -->
-      <Card class="rounded-t-none">
+      <Card class="">
         <CardHeader>
           <CardTitle class="flex items-center gap-2">
             <UserCheck class="h-5 w-5"/>
@@ -686,7 +545,7 @@ function displayRole(role: string): string {
             Users requesting to join your organization
           </CardDescription>
         </CardHeader>
-        <CardContent class="p-0">
+        <CardContent class="px-4">
           {#if filteredRequests.length > 0}
             <Table>
               <TableHeader>
@@ -742,11 +601,11 @@ function displayRole(role: string): string {
                     <TableCell>
                       <div class="flex items-center gap-2 text-sm text-muted-foreground">
                         {#if request.status === 'pending'}
-                        <Calendar class="h-4 w-4"/>
-                        {formatDate( request.expiresAt )}
-                          {:else}
+                          <Calendar class="h-4 w-4"/>
+                          {formatDate( request.expiresAt )}
+                        {:else}
                           -
-                          {/if}
+                        {/if}
                       </div>
                     </TableCell>
                     {#if canManageMembers && request.status === 'pending'}
@@ -798,7 +657,9 @@ function displayRole(role: string): string {
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
-                      {/if}
+                    {:else}
+                      <TableCell/>
+                    {/if}
                   </TableRow>
                 {/each}
               </TableBody>
@@ -818,89 +679,3 @@ function displayRole(role: string): string {
       </Card>
     </TabsContent>
   </Tabs>
-</div>
-
-<!-- Invite Dialog -->
-<Dialog bind:open={sendDialogOpen}>
-  <DialogContent class="sm:max-w-md">
-    <DialogHeader>
-      <DialogTitle class="flex items-center gap-2">
-        <UserPlus class="h-5 w-5"/>
-        Invite Team Member
-      </DialogTitle>
-      <DialogDescription>
-        Send an invitation to join your organization. They'll receive an email with instructions to get started.
-      </DialogDescription>
-    </DialogHeader>
-
-    <form action="?/send-invite" method="POST" use:enhance class="space-y-4">
-      <FormField form={sendInviteForm} name="email">
-        <FormControl>
-          {#snippet children( { props } )}
-            <FormLabel>Email Address</FormLabel>
-            <Input
-                {...props}
-                type="email"
-                placeholder="colleague@company.com"
-                bind:value={$sendInviteData.email}
-            />
-            <FieldErrors/>
-          {/snippet}
-        </FormControl>
-      </FormField>
-
-      {#if isSiteAdmin}
-        <FormField form={sendInviteForm} name="role">
-          <FormControl>
-            {#snippet children( { props } )}
-              <FormLabel>Role</FormLabel>
-              <Select type="single" name="role" bind:value={$sendInviteData.role}>
-                <SelectTrigger {...props}>
-                  {$sendInviteData.role ? OrganizationRoles[$sendInviteData.role] : 'Select Role'}
-                </SelectTrigger>
-                <SelectContent align="start">
-                  <SelectItem value="member">
-                    <div class="flex items-center gap-2">
-                      <User class="h-4 w-4"/>
-                      <div>
-                        <p class="font-medium">Member</p>
-                        <p class="text-xs text-muted-foreground">Can view and create forms</p>
-                      </div>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="admin">
-                    <div class="flex items-center gap-2">
-                      <Crown class="h-4 w-4"/>
-                      <div>
-                        <p class="font-medium">Admin</p>
-                        <p class="text-xs text-muted-foreground">Full access to manage organization</p>
-                      </div>
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              <FieldErrors/>
-            {/snippet}
-          </FormControl>
-        </FormField>
-      {/if}
-
-      <Alert>
-        <Mail class="h-4 w-4"/>
-        <AlertDescription>
-          An invitation email will be sent to this address with a secure link to join your organization.
-        </AlertDescription>
-      </Alert>
-
-      <DialogFooter>
-        <Button type="button" variant="outline" onclick={() => { sendDialogOpen = false; }}>
-          Cancel
-        </Button>
-        <Button type="submit" class="flex items-center gap-2">
-          <Mail class="h-4 w-4"/>
-          Send Invitation
-        </Button>
-      </DialogFooter>
-    </form>
-  </DialogContent>
-</Dialog>
