@@ -51,10 +51,6 @@ export const load = async function ({ locals, parent, request }) {
 
   const { members, invitations, ...tenant } = parentTenant;
 
-  console.log('members', members);
-  console.log('invitations', invitations);
-  console.log('tenant', tenant);
-
   if (!user) redirect(constants.HTTP_STATUS_SEE_OTHER, '/login');
 
   // Check if the user can manage members of this organization

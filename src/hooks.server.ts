@@ -41,6 +41,7 @@ export const handle: Handle = sequence(
   // }),
   // sentryHandle(),
   async function ({ event, resolve }) {
+    console.log('handle', event.url.pathname);
     // Only check building state once and cache it to skip steps during SSR
     if (isBuilding === undefined) {
       //@ts-expect-error
