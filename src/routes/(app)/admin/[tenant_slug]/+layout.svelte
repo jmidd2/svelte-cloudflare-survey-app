@@ -80,7 +80,7 @@ const navigationItems = $derived<NavigationItem[]>([
         name: 'Invitations',
         href: `/admin/${tenant?.slug}/members/invitations`,
         current: page.url.pathname.endsWith('/members/invitations'),
-        badge: data.pendingInvitations || 0,
+        badge: data.pendingInvites || 0,
       },
       {
         name: 'Requests',
