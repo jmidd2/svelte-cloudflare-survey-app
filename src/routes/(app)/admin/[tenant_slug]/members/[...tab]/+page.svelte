@@ -279,7 +279,7 @@ function displayRole(role: string): string {
         <CardHeader>
           <CardTitle class="flex items-center gap-2">
             <Users class="h-5 w-5"/>
-            Active Members ({filteredMembers.length})
+            Active Members {#if searchQuery !== ''}({filteredMembers.length}/{data.currentMemberCount}){:else}({data.currentMemberCount}){/if}
           </CardTitle>
           <CardDescription>
             Current members of your organization
@@ -385,7 +385,7 @@ function displayRole(role: string): string {
         <CardHeader>
           <CardTitle class="flex items-center gap-2">
             <Mail class="h-5 w-5"/>
-            Invitations ({filteredInvites.length})
+            Invitations ({data.pendingInvites})
           </CardTitle>
           <CardDescription>
             Invitations sent to join your organization
@@ -539,7 +539,7 @@ function displayRole(role: string): string {
         <CardHeader>
           <CardTitle class="flex items-center gap-2">
             <UserCheck class="h-5 w-5"/>
-            Join Requests ({filteredRequests.length})
+            Join Requests ({data.pendingRequests})
           </CardTitle>
           <CardDescription>
             Users requesting to join your organization

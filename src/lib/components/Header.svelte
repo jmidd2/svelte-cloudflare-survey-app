@@ -165,7 +165,7 @@ function buildUrl(url: URL, slug: string): string {
 $inspect(organizationList);
 </script>
 
-<header class="sticky top-0 z-25 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+<header class="sticky top-0 z-45 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
   <div class="px-4">
     <div class="flex h-16 items-center justify-between">
       <!-- Left Section: Logo + Breadcrumbs -->

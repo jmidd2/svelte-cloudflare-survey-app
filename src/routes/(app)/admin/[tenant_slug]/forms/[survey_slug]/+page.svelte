@@ -1,5 +1,16 @@
 <script lang="ts">
 import {
+  Menu,
+  PencilIcon,
+  SettingsIcon,
+  ShareIcon,
+  XIcon,
+} from '@lucide/svelte';
+import { slide } from 'svelte/transition';
+import { toast } from 'svelte-sonner';
+import { superForm } from 'sveltekit-superforms';
+import { zod4Client } from 'sveltekit-superforms/adapters';
+import {
   EditCreateFormDialog,
   SettingsDialog,
   ShareDialog,
@@ -12,17 +23,6 @@ import { formDialogManager } from '$lib/stores/SurveyDialog.svelte.js';
 import { editFormSchema } from '$lib/validation-schema';
 import { pageState } from '$stores/pageState.svelte';
 import { SurveyEditor, setSurveyEditor } from '$stores/survey-editor.svelte';
-import {
-  Menu,
-  PencilIcon,
-  SettingsIcon,
-  ShareIcon,
-  XIcon,
-} from '@lucide/svelte';
-import { slide } from 'svelte/transition';
-import { toast } from 'svelte-sonner';
-import { superForm } from 'sveltekit-superforms';
-import { zod4Client } from 'sveltekit-superforms/adapters';
 import type { PageProps } from './$types';
 
 const { data, form }: PageProps = $props();
@@ -131,7 +131,7 @@ onClickOutside(
 <!-- 2-Column Layout that works within existing admin layout -->
 <div class="flex h-full bg-background overflow-hidden max-h-[calc(100vh_-_65px)]">
   <!-- Left Sidebar: Toolbox (collapsible on mobile) -->
-  <div bind:this={toolboxContainer} class={["fixed z-50 h-[calc(100vh-65px)] left-0 lg:relative lg:translate-x-0 lg:flex w-64 border-r border-border flex-col bg-card", { '-translate-x-full': !mobileToolboxShowing, 'translate-x-0': mobileToolboxShowing }]}>
+  <div bind:this={toolboxContainer} class={["fixed z-25 h-[calc(100vh-65px)] left-0 lg:relative lg:translate-x-0 lg:flex w-64 border-r border-border flex-col bg-card", { '-translate-x-full': !mobileToolboxShowing, 'translate-x-0': mobileToolboxShowing }]}>
     {#if mobileToolboxShowing}
       <div class="flex items-center justify-between p-4 border-b border-border">
         <h2 class="font-semibold">Toolbox</h2>
