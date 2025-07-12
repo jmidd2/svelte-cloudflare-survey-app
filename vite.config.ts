@@ -22,6 +22,9 @@ export default defineConfig({
 	build:{
 		sourcemap: true,
 	},
+  experimental: {
+    enableNativePlugin: true,
+  }
 	// test: {
 	// 	workspace: [
 	// 		{
