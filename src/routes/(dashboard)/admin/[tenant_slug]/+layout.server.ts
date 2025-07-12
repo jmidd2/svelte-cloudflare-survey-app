@@ -21,24 +21,7 @@ export const load = async function ({ locals, parent }) {
       and(eq(members.organizationId, tenant.id), eq(members.userId, user.id))
     );
 
-  // Cache these results in Cloudflare KV grouping by org/tenant id
-  const pendingRequests = await locals.db.$count(
-    requestsTable,
-    eq(requestsTable.status, 'pending')
-  );
-  const pendingInvites = await locals.db.$count(
-    invitations,
-    eq(invitations.status, 'pending')
-  );
-  const currentMemberCount = await locals.db.$count(
-    members,
-    eq(members.organizationId, tenant.id)
-  );
-
   return {
-    pendingRequests,
-    pendingInvites,
-    currentMemberCount,
     isOrgAdmin: currentMember.role === 'admin',
     isOrgOwner: currentMember.role === 'owner',
   };

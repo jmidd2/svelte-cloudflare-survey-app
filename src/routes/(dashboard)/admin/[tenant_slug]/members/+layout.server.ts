@@ -1,5 +1,5 @@
 import { constants } from 'node:http2';
-import { type Actions, fail, redirect } from '@sveltejs/kit';
+import { type Actions, error, fail, redirect } from '@sveltejs/kit';
 import type { User } from 'better-auth';
 import { eq } from 'drizzle-orm';
 import { message, superValidate } from 'sveltekit-superforms';
@@ -44,15 +44,16 @@ const flattenMembers = (member: OrganizationMember) => {
   return { createdAt, email, id, image, name, organizationId, role, userId };
 };
 
-export const load: PageServerLoad = async function ({
-  locals,
-  parent,
-  request,
-}) {
-  const {
-    tenant: { members, invitations, ...tenant },
-    user,
-  } = await parent();
+export const load = async function ({ locals, parent, request }) {
+  const { tenant: parentTenant, user } = await parent();
+
+  if (!parentTenant) error(400, 'No tenant found');
+
+  const { members, invitations, ...tenant } = parentTenant;
+
+  console.log('members', members);
+  console.log('invitations', invitations);
+  console.log('tenant', tenant);
 
   if (!user) redirect(constants.HTTP_STATUS_SEE_OTHER, '/login');
 

@@ -51,8 +51,7 @@ interface HeaderProps {
   currentOrg?: SelectOrganization | null;
   showOrgContext?: boolean;
   organizationList?: OrganizationListItem[];
-  isOrgAdmin?: boolean;
-  isAdminRoute?: boolean;
+  isSiteAdmin?: boolean;
 }
 
 let {
@@ -60,8 +59,7 @@ let {
   currentOrg = null,
   showOrgContext = false,
   organizationList = [],
-  isOrgAdmin = false,
-  isAdminRoute = false,
+  isSiteAdmin = false,
 }: HeaderProps = $props();
 // organizationList = [
 //   { id: '2', name: 'Test Org', slug: 'test-org', logo: null },
@@ -161,8 +159,6 @@ function buildUrl(url: URL, slug: string): string {
 
   return basePath;
 }
-
-$inspect(organizationList);
 </script>
 
 <header class="sticky top-0 z-45 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -241,80 +237,6 @@ $inspect(organizationList);
                 </Command>
               </PopoverContent>
             </Popover>
-        {:else}
-          <div class="hidden md:flex items-center gap-1 ml-4">
-            <a
-                href="/"
-                class={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-      page.url.pathname === '/'
-        ? 'bg-primary/10 text-primary font-semibold'
-        : 'text-muted-foreground hover:text-foreground hover:bg-accent'
-    }`}
-            >
-              Home
-            </a>
-            <a
-                href="/pricing"
-                class={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-      page.url.pathname === '/pricing'
-        ? 'bg-primary/10 text-primary font-semibold'
-        : 'text-muted-foreground hover:text-foreground hover:bg-accent'
-    }`}
-            >
-              Pricing
-            </a>
-            <a
-                href="/contact"
-                class={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-      page.url.pathname === '/contact'
-        ? 'bg-primary/10 text-primary font-semibold'
-        : 'text-muted-foreground hover:text-foreground hover:bg-accent'
-    }`}
-            >
-              Contact
-            </a>
-            {#if user}
-              <a
-                  href="/admin"
-                  class={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-      page.url.pathname.startsWith('/admin')
-        ? 'bg-primary/10 text-primary font-semibold'
-        : 'text-muted-foreground hover:text-foreground hover:bg-accent'
-    }`}
-              >
-                Dashboard
-              </a>
-              {/if}
-          </div>
-
-          <!-- Mobile Navigation Menu -->
-          <div class="md:hidden ml-4">
-            <DropdownMenu>
-              <DropdownMenuTrigger>
-<!--                <Button variant="ghost" size="sm" class="h-8 w-8 p-0">-->
-                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-<!--                </Button>-->
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" class="w-48">
-                <DropdownMenuItem>
-                  <a href="/" class="w-full">Home</a>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <a href="/pricing" class="w-full">Pricing</a>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <a href="/contact" class="w-full">Contact</a>
-                </DropdownMenuItem>
-                {#if user}
-                  <DropdownMenuItem>
-                  <a href="/admin" class="w-full">Dashboard</a>
-                  </DropdownMenuItem>
-                {/if}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
         {/if}
       </div>
 
@@ -397,23 +319,23 @@ $inspect(organizationList);
         {#if user}
           <DropdownMenu>
             <DropdownMenuTrigger class="py-2 has-[>svg]:px-3 h-8 gap-2 px-2 focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-md text-sm font-medium outline-none transition-all focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50">
-<!--              <Button variant="ghost" class="h-8 gap-2 px-2">-->
-                <Avatar class="h-6 w-6">
-                  <AvatarImage src={user.image} alt={user.name} />
-                  <AvatarFallback class="bg-primary/10 text-primary text-xs">
-                    {getInitials(user.name || user.email)}
-                  </AvatarFallback>
-                </Avatar>
-                <span class="hidden sm:block text-sm font-medium">
+              <!--              <Button variant="ghost" class="h-8 gap-2 px-2">-->
+              <Avatar class="h-6 w-6">
+                <AvatarImage src={user.image} alt={user.name} />
+                <AvatarFallback class="bg-primary/10 text-primary text-xs">
+                  {getInitials(user.name || user.email)}
+                </AvatarFallback>
+              </Avatar>
+              <span class="hidden sm:block text-sm font-medium">
                   {user.name || user.email}
                 </span>
-<!--              </Button>-->
+              <!--              </Button>-->
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" class="w-56">
               <DropdownMenuLabel class="font-normal">
-                <div class="flex flex-col space-y-1">
-                  <p class="text-sm font-medium leading-none">{user.name || 'User'}</p>
-                  <p class="text-xs leading-none text-muted-foreground">{user.email}</p>
+                <div class="flex flex-col space-y-1 w-full">
+                  <p class="text-sm font-medium truncate">{user.name || 'User'}</p>
+                  <p class="text-xs text-muted-foreground truncate">{user.email}</p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
@@ -429,11 +351,11 @@ $inspect(organizationList);
                   <span>Settings</span>
                 </a>
               </DropdownMenuItem>
-              {#if isOrgAdmin}
-                <DropdownMenuItem>
-                  <a class="inline-flex items-center gap-2" href={`/admin`}>
+              {#if isSiteAdmin}
+                <DropdownMenuItem disabled>
+                  <a class="inline-flex items-center gap-2" href={`/admin`} aria-disabled="true">
                     <Building2 class="mr-2 h-4 w-4" />
-                    <span>Admin Dashboard</span>
+                    <span>Site Dashboard</span>
                   </a>
                 </DropdownMenuItem>
               {/if}
