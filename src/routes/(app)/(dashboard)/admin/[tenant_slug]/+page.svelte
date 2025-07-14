@@ -28,8 +28,7 @@ const tenantSlug = $derived(data.tenant.slug);
 const tenantName = $derived(data.tenant.name);
 const forms = $derived(data.forms);
 const isOrgAdmin = $derived(data.isOrgOwner || data.isOrgAdmin);
-const responsesByFormId: [] = $derived(data.responsesByFormId);
-console.log(responsesByFormId)
+const responsesByFormId: {} = $derived(data.responses);
 
 const addForm = superForm(data.addForm, {
   id: 'add-form',

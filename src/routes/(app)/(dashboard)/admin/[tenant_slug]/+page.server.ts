@@ -11,28 +11,13 @@ export const load = async function ({ locals, parent }) {
 
   if (!tenant) redirect(constants.HTTP_STATUS_SEE_OTHER, '/admin');
 
-  const forms = getFormsByTenant(locals.db, tenant.id);
+  const forms = await getFormsByTenant(locals.db, tenant.id);
 
-  const formIds = (await forms).map(form => form.id);
-
-  const responsesPromises = formIds.map(async (formId) => {
-    const responses = await getResponsesByFormId(locals.db, formId);
-    return {
-      formId,
-      responses
-    };
-  });
-
-  const responseData = await Promise.all(responsesPromises);
-
-  const responsesByFormId = responseData.reduce((acc, { formId, responses }) => {
-    acc[formId] = responses;
-    return acc;
-  }, {});
+  
 
   return {
     forms,
-    responsesByFormId,
+    // responsesByFormId,
     tenant,
     user,
     isSiteAdmin: user.role === 'admin',

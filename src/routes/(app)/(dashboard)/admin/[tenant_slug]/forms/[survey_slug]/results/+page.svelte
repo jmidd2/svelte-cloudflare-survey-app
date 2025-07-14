@@ -22,7 +22,12 @@
   const fields = $derived(data.fields);
   const lineLimit = 3;
   let searchQuery = $state("");
-  let selectedStatus = $state<FormStates>("all");
+  const FormStates = {
+    ALL: 'all',
+    PAST: 'past',
+    CURRENT: 'current',
+  }
+  let selectedStatus = $state<keyof typeof FormStates>('ALL');
   $inspect(data);
 
   // Add filtered responses derived state
@@ -78,6 +83,8 @@
     );
   });
 
+
+  //TODO: move to utils file
   function formatDate(date: string | Date): string {
     return new Date(date).toLocaleDateString("en-US", {
       year: "numeric",
