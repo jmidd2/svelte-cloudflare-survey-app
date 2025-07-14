@@ -28,6 +28,8 @@ const tenantSlug = $derived(data.tenant.slug);
 const tenantName = $derived(data.tenant.name);
 const forms = $derived(data.forms);
 const isOrgAdmin = $derived(data.isOrgOwner || data.isOrgAdmin);
+const responsesByFormId: [] = $derived(data.responsesByFormId);
+console.log(responsesByFormId)
 
 const addForm = superForm(data.addForm, {
   id: 'add-form',
@@ -255,7 +257,7 @@ const recentActivity = $derived([
                       </div>
                       <div class="flex items-center gap-1">
                         <Eye class="h-4 w-4" />
-                        <span>0 responses</span> <!-- Replace with actual data -->
+                        <span>{responsesByFormId[survey.id].length || 0} responses</span> <!-- Replace with actual data -->
                       </div>
                     </div>
                   </div>

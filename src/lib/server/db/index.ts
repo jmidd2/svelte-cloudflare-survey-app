@@ -209,6 +209,17 @@ export async function getFormFields(db: DrizzleClient, formId: string) {
 }
 
 /**
+ * Get field label by formId and fieldId
+ */
+export async function getFieldLabel(db: DrizzleClient, formId: string, fieldId: string)
+{
+  return db
+    .select()
+    .from(schema.formFields)
+    .where(eq(schema.formFields.formId, formId) && eq(schema.formFields.id, fieldId))
+}
+
+/**
  * Store a form submission
  */
 export async function createSubmission(
