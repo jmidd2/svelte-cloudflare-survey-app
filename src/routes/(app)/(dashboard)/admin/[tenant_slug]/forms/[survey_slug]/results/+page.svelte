@@ -23,11 +23,12 @@
   const lineLimit = 3;
   let searchQuery = $state("");
   const FormStates = {
-    ALL: 'all',
-    PAST: 'past',
-    CURRENT: 'current',
+    ALL: 'All',
+    ACTIVE: 'Active',
+    DRAFT: 'Draft',
+    ARCHIVED: 'Archived',
   }
-  let selectedStatus = $state<keyof typeof FormStates>('ALL');
+  let selectedStatus = $state<keyof typeof FormStates>(FormStates.ALL);
   $inspect(data);
 
   // Add filtered responses derived state
@@ -124,16 +125,16 @@
                     />
                 </div>
 
-                <Select type="single" bind:value={selectedStatus} disabled>
+                <Select type="single" bind:value={selectedStatus} >
                     <SelectTrigger class="w-full sm:w-48">
                         <Filter class="h-4 w-4 mr-2" />
-                        {selectedStatus === "all" ? "All Status" : selectedStatus}
+                        {selectedStatus === FormStates.ALL ? "All" : selectedStatus}
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="all">All Status</SelectItem>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="draft">Draft</SelectItem>
-                        <SelectItem value="archived">Archived</SelectItem>
+                        <SelectItem value="All">All</SelectItem>
+                        <SelectItem value="Active">Active</SelectItem>
+                        <SelectItem value="Draft">Draft</SelectItem>
+                        <SelectItem value="Archived">Archived</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
