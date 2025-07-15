@@ -73,6 +73,7 @@ $effect(() => {
     })
     .filter(response => response.matchingData.length > 0); // Only keep responses that have matches
   console.log(filtered);
+  console.log('searchQuery: ', searchQuery.length)
   console.log('Setting filtered results:', filtered.length);
   filteredResponses = filtered;
 });
@@ -100,6 +101,9 @@ function fieldLabelFromFieldId(fieldId: string) {
   const field = fields.find(field => field.id === fieldId);
   return field ? field.label : '...';
 }
+
+
+
 </script>
 
 <div class="p-6 space-y-8">
@@ -154,6 +158,8 @@ function fieldLabelFromFieldId(fieldId: string) {
 
     <!-- Use filteredResponses instead of responses -->
     {#each filteredResponses as response}
+        {@const maxLabelLength = Math.max(...fields.map(field => field.label.length))}
+        {@const labelWidth = `${maxLabelLength * 0.6}rem`}
         <Card class="hover:shadow-lg transition-shadow space-y-4 mb-2">
             <CardHeader class="flex justify-between mb-3">
                 <div
@@ -164,7 +170,7 @@ function fieldLabelFromFieldId(fieldId: string) {
                 </div>
             </CardHeader>
                 <CardContent>
-                    <div class="grid grid-cols-[auto_1fr] gap-2 mb-1 truncate">
+                    <div class="flex flex-col items-center md:grid md:grid-cols-[auto_1fr] gap-2 mb-1" style="grid-template-columns: {labelWidth} auto;">
                         {#if response.matchingData.length > 0}
                             {#each response.matchingData as entry, index}
                                 <p class="text-gray-400 truncate">{fieldLabelFromFieldId(entry.field.id)}:</p>
@@ -224,7 +230,7 @@ function fieldLabelFromFieldId(fieldId: string) {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <div class="grid gap-2 mb-1" style="grid-template-columns: {labelWidth} 1fr;">
+                    <div class="flex flex-col items-center md:grid md:grid-cols-[auto_1fr] gap-2 mb-1" style="grid-template-columns: {labelWidth} auto;">
                         {#each response.data.slice(0, lineLimit) as entry, index}
                             <p class="text-gray-400 truncate">{fieldLabelFromFieldId(entry.field.id)}:</p>
                             <p class="font-semibold">{entry.submitted.value}</p>
