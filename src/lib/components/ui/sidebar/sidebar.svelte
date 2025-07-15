@@ -1,7 +1,7 @@
 <script lang="ts">
+import type { HTMLAttributes } from 'svelte/elements';
 import * as Sheet from '$lib/components/ui/sheet/index.js';
 import { cn, type WithElementRef } from '$lib/utils';
-import type { HTMLAttributes } from 'svelte/elements';
 import { SIDEBAR_WIDTH_MOBILE } from './constants.js';
 import { useSidebar } from './context.svelte.js';
 
@@ -80,7 +80,7 @@ const sidebar = useSidebar();
 		<div
 			data-slot="sidebar-container"
 			class={cn(
-				"w-(--sidebar-width) fixed inset-y-0 z-10 hidden h-svh transition-[left,right,width] duration-200 ease-linear md:flex",
+				"w-(--sidebar-width) fixed inset-y-0 z-10 hidden h-[calc(100svh-65px)] transition-[left,right,width] duration-200 ease-linear md:flex",
 				side === "left"
 					? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
 					: "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",

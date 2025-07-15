@@ -1,9 +1,9 @@
 <script lang="ts">
-import { Button } from '$lib/components/ui/button';
 import { CheckIcon, CopyIcon, DownloadIcon } from '@lucide/svelte';
 import { onMount } from 'svelte';
 import { toast } from 'svelte-sonner';
 import { encode } from 'uqr';
+import { Button } from '$lib/components/ui/button';
 
 interface Props {
   url: string;
@@ -167,7 +167,7 @@ onMount(() => {
 
     {#if qrImageUrl && !loading}
       <img
-          src={qrImageUrl || "/placeholder.svg"}
+          src={qrImageUrl}
           alt="QR Code for {url}"
           class="w-full h-full object-contain"
           style="width: {size}px; height: {size}px;"

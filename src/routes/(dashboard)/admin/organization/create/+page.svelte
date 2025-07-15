@@ -1,4 +1,17 @@
 <script lang="ts">
+import {
+  ArrowLeft,
+  Building2,
+  Globe,
+  Loader2,
+  Mail,
+  MapPin,
+  Phone,
+  Upload,
+} from '@lucide/svelte';
+import { toast } from 'svelte-sonner';
+import SuperDebug, { superForm } from 'sveltekit-superforms';
+import { zod4Client } from 'sveltekit-superforms/adapters';
 import { goto } from '$app/navigation';
 import { Badge } from '$lib/components/ui/badge';
 import { Button } from '$lib/components/ui/button';
@@ -22,19 +35,6 @@ import { Textarea } from '$lib/components/ui/textarea';
 import { createOrganizationSchema } from '$lib/validation-schema';
 import { pageState } from '$stores/pageState.svelte';
 import { formDialogManager } from '$stores/SurveyDialog.svelte';
-import {
-  ArrowLeft,
-  Building2,
-  Globe,
-  Loader2,
-  Mail,
-  MapPin,
-  Phone,
-  Upload,
-} from '@lucide/svelte';
-import { toast } from 'svelte-sonner';
-import SuperDebug, { superForm } from 'sveltekit-superforms';
-import { zod4Client } from 'sveltekit-superforms/adapters';
 
 const { data } = $props();
 
@@ -132,7 +132,7 @@ function handleNameChange() {
     <title>Create Organization - FormBuilder</title>
 </svelte:head>
 
-<div class="container mx-auto py-8 px-4 max-w-4xl min-h-[calc(100vh-390px)]">
+<div class="container mx-auto py-8 px-4 max-w-4xl">
     <!-- Header -->
     <div class="mb-8">
         <div class="flex items-center gap-4 mb-4">
@@ -379,5 +379,4 @@ function handleNameChange() {
             </Button>
         </div>
     </form>
-    <SuperDebug data={formData}></SuperDebug>
 </div>
