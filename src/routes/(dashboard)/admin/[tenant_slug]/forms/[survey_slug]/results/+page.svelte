@@ -1,111 +1,114 @@
 <script lang="ts">
-  import { Calendar, Filter, Search } from "@lucide/svelte";
+import { ArrowLeft, Calendar, Filter, Search } from '@lucide/svelte';
+import { page } from '$app/state';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '$lib/components/ui/accordion';
+import { Button } from '$lib/components/ui/button';
+import { Card, CardContent, CardHeader } from '$lib/components/ui/card';
+import { Input } from '$lib/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from '$lib/components/ui/select';
 
-  import { Card, CardContent, CardHeader } from "$lib/components/ui/card";
-  import {
-    Accordion,
-    AccordionTrigger,
-    AccordionItem,
-    AccordionContent,
-  } from "$lib/components/ui/accordion";
-  import { Input } from "$lib/components/ui/input";
-  import {
-    Select,
-    SelectTrigger,
-    SelectItem,
-    SelectContent,
-  } from "$lib/components/ui/select";
+const { data } = $props();
+const survey = $derived(data.survey);
+const responses = $derived(data.responses);
+const fields = $derived(data.fields);
+const lineLimit = 3;
+let searchQuery = $state('');
+const FormStates = {
+  ALL: 'All',
+  ACTIVE: 'Active',
+  DRAFT: 'Draft',
+  ARCHIVED: 'Archived',
+};
+let selectedStatus = $state<keyof typeof FormStates>(FormStates.ALL);
+$inspect(data);
 
-  const { data } = $props();
-  const survey = $derived(data.survey);
-  const responses = $derived(data.responses);
-  const fields = $derived(data.fields);
-  const lineLimit = 3;
-  let searchQuery = $state("");
-  const FormStates = {
-    ALL: 'All',
-    ACTIVE: 'Active',
-    DRAFT: 'Draft',
-    ARCHIVED: 'Archived',
+// Add filtered responses derived state
+// Try using $state instead of $derived
+let filteredResponses = $state([]);
+
+// Use $effect to handle the filtering
+$effect(() => {
+  console.log('Effect running - searchQuery:', searchQuery);
+
+  if (!searchQuery.trim()) {
+    console.log('No search query, using all responses');
+    filteredResponses = responses.map(response => ({
+      ...response,
+      matchingData: response.data, // Show all data when no search
+    }));
+    return;
   }
-  let selectedStatus = $state<keyof typeof FormStates>(FormStates.ALL);
-  $inspect(data);
 
-  // Add filtered responses derived state
-  // Try using $state instead of $derived
-  let filteredResponses = $state([]);
+  console.log('Filtering with query:', searchQuery);
+  const query = searchQuery.toLowerCase().trim();
 
-  // Use $effect to handle the filtering
-  $effect(() => {
-    console.log("Effect running - searchQuery:", searchQuery);
+  const filtered = responses
+    .map(response => {
+      // Find only the matching field-value pairs
+      const matchingData = response.data.filter((entry, index) => {
+        const fieldLabel = fields[index]?.label?.toLowerCase() || '';
+        const fieldLabelMatch = fieldLabel.includes(query);
 
-    if (!searchQuery.trim()) {
-      console.log("No search query, using all responses");
-      filteredResponses = responses.map((response) => ({
+        const submittedValue =
+          entry.submitted?.value?.toString().toLowerCase() || '';
+        const valueMatch = submittedValue.includes(query);
+
+        return fieldLabelMatch || valueMatch;
+      });
+      return {
         ...response,
-        matchingData: response.data, // Show all data when no search
-      }));
-      return;
-    }
+        matchingData,
+        originalDataLength: response.data.length,
+      };
+    })
+    .filter(response => response.matchingData.length > 0); // Only keep responses that have matches
+  console.log(filtered);
+  console.log('Setting filtered results:', filtered.length);
+  filteredResponses = filtered;
+});
 
-    console.log("Filtering with query:", searchQuery);
-    const query = searchQuery.toLowerCase().trim();
+// Additional debug effect
+$effect(() => {
+  console.log(
+    'Debug effect - filteredResponses length:',
+    filteredResponses.length
+  );
+});
 
-    const filtered = responses
-      .map((response) => {
-        // Find only the matching field-value pairs
-        const matchingData = response.data.filter((entry, index) => {
-          const fieldLabel = fields[index]?.label?.toLowerCase() || "";
-          const fieldLabelMatch = fieldLabel.includes(query);
-
-          const submittedValue =
-            entry.submitted?.value?.toString().toLowerCase() || "";
-          const valueMatch = submittedValue.includes(query);
-
-          return fieldLabelMatch || valueMatch;
-        });
-        return {
-          ...response,
-          matchingData,
-          originalDataLength: response.data.length,
-        };
-      })
-      .filter((response) => response.matchingData.length > 0); // Only keep responses that have matches
-    console.log(filtered);
-    console.log("Setting filtered results:", filtered.length);
-    filteredResponses = filtered;
+//TODO: move to utils file
+function formatDate(date: string | Date): string {
+  return new Date(date).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
   });
+}
 
-  // Additional debug effect
-  $effect(() => {
-    console.log(
-      "Debug effect - filteredResponses length:",
-      filteredResponses.length
-    );
-  });
-
-
-  //TODO: move to utils file
-  function formatDate(date: string | Date): string {
-    return new Date(date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "numeric",
-    });
-
-   
-  }
-
-    function fieldLabelFromFieldId(fieldId: string) {
-        const field = fields.find(field => field.id === fieldId)
-        return field ? field.label : '...'
-    }
-
+function fieldLabelFromFieldId(fieldId: string) {
+  const field = fields.find(field => field.id === fieldId);
+  return field ? field.label : '...';
+}
 </script>
 
 <div class="p-6 space-y-8">
+  <div class="flex items-center gap-4 mb-4">
+    <Button variant="ghost" size="sm" href={`/admin/${data.tenant?.slug}/forms`} class="gap-2">
+      <ArrowLeft class="h-4 w-4" />
+      Back to Forms
+    </Button>
+  </div>
     <div class="flex flex-col">
         <h1 class="text-3xl font-bold text-foreground">{survey.title}</h1>
         <p class="text-muted-foreground mt-1">{survey.description}</p>
