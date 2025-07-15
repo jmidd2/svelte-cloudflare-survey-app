@@ -79,6 +79,20 @@ export async function createDbClient({
 }
 
 /**
+ * Get responses for form
+ */
+export async function getResponsesByFormId(
+  db: DrizzleClient,
+  formId: string
+){
+  return db
+    .select().from(schema.submissions)
+    .where(eq(schema.submissions.formId, formId))
+    .orderBy(desc(schema.submissions.createdAt));
+}
+
+
+/**
  * Get forms for a tenant
  */
 export async function getFormsByTenant(
@@ -192,6 +206,17 @@ export async function getFormFields(db: DrizzleClient, formId: string) {
     .from(schema.formFields)
     .where(eq(schema.formFields.formId, formId))
     .orderBy(asc(schema.formFields.orderIndex));
+}
+
+/**
+ * Get field label by formId and fieldId
+ */
+export async function getFieldLabel(db: DrizzleClient, formId: string, fieldId: string)
+{
+  return db
+    .select()
+    .from(schema.formFields)
+    .where(eq(schema.formFields.formId, formId) && eq(schema.formFields.id, fieldId))
 }
 
 /**

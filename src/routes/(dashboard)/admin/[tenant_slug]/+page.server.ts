@@ -1,4 +1,4 @@
-import { getFormsByTenant } from '$lib/server/db';
+import { getFormFields, getFormsByTenant, getResponsesByFormId } from '$lib/server/db';
 import { addFormSchema } from '$lib/validation-schema';
 import { constants } from 'node:http2';
 import { redirect } from '@sveltejs/kit';
@@ -11,10 +11,13 @@ export const load = async function ({ locals, parent }) {
 
   if (!tenant) redirect(constants.HTTP_STATUS_SEE_OTHER, '/admin');
 
-  const forms = getFormsByTenant(locals.db, tenant.id);
+  const forms = await getFormsByTenant(locals.db, tenant.id);
+
+  
 
   return {
     forms,
+    // responsesByFormId,
     tenant,
     user,
     isSiteAdmin: user.role === 'admin',

@@ -1,5 +1,6 @@
 <script lang="ts">
 import {
+  ChartColumnIcon,
   Menu,
   PencilIcon,
   SettingsIcon,
@@ -10,6 +11,7 @@ import { slide } from 'svelte/transition';
 import { toast } from 'svelte-sonner';
 import { superForm } from 'sveltekit-superforms';
 import { zod4Client } from 'sveltekit-superforms/adapters';
+import { page } from '$app/state';
 import {
   EditCreateFormDialog,
   SettingsDialog,
@@ -177,6 +179,10 @@ onClickOutside(
                 <Button variant="outline" size="sm" onclick={openShareDialog}>
                   <ShareIcon class="w-4 h-4 mr-1" />
                   Share
+                </Button>
+                <Button variant="outline" size="sm" href={`${page.url}/results`}>
+                  <ChartColumnIcon class="w-4 h-4 mr-1" />
+                  Results
                 </Button>
                 <Button variant="outline" size="sm" onclick={openSettingsDialog}>
                   <SettingsIcon class="w-4 h-4 mr-1" />

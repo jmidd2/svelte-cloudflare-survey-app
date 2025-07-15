@@ -1,4 +1,19 @@
 <script lang="ts">
+import {
+  Calendar,
+  ChartColumnIcon,
+  Eye,
+  FileText,
+  Filter,
+  MoreHorizontal,
+  PencilIcon,
+  Plus,
+  Search,
+  ShareIcon,
+} from '@lucide/svelte';
+import { toast } from 'svelte-sonner';
+import { superForm } from 'sveltekit-superforms';
+import { zod4Client } from 'sveltekit-superforms/adapters';
 import { applyAction, enhance } from '$app/forms';
 import { goto } from '$app/navigation';
 import { EditCreateFormDialog, ShareDialog } from '$lib/components/dialogs';
@@ -42,29 +57,17 @@ import type { SelectForm } from '$lib/server/db/schema';
 import { addFormSchema } from '$lib/validation-schema';
 import { pageState } from '$stores/pageState.svelte';
 import { formDialogManager } from '$stores/SurveyDialog.svelte';
-import {
-  Calendar,
-  ChartColumnIcon,
-  Eye,
-  FileText,
-  Filter,
-  MoreHorizontal,
-  PencilIcon,
-  Plus,
-  Search,
-  ShareIcon,
-} from '@lucide/svelte';
-import { toast } from 'svelte-sonner';
-import { superForm } from 'sveltekit-superforms';
-import { zod4Client } from 'sveltekit-superforms/adapters';
 
 const { data } = $props();
+
+console.log('data: ', data);
 
 const tenantSlug = $derived(data.tenant?.slug ?? '');
 const tenantName = $derived(data.tenant?.name ?? '');
 const forms = $derived(data.forms);
 const isOrgAdmin = $derived(data.isOrgAdmin);
 const isOrgOwner = $derived(data.isOrgOwner);
+const responses = $derived(data.responses ?? []);
 type FormStates = 'all' | 'active' | 'draft' | 'archived';
 // Track which survey is being shared
 let currentSurvey = $state<SelectForm | null>(null);
@@ -260,10 +263,10 @@ let confirmFormTitle = $derived.by(() => {
                 <Calendar class="h-4 w-4" />
                 <span>{formatDate(survey.updatedAt)}</span>
               </div>
-              <div class="flex items-center gap-1">
+              <Button href={`/admin/${tenantSlug}/forms/${survey.slug}/results`} variant="ghost" size="sm">
                 <Eye class="h-4 w-4" />
-                <span>0 responses</span> <!-- Replace with actual data -->
-              </div>
+                <span>{data.responses[survey.id].length} responses</span>
+              </Button>
             </div>
 
             <Button

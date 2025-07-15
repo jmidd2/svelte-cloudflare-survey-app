@@ -1,13 +1,4 @@
 <script lang="ts">
-import { page } from '$app/state';
-import { EditCreateFormDialog, ShareDialog } from '$lib/components/dialogs';
-import { Badge } from '$lib/components/ui/badge';
-import { Button } from '$lib/components/ui/button';
-import { Card, CardContent } from '$lib/components/ui/card';
-import type { SelectForm } from '$lib/server/db/schema';
-import { addFormSchema } from '$lib/validation-schema';
-import { pageState } from '$stores/pageState.svelte';
-import { formDialogManager } from '$stores/SurveyDialog.svelte';
 import {
   Calendar,
   ChartColumnIcon,
@@ -21,6 +12,15 @@ import {
 import { toast } from 'svelte-sonner';
 import { superForm } from 'sveltekit-superforms';
 import { zod4Client } from 'sveltekit-superforms/adapters';
+import { page } from '$app/state';
+import { EditCreateFormDialog, ShareDialog } from '$lib/components/dialogs';
+import { Badge } from '$lib/components/ui/badge';
+import { Button } from '$lib/components/ui/button';
+import { Card, CardContent } from '$lib/components/ui/card';
+import type { SelectForm } from '$lib/server/db/schema';
+import { addFormSchema } from '$lib/validation-schema';
+import { pageState } from '$stores/pageState.svelte';
+import { formDialogManager } from '$stores/SurveyDialog.svelte';
 
 const { data } = $props();
 
@@ -28,6 +28,7 @@ const tenantSlug = $derived(data.tenant.slug);
 const tenantName = $derived(data.tenant.name);
 const forms = $derived(data.forms);
 const isOrgAdmin = $derived(data.isOrgOwner || data.isOrgAdmin);
+const responsesByFormId = $derived(data.responses);
 
 const addForm = superForm(data.addForm, {
   id: 'add-form',
@@ -221,11 +222,11 @@ const recentActivity = $derived([
           View All
         </Button>
       </div>
-      {#await forms}
-        <div class="space-y-4">
-          <p>Loading...</p>
-        </div>
-      {:then forms}
+      <!--{#await forms}-->
+      <!--  <div class="space-y-4">-->
+      <!--    <p>Loading...</p>-->
+      <!--  </div>-->
+      <!--{:then forms}-->
       {#if forms.length > 0}
         <div class="space-y-4">
           {#each forms.slice(0, 5) as survey}
@@ -253,10 +254,12 @@ const recentActivity = $derived([
                         <Calendar class="h-4 w-4" />
                         <span>Updated {formatDate(survey.updatedAt)}</span>
                       </div>
-                      <div class="flex items-center gap-1">
-                        <Eye class="h-4 w-4" />
-                        <span>0 responses</span> <!-- Replace with actual data -->
-                      </div>
+                      <Button href={`/admin/${tenantSlug}/forms/${survey.slug}/results`} variant="ghost" size="sm">
+<!--                        <div class="flex items-center gap-1">-->
+                          <Eye class="h-4 w-4" />
+                          <span>{responsesByFormId[survey.id].length || 0} responses</span>
+<!--                        </div>-->
+                      </Button>
                     </div>
                   </div>
 
@@ -269,11 +272,9 @@ const recentActivity = $derived([
                       <ShareIcon class="h-4 w-4 mr-2" />
                       Share
                     </Button>
-                    <Button variant="outline" size="sm" href={`/admin/${tenantSlug}/forms/${survey.slug}`}>
-                      <a class="inline-flex items-center" href={`/admin/${tenantSlug}/forms/${survey.slug}/results`}>
+                    <Button variant="outline" size="sm" href={`/admin/${tenantSlug}/forms/${survey.slug}/results`}>
                         <ChartColumnIcon class="h-4 w-4 mr-2" />
                         View Results
-                      </a>
                     </Button>
 
 <!--                    <DropdownMenu>-->
@@ -318,7 +319,7 @@ const recentActivity = $derived([
           </CardContent>
         </Card>
       {/if}
-      {/await}
+      <!--{/await}-->
     </div>
 
     <!-- Activity Sidebar -->
