@@ -24,10 +24,10 @@ const fields = $derived(data.fields);
 const lineLimit = 3;
 let searchQuery = $state('');
 const FormStates = {
-  ALL: 'All',
-  ACTIVE: 'Active',
-  DRAFT: 'Draft',
-  ARCHIVED: 'Archived',
+    ALL: 'All',
+    ACTIVE: 'Active',
+    DRAFT: 'Draft',
+    ARCHIVED: 'Archived',
 };
 let selectedStatus = $state<keyof typeof FormStates>(FormStates.ALL);
 $inspect(data);
@@ -38,68 +38,54 @@ let filteredResponses = $state([]);
 
 // Use $effect to handle the filtering
 $effect(() => {
-  console.log('Effect running - searchQuery:', searchQuery);
-
-  if (!searchQuery.trim()) {
-    console.log('No search query, using all responses');
-    filteredResponses = responses.map(response => ({
-      ...response,
+    if (!searchQuery.trim()) {
+        filteredResponses = responses.map(response => ({
+        ...response,
       matchingData: response.data, // Show all data when no search
     }));
     return;
-  }
+    }
 
-  console.log('Filtering with query:', searchQuery);
-  const query = searchQuery.toLowerCase().trim();
+    const query = searchQuery.toLowerCase().trim();
 
-  const filtered = responses
-    .map(response => {
+    const filtered = responses
+        .map(response => {
       // Find only the matching field-value pairs
-      const matchingData = response.data.filter((entry, index) => {
+        const matchingData = response.data.filter((entry, index) => {
         const fieldLabel = fields[index]?.label?.toLowerCase() || '';
         const fieldLabelMatch = fieldLabel.includes(query);
 
         const submittedValue =
-          entry.submitted?.value?.toString().toLowerCase() || '';
+            entry.submitted?.value?.toString().toLowerCase() || '';
         const valueMatch = submittedValue.includes(query);
 
         return fieldLabelMatch || valueMatch;
-      });
-      return {
+    });
+    
+    return {
         ...response,
         matchingData,
         originalDataLength: response.data.length,
-      };
-    })
-    .filter(response => response.matchingData.length > 0); // Only keep responses that have matches
-  console.log(filtered);
-  console.log('searchQuery: ', searchQuery.length)
-  console.log('Setting filtered results:', filtered.length);
-  filteredResponses = filtered;
-});
+    };
+}).filter(response => response.matchingData.length > 0); // Only keep responses that have matches
 
-// Additional debug effect
-$effect(() => {
-  console.log(
-    'Debug effect - filteredResponses length:',
-    filteredResponses.length
-  );
+filteredResponses = filtered;
 });
 
 //TODO: move to utils file
 function formatDate(date: string | Date): string {
-  return new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: 'numeric',
-  });
+    return new Date(date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+    });
 }
 
 function fieldLabelFromFieldId(fieldId: string) {
-  const field = fields.find(field => field.id === fieldId);
-  return field ? field.label : '...';
+    const field = fields.find(field => field.id === fieldId);
+    return field ? field.label : '...';
 }
 
 
@@ -147,12 +133,54 @@ function fieldLabelFromFieldId(fieldId: string) {
             </div>
         </CardContent>
     </Card>
-
+    <!-- This is the table version of the survey results. Needs to be fixed to scroll properly at all screen sizes -->
+    <!-- <Card class="p-0 bg-background border-none">
+        <CardContent class="p-0">
+            <div class="max-w-[2250px] ">
+                <div class="w-full overflow-x-auto rounded-xl border bg-card">
+                    <div class="min-w-max">
+                        <table class="w-full">
+                            <thead class="bg-accent/50 text-lg">
+                                <tr class="grid py-2" style="grid-template-columns: repeat({data.fields.length + 1}, minmax(350px, 1fr))">
+                                    {#each data.fields as entry, index}
+                                    {#if index === 0}
+                                    <th class="text-left">Date/Time Submitted</th>
+                                    {/if}
+                                    <th class="text-left">{fieldLabelFromFieldId(entry.id)}</th>
+                                    {/each}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {#each responses.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) as response}
+                                <tr class="grid text-center" style="grid-template-columns: repeat({data.fields.length + 1}, 1fr)">
+                                    <td class="border-b flex justify-center py-2">
+                                        <p class="py-1 text-gray-200 border px-2 rounded-lg bg-gray-500/30 inline-flex gap-x-2">
+                                            <Calendar class="text-gray-300" />
+                                            {formatDate(new Date(response.createdAt))}
+                                        </p>
+                                    </td>
+                                    {#each data.fields as field}
+                                    {@const submittedEntry = response.data.find(entry => entry.field.id === field.id)}
+                                    <td class="border-b content-center {!submittedEntry && 'text-gray-500'}">
+                                        {submittedEntry ? submittedEntry.submitted.value : 'N/A'}
+                                    </td>
+                                    {/each}
+                                    </tr>
+                                {/each}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </CardContent>
+    </Card> -->
+    
+    
     <!-- Show results count when searching -->
     {#if searchQuery.length > 0}
-        <p class="text-sm text-muted-foreground mb-4">
-            Found {filteredResponses.length} result{filteredResponses.length !== 1
-            ? "s"
+    <p class="text-sm text-muted-foreground mb-4">
+        Found {filteredResponses.length} result{filteredResponses.length !== 1
+        ? "s"
             : ""} for "{searchQuery}"
         </p>
 
