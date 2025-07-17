@@ -150,15 +150,15 @@ const toggleRowExpansion = (rowId: any) => {
                 <thead class="bg-accent/50 text-lg">
                     <tr class="grid grid-cols-[1fr_1fr_1fr_1fr_50px] py-2">
                         <th class="text-center">Date/Time Submitted</th>
-                        <th class="text-center">Info</th>
-                        <th class="text-center">Info</th>
-                        <th class="text-center">Status</th>
+                        <th class="text-center">Something</th>
+                        <th class="text-center">Extra</th>
+                        <th class="text-center">Status</th> <!--Maybe something to show if all fields have been completed, archived survey-->
                         <th></th>
                     </tr>
                 </thead>
                 <tbody class="">
                     {#each responses.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) as response}
-                        <tr id={response.id} class="grid grid-cols-[1fr_1fr_1fr_1fr_50px] py-2" onclick={() => toggleRowExpansion(response.id)}>
+                        <tr id={response.id} class="grid grid-cols-[1fr_1fr_1fr_1fr_50px] py-2 not-last:border-b" onclick={() => toggleRowExpansion(response.id)}>
                             <td class="text-center">
                                 <div class="inline-flex gap-x-3 bg-accent/70 py-2 px-4 rounded-lg border">
                                     <Calendar class="text-white/70"/>
@@ -186,7 +186,15 @@ const toggleRowExpansion = (rowId: any) => {
                             <tr>
                                 <td>
                                     <div class="w-full bg-card p-4">
-                                        <h4>Additional Info</h4>
+                                        <h4 class="mb-4">Full Response</h4>
+                                        <div class="grid  sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
+                                            {#each response.data as item}
+                                                <div class="flex flex-col">
+                                                    <p class="text-secondary text-left">{fieldLabelFromFieldId(item.field.id)}:</p>
+                                                    <p class="text-left mb-2">{typeof item.submitted.value === 'string' ? item.submitted.value : 'N/A'}</p>
+                                                </div>
+                                            {/each}
+                                        </div>
                                     </div>
                                 </td>
                             </tr>
