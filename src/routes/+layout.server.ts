@@ -20,6 +20,4 @@ export const load: LayoutServerLoad = async function ({
 };
 
 // TODO: Add prerender where needed like the pricing, contact, etc.
-// FIXME: Fix Toolbox bg on long pages
-// TODO: Properties menu should be static/sticky
 // FIXME: Fields with options cannot be added for some reason

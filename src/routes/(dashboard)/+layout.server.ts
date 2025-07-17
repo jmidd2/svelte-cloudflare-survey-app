@@ -120,6 +120,3 @@ export const load: LayoutServerLoad = async function ({
 //   ...data,
 // };
 // }
-
-// TODO: Make User Profile page
-// TODO: Move admin -> dashboard (replace (dashboard))
