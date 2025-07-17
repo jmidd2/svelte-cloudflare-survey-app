@@ -90,7 +90,7 @@ function fieldLabelFromFieldId(fieldId: string) {
 
 let expandedRows = $state(new Set())
 
-const toggleRowExpansion = (rowId: any) => {
+const toggleRowExpansion = (rowId: string) => {
     const newExpanded = new Set(expandedRows)
     if( newExpanded.has(rowId)){
         newExpanded.delete(rowId)
@@ -99,6 +99,18 @@ const toggleRowExpansion = (rowId: any) => {
     }
     expandedRows = newExpanded
 }
+
+function getFieldValue(item) {
+    switch (item.field.type) {
+      case "checkbox":
+        return item.submitted.values.map(x => " " + x).join(",");
+      case "radio":
+      case "select":
+        return item.submitted.value;
+      default:
+        return "N/A";
+    }
+  }
 
 </script>
 
@@ -160,7 +172,7 @@ const toggleRowExpansion = (rowId: any) => {
                     {#each responses.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) as response}
                         <tr id={response.id} class="grid grid-cols-[1fr_1fr_1fr_1fr_50px] py-2 not-last:border-b" onclick={() => toggleRowExpansion(response.id)}>
                             <td class="text-center">
-                                <div class="inline-flex gap-x-3 bg-accent/70 py-2 px-4 rounded-lg border">
+                                <div class="inline-flex gap-x-3 bg-accent/50 py-1 px-2 rounded-lg border">
                                     <Calendar class="text-white/70"/>
                                     {formatDate(new Date(response.createdAt))}
                                 </div>
@@ -191,7 +203,7 @@ const toggleRowExpansion = (rowId: any) => {
                                             {#each response.data as item}
                                                 <div class="flex flex-col">
                                                     <p class="text-secondary text-left">{fieldLabelFromFieldId(item.field.id)}:</p>
-                                                    <p class="text-left mb-2">{typeof item.submitted.value === 'string' ? item.submitted.value : 'N/A'}</p>
+                                                    <p class="text-left mb-2">{getFieldValue(item)}</p>
                                                 </div>
                                             {/each}
                                         </div>
