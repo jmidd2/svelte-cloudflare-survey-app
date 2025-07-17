@@ -53,63 +53,73 @@ export const load: LayoutServerLoad = async function ({
 
   const hasOrgAdminRole = organizations.some(o => o.isAdmin || o.isOwner);
 
+  let tenant;
+  let currentOrg: OrganizationListItem | undefined = {};
+
   if (tenant_slug) {
     // const tenant = await getTenantBySlug(locals.db, tenant_slug);
-    const tenant = await locals.auth.getFullOrganization({
+    tenant = await locals.auth.getFullOrganization({
       headers: request.headers,
       query: { organizationSlug: tenant_slug },
     });
-
-    const currentOrg = organizations.find(org => org.slug === tenant_slug);
-
+    currentOrg = organizations.find(org => org.slug === tenant_slug);
     if (!(currentOrg && tenant)) throw new Error('could not find organization');
-
-    await locals.auth.setActiveOrganization({
+  } else if (organizations.length > 0) {
+    tenant = await locals.auth.getFullOrganization({
       headers: request.headers,
-      body: {
-        organizationId: tenant.id,
-      },
+      query: { organizationId: organizations[0].id },
     });
-
-    // Cache these results in Cloudflare KV grouping by org/tenant id
-    const pendingRequests = await locals.db.$count(
-      requestsTable,
-      eq(requestsTable.status, 'pending')
-    );
-    const pendingInvites = await locals.db.$count(
-      invitations,
-      eq(invitations.status, 'pending')
-    );
-    const currentMemberCount = await locals.db.$count(
-      members,
-      eq(members.organizationId, tenant.id)
-    );
-
-    return {
-      pendingRequests,
-      pendingInvites,
-      currentMemberCount,
-      tenant: { ...currentOrg, ...tenant },
-      hasOrgAdminRole,
-      organizations,
-    };
   }
 
+  console.log('currentorg', currentOrg);
+  console.log('tenat', tenant);
+
+  await locals.auth.setActiveOrganization({
+    headers: request.headers,
+    body: {
+      organizationId: tenant.id,
+    },
+  });
+
+  // Cache these results in Cloudflare KV grouping by org/tenant id
+  const pendingRequests = await locals.db.$count(
+    requestsTable,
+    eq(requestsTable.status, 'pending')
+  );
+  const pendingInvites = await locals.db.$count(
+    invitations,
+    eq(invitations.status, 'pending')
+  );
+  const currentMemberCount = await locals.db.$count(
+    members,
+    eq(members.organizationId, tenant.id)
+  );
+
   return {
+    pendingRequests,
+    pendingInvites,
+    currentMemberCount,
+    tenant: { ...currentOrg, ...tenant },
     hasOrgAdminRole,
     organizations,
   };
-  // const data = await parent();
-
-  // const session = await locals.auth.getSession({
-  //   headers: request.headers,
-  // });
-
-  //
-  // return {
-  //   ...data,
-  // };
 };
+
+// return {
+//     hasOrgAdminRole,
+//     organizations,
+//   };
+// const data = await parent();
+
+// const session = await locals.auth.getSession({
+//   headers: request.headers,
+// });
+
+//
+// return {
+//   ...data,
+// };
+// }
 
 // TODO: Make User Profile page
 // TODO: Move admin -> dashboard (replace (dashboard))
