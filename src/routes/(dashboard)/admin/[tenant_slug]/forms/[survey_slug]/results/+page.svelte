@@ -1,5 +1,5 @@
 <script lang="ts">
-import { ArrowLeft, Calendar, Filter, Search } from '@lucide/svelte';
+import { ArrowLeft, Calendar, ChevronDown, ChevronUp, Filter, Search } from '@lucide/svelte';
 import { page } from '$app/state';
 import {
   Accordion,
@@ -88,7 +88,17 @@ function fieldLabelFromFieldId(fieldId: string) {
     return field ? field.label : '...';
 }
 
+let expandedRows = $state(new Set())
 
+const toggleRowExpansion = (rowId: any) => {
+    const newExpanded = new Set(expandedRows)
+    if( newExpanded.has(rowId)){
+        newExpanded.delete(rowId)
+    }else{
+        newExpanded.add(rowId)
+    }
+    expandedRows = newExpanded
+}
 
 </script>
 
@@ -134,9 +144,61 @@ function fieldLabelFromFieldId(fieldId: string) {
         </CardContent>
     </Card>
     <!-- This is the table version of the survey results. Needs to be fixed to scroll properly at all screen sizes -->
+    <Card class="bg-black/0 p-0">
+        <CardContent class="p-0">
+            <table class="w-full">
+                <thead class="bg-accent/50 text-lg">
+                    <tr class="grid grid-cols-[1fr_1fr_1fr_1fr_50px] py-2">
+                        <th class="text-center">Date/Time Submitted</th>
+                        <th class="text-center">Info</th>
+                        <th class="text-center">Info</th>
+                        <th class="text-center">Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody class="">
+                    {#each responses.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) as response}
+                        <tr id={response.id} class="grid grid-cols-[1fr_1fr_1fr_1fr_50px] py-2" onclick={() => toggleRowExpansion(response.id)}>
+                            <td class="text-center">
+                                <div class="inline-flex gap-x-3 bg-accent/70 py-2 px-4 rounded-lg border">
+                                    <Calendar class="text-white/70"/>
+                                    {formatDate(new Date(response.createdAt))}
+                                </div>
+                                </td>
+                            <td class="text-center content-center">
+                                N/A
+                            </td>
+                            <td class="text-center content-center">
+                                N/A
+                            </td>
+                            <td class="text-center content-center">
+                                N/A
+                            </td>
+                            <td class="content-center">
+                                {#if expandedRows.has(response.id)}
+                                    <ChevronUp class="w-4 h-4" />
+                                {:else}
+                                    <ChevronDown class="w-4 h-4" />
+                                {/if}
+                            </td>
+                        </tr>
+                        {#if expandedRows.has(response.id)}
+                            <tr>
+                                <td>
+                                    <div class="w-full bg-card p-4">
+                                        <h4>Additional Info</h4>
+                                    </div>
+                                </td>
+                            </tr>
+                        {/if}
+                    {/each}
+                </tbody>
+            </table>
+        </CardContent>
+    </Card>
     <!-- <Card class="p-0 bg-background border-none">
         <CardContent class="p-0">
-            <div class="max-w-[2250px] ">
+            <div class="w-1/4 ">
                 <div class="w-full overflow-x-auto rounded-xl border bg-card">
                     <div class="min-w-max">
                         <table class="w-full">
@@ -144,9 +206,9 @@ function fieldLabelFromFieldId(fieldId: string) {
                                 <tr class="grid py-2" style="grid-template-columns: repeat({data.fields.length + 1}, minmax(350px, 1fr))">
                                     {#each data.fields as entry, index}
                                     {#if index === 0}
-                                    <th class="text-left">Date/Time Submitted</th>
+                                    <th class="text-center">Date/Time Submitted</th>
                                     {/if}
-                                    <th class="text-left">{fieldLabelFromFieldId(entry.id)}</th>
+                                    <th class="text-center">{fieldLabelFromFieldId(entry.id)}</th>
                                     {/each}
                                 </tr>
                             </thead>
@@ -177,15 +239,15 @@ function fieldLabelFromFieldId(fieldId: string) {
     
     
     <!-- Show results count when searching -->
-    {#if searchQuery.length > 0}
+    <!-- {#if searchQuery.length > 0}
     <p class="text-sm text-muted-foreground mb-4">
         Found {filteredResponses.length} result{filteredResponses.length !== 1
         ? "s"
             : ""} for "{searchQuery}"
-        </p>
+        </p> -->
 
     <!-- Use filteredResponses instead of responses -->
-    {#each filteredResponses as response}
+    <!-- {#each filteredResponses as response}
         {@const maxLabelLength = Math.max(...fields.map(field => field.label.length))}
         {@const labelWidth = `${maxLabelLength * 0.6}rem`}
         <Card class="hover:shadow-lg transition-shadow space-y-4 mb-2">
@@ -289,5 +351,5 @@ function fieldLabelFromFieldId(fieldId: string) {
                 </CardContent>
             </Card>
         {/each}
-    {/if}
+    {/if} -->
 </div>
