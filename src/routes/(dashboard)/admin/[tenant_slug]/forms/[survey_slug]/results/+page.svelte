@@ -118,7 +118,7 @@ function getFieldValue(item: NewSubmissionData) {
 
 </script>
 
-<div class="p-6 space-y-8">
+<div class="p-6 space-y-8 max-w-[calc(100vw-var(--sidebar-width)-15px)]">
   <div class="flex items-center gap-4 mb-4">
     <Button variant="ghost" size="sm" href={`/admin/${data.tenant?.slug}/forms`} class="gap-2">
       <ArrowLeft class="h-4 w-4" />
@@ -159,7 +159,10 @@ function getFieldValue(item: NewSubmissionData) {
             </div>
         </CardContent>
     </Card>
-    <Card class="bg-black/0 p-0">
+
+    <!-- The table below shows the submission date, and the amount of answers provided. Upon clicking the row, you can then see the full response from the survey.  -->
+
+    <!-- <Card class="bg-black/0 p-0">
         <CardContent class="p-0">
             <table class="w-full">
                 <thead class="bg-accent/50 text-lg">
@@ -167,7 +170,7 @@ function getFieldValue(item: NewSubmissionData) {
                         <th class="text-center">Date/Time Submitted</th>
                         <th class="text-center">Something</th>
                         <th class="text-center">Extra</th>
-                        <th class="text-center">Answers</th> <!--Maybe something to show if all fields have been completed, archived survey-->
+                        <th class="text-center">Answers</th> 
                         <th></th>
                     </tr>
                 </thead>
@@ -220,59 +223,54 @@ function getFieldValue(item: NewSubmissionData) {
                 </tbody>
             </table>
         </CardContent>
-    </Card>
-    <!-- <Card class="p-0 bg-background border-none">
-        <CardContent class="p-0">
-            <div class="w-1/4 ">
-                <div class="w-full overflow-x-auto rounded-xl border bg-card">
-                    <div class="min-w-max">
-                        <table class="w-full">
-                            <thead class="bg-accent/50 text-lg">
-                                <tr class="grid py-2" style="grid-template-columns: repeat({data.fields.length + 1}, minmax(350px, 1fr))">
-                                    {#each data.fields as entry, index}
-                                    {#if index === 0}
-                                    <th class="text-center">Date/Time Submitted</th>
-                                    {/if}
-                                    <th class="text-center">{fieldLabelFromFieldId(entry.id)}</th>
-                                    {/each}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {#each responses.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) as response}
-                                <tr class="grid text-center" style="grid-template-columns: repeat({data.fields.length + 1}, 1fr)">
-                                    <td class="border-b flex justify-center py-2">
-                                        <p class="py-1 text-gray-200 border px-2 rounded-lg bg-gray-500/30 inline-flex gap-x-2">
-                                            <Calendar class="text-gray-300" />
-                                            {formatDate(new Date(response.createdAt))}
-                                        </p>
-                                    </td>
-                                    {#each data.fields as field}
-                                    {@const submittedEntry = response.data.find(entry => entry.field.id === field.id)}
-                                    <td class="border-b content-center {!submittedEntry && 'text-gray-500'}">
-                                        {submittedEntry ? submittedEntry.submitted.value : 'N/A'}
-                                    </td>
-                                    {/each}
-                                    </tr>
-                                {/each}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </CardContent>
     </Card> -->
-    
-    
-    <!-- Show results count when searching -->
-    <!-- {#if searchQuery.length > 0}
-    <p class="text-sm text-muted-foreground mb-4">
-        Found {filteredResponses.length} result{filteredResponses.length !== 1
-        ? "s"
-            : ""} for "{searchQuery}"
-        </p> -->
 
-    <!-- Use filteredResponses instead of responses -->
-    <!-- {#each filteredResponses as response}
+    <!-- Desktop View using a side-scrolling table-->
+    <div class="hidden lg:block overflow-x-scroll rounded-xl border">
+        <table class="w-full ">
+            <thead class="bg-accent/50 text-lg">
+                <tr class="grid py-2" style="grid-template-columns: repeat({data.fields.length + 1}, minmax(280px, 1fr))">
+                    {#each data.fields as entry, index}
+                        {#if index === 0}
+                            <th class="text-center">Date/Time Submitted</th>
+                        {/if}
+                            <th class="text-center">{fieldLabelFromFieldId(entry.id)}</th>
+                    {/each}
+                </tr>
+            </thead>
+            <tbody>
+                {#each responses.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) as response}
+                    <tr class="grid text-center" style="grid-template-columns: repeat({data.fields.length + 1}, 1fr)">
+                        <td class="border-b flex justify-center py-2">
+                            <p class="py-1 text-gray-200 border px-2 rounded-lg bg-gray-500/30 inline-flex gap-x-2">
+                                <Calendar class="text-gray-300" />
+                                {formatDate(new Date(response.createdAt))}
+                            </p>
+                        </td>
+                        {#each data.fields as field}
+                            {@const submittedEntry = response.data.find(entry => entry.field.id === field.id)}
+                            <td class="border-b content-center {!submittedEntry && 'text-gray-500'}">
+                                {submittedEntry ? getFieldValue(submittedEntry) : '-'}
+                            </td>
+                        {/each}
+                    </tr>
+                {/each}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Mobile view using cards, and accordion -->
+    <div class="block lg:hidden">
+        <!-- Show results count when searching -->
+        {#if searchQuery.length > 0}
+        <p class="text-sm text-muted-foreground mb-4">
+            Found {filteredResponses.length} result{filteredResponses.length !== 1
+        ? "s"
+        : ""} for "{searchQuery}"
+        </p>
+        
+        <!-- Use filteredResponses instead of responses -->
+        {#each filteredResponses as response}
         {@const maxLabelLength = Math.max(...fields.map(field => field.label.length))}
         {@const labelWidth = `${maxLabelLength * 0.6}rem`}
         <Card class="hover:shadow-lg transition-shadow space-y-4 mb-2">
@@ -284,28 +282,28 @@ function getFieldValue(item: NewSubmissionData) {
                     <p>{formatDate(response.createdAt)}</p>
                 </div>
             </CardHeader>
-                <CardContent>
+            <CardContent>
                     <div class="flex flex-col items-center md:grid md:grid-cols-[auto_1fr] gap-2 mb-1" style="grid-template-columns: {labelWidth} auto;">
                         {#if response.matchingData.length > 0}
                             {#each response.matchingData as entry, index}
                                 <p class="text-gray-400 truncate">{fieldLabelFromFieldId(entry.field.id)}:</p>
                                 <p class="font-semibold">{entry.submitted.value}</p>
                             {/each}
-                        {:else}
+                            {:else}
                             {#each response.data.slice(0, lineLimit) as entry, index}
                                 <p class="text-gray-400 truncate">{fieldLabelFromFieldId(entry.field.id)}:</p>
                                 <p class="font-semibold">{entry.submitted.value}</p>
                             {/each}
                             {#if response.data.length > lineLimit}
-                                <Accordion type="single" collapsible class="w-full">
+                            <Accordion type="single" collapsible class="w-full">
                                     <AccordionItem value="additional-items">
                                         <AccordionTrigger
                                         class="py-2 px-0 text-gray-100 italic hover:no-underline"
                                         >
                                         +{response.data.length - lineLimit} more
-                                        </AccordionTrigger>
-                                        <AccordionContent>
-                                            <div class="grid grid-cols-[auto_1fr] gap-2 mb-1">
+                                    </AccordionTrigger>
+                                    <AccordionContent>
+                                        <div class="grid grid-cols-[auto_1fr] gap-2 mb-1">
                                                 {#each response.data.slice(lineLimit) as entry, index}
                                                     <p class="font-semibold">
                                                         {fields[index + lineLimit].label}:
@@ -326,19 +324,19 @@ function getFieldValue(item: NewSubmissionData) {
                 <Card class="p-8 text-center">
                     <p class="text-muted-foreground">
                     No results found for "{searchQuery}"
-                    </p>
-                </Card>
+                </p>
+            </Card>
             {/if}
-        {/each}
-    {/if}
-    {#if !searchQuery}
-        {#each responses as response}
+            {/each}
+            {/if}
+            {#if !searchQuery}
+            {#each responses as response}
             {@const maxLabelLength = Math.max(...fields.map(field => field.label.length))}
             {@const labelWidth = `${maxLabelLength * 0.6}rem`}
             <Card class="hover:shadow-lg transition-shadow space-y-4 mb-4">
                 <CardHeader class="flex justify-between mb-3">
-                        <div
-                        class="flex items-center gap-x-2 text-gray-200 border px-2 rounded-lg bg-gray-500/30 -ml-1"
+                    <div
+                    class="flex items-center gap-x-2 text-gray-200 border px-2 rounded-lg bg-gray-500/30 -ml-1"
                         >
                         <Calendar class="h-4 w-4" />
                         <p>{formatDate(response.createdAt)}</p>
@@ -347,13 +345,13 @@ function getFieldValue(item: NewSubmissionData) {
                 <CardContent>
                     <div class="flex flex-col items-center md:grid md:grid-cols-[auto_1fr] gap-2 mb-1" style="grid-template-columns: {labelWidth} auto;">
                         {#each response.data.slice(0, lineLimit) as entry, index}
-                            <p class="text-gray-400 truncate">{fieldLabelFromFieldId(entry.field.id)}:</p>
-                            <p class="font-semibold">{entry.submitted.value}</p>
+                        <p class="text-gray-400 truncate">{fieldLabelFromFieldId(entry.field.id)}:</p>
+                        <p class="font-semibold">{entry.submitted.value}</p>
                         {/each}
 
                         {#if response.data.length > lineLimit}
-                            <Accordion type="single" collapsible class="w-full col-span-2">
-                                <AccordionItem value="additional-items">
+                        <Accordion type="single" collapsible class="w-full col-span-2">
+                            <AccordionItem value="additional-items">
                                     <AccordionTrigger
                                     class="py-2 px-0 text-gray-100 italic hover:no-underline"
                                     >
@@ -376,5 +374,6 @@ function getFieldValue(item: NewSubmissionData) {
                 </CardContent>
             </Card>
         {/each}
-    {/if} -->
+        {/if}
+    </div>
 </div>
