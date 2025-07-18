@@ -112,9 +112,13 @@ function getFieldValue(item: NewSubmissionData) {
     }
   }
 
-</script>
+const uniqueFields = responses.length > 0 ? responses[0].data.map(entry => entry.field) : [];
 
-<div class="p-6 space-y-8 max-w-[calc(100vw-var(--sidebar-width)-15px)]">
+</script>
+<!-- this is the width I had to use on this outer div for the scrolling table -->
+<!-- max-w-[calc(100vw-var(--sidebar-width)-15px)] -->
+
+<div class="p-6 space-y-8">
   <div class="flex items-center gap-4 mb-4">
     <Button variant="ghost" size="sm" href={`/admin/${data.tenant?.slug}/forms`} class="gap-2">
       <ArrowLeft class="h-4 w-4" />
@@ -155,6 +159,35 @@ function getFieldValue(item: NewSubmissionData) {
             </div>
         </CardContent>
     </Card>
+
+    <div class="w-full h-[calc(100lvh-402px)] grid lg:grid-cols-2 sm:grid-cols-1 xl:grid-cols-3 gap-x-4 overflow-y-scroll">
+        {#each uniqueFields as field}
+            <table class="rounded-xl border overflow-hidden mb-4">
+                <colgroup>
+                    <col class="w-[200px]">
+                    <col class="w-[400px]">
+                </colgroup>
+                <thead>
+                    <tr class="text-center bg-accent">
+                        <th class="border-b border-r p-2">Submitted Date</th>
+                        <th class="border-b p-2">{fieldLabelFromFieldId(field.id)}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {#each responses as response}
+                        {@const fieldEntry = response.data.find(entry => entry.field.id === field.id)}
+                        <tr class="text-center border-x not-last:border-b ">
+                            <td class="border-r p-2 last:rounded-b-xl"><div class="inline-flex gap-x-3 bg-accent/50 py-1 px-2 rounded-lg border">
+                                <Calendar class="text-white/70"/>
+                                {formatDate(new Date(response.createdAt))}
+                            </div></td>
+                            <td class="border-l p-2">{fieldEntry ? getFieldValue(fieldEntry) : '-'}</td>
+                        </tr>
+                    {/each}
+                </tbody>
+            </table>
+        {/each}
+    </div>
 
     <!-- The table below shows the submission date, and the amount of answers provided. Upon clicking the row, you can then see the full response from the survey.  -->
 
@@ -222,7 +255,7 @@ function getFieldValue(item: NewSubmissionData) {
     </Card> -->
 
     <!-- Desktop View using a side-scrolling table-->
-    <div class="hidden lg:block overflow-x-scroll rounded-xl border">
+    <!-- <div class="hidden lg:block overflow-x-scroll rounded-xl border">
         <table class="w-full ">
             <thead class="bg-accent/50 text-lg">
                 <tr class="grid py-2" style="grid-template-columns: repeat({data.fields.length + 1}, minmax(280px, 1fr))">
@@ -253,20 +286,20 @@ function getFieldValue(item: NewSubmissionData) {
                 {/each}
             </tbody>
         </table>
-    </div>
+    </div> -->
     
     <!-- Mobile view using cards, and accordion -->
-    <div class="block lg:hidden">
+    <!-- <div class="block lg:hidden"> -->
         <!-- Show results count when searching -->
-        {#if searchQuery.length > 0}
+        <!-- {#if searchQuery.length > 0}
         <p class="text-sm text-muted-foreground mb-4">
             Found {filteredResponses.length} result{filteredResponses.length !== 1
         ? "s"
         : ""} for "{searchQuery}"
-        </p>
+        </p> -->
         
         <!-- Use filteredResponses instead of responses -->
-        {#each filteredResponses as response}
+        <!-- {#each filteredResponses as response}
         {@const maxLabelLength = Math.max(...fields.map(field => field.label.length))}
         {@const labelWidth = `${maxLabelLength * 0.6}rem`}
         <Card class="hover:shadow-lg transition-shadow space-y-4 mb-2">
@@ -371,5 +404,5 @@ function getFieldValue(item: NewSubmissionData) {
             </Card>
         {/each}
         {/if}
-    </div>
+    </div> -->
 </div>
