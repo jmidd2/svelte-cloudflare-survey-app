@@ -8,9 +8,14 @@ export const load = async function ({ locals, params }) {
   if (!survey)
     return error(constants.HTTP_STATUS_NOT_FOUND, 'survey not found');
 
-  const responses = await getResponsesByFormId(locals.db, survey.id);
-  const fields = await getFormFields(locals.db, survey.id)
-
+  // const responses = await getResponsesByFormId(locals.db, survey.id);
+  // const fields = await getFormFields(locals.db, survey.id)
+  const test = await locals.db.query.formFields.findMany({
+    with:{
+      fieldSubmissions: {with: {formSubmission: true}}
+    }
+  })
+  console.log(test)
   return {
     survey,
     responses,

@@ -19,6 +19,16 @@ import {
 import type { NewSubmissionData } from '$lib/server/db/schema.js';
   import { FIELD_LABELS } from '$lib/utils/form-fields/index.js';
   import Badge from '$lib/components/ui/badge/badge.svelte';
+  import { DropdownMenu } from '$lib/components/ui/dropdown-menu';
+  import DropdownMenuTrigger from '$lib/components/ui/dropdown-menu/dropdown-menu-trigger.svelte';
+  import DropdownMenuContent from '$lib/components/ui/dropdown-menu/dropdown-menu-content.svelte';
+  import DropdownMenuLabel from '$lib/components/ui/dropdown-menu/dropdown-menu-label.svelte';
+  import DropdownMenuItem from '$lib/components/ui/dropdown-menu/dropdown-menu-item.svelte';
+  import { Checkbox } from '$lib/components/ui/checkbox';
+  import PopoverTrigger from '$lib/components/ui/popover/popover-trigger.svelte';
+  import PopoverContent from '$lib/components/ui/popover/popover-content.svelte';
+  import { Popover } from '$lib/components/ui/popover';
+  import { SvelteMap } from 'svelte/reactivity';
 
 const { data } = $props();
 const survey = $derived(data.survey);
@@ -112,7 +122,24 @@ function getFieldValue(item: NewSubmissionData) {
     }
   }
 
-const uniqueFields = responses.length > 0 ? responses[0].data.map(entry => entry.field) : [];
+// const uniqueFields = fields.length > 0 ? fields.map(entry => entry) : [];
+let uniqueFields
+
+const groupMap = $derived.by(()=>{
+    const groupedByMap = new Map<string, Array<{ createdAt: Date;  submitted: { value: string | number | boolean } | { values: Array<string | number> } } >>();
+    for (const r of responses) {
+        for (const fieldResponse of r.data) {
+            if (groupedByMap.has(fieldResponse.field.id)) {
+                groupedByMap.get(fieldResponse.field.id)?.push({ createdAt: r.createdAt, submitted: fieldResponse.submitted})
+            } else {
+                groupedByMap.set(fieldResponse.field.id, [{ createdAt: r.createdAt, submitted: fieldResponse.submitted}])
+            }
+        }
+    }
+    return groupedByMap
+})
+
+$inspect(groupMap)
 
 </script>
 <!-- this is the width I had to use on this outer div for the scrolling table -->
@@ -144,7 +171,7 @@ const uniqueFields = responses.length > 0 ? responses[0].data.map(entry => entry
                     />
                 </div>
 
-                <Select type="single" bind:value={selectedStatus} >
+                <!-- <Select type="single" bind:value={selectedStatus} >
                     <SelectTrigger class="w-full sm:w-48">
                         <Filter class="h-4 w-4 mr-2" />
                         {selectedStatus === FormStates.ALL ? "All" : selectedStatus}
@@ -155,11 +182,64 @@ const uniqueFields = responses.length > 0 ? responses[0].data.map(entry => entry
                         <SelectItem value="Draft">Draft</SelectItem>
                         <SelectItem value="Archived">Archived</SelectItem>
                     </SelectContent>
-                </Select>
+                </Select> -->
+
+                <Popover>
+                    <PopoverTrigger  class="w-full sm:w-48 inline-flex content-center">
+                        <Filter class="h-5 w-5 mr-2" />
+                        Select Questions
+                    </PopoverTrigger>
+                    <PopoverContent side="left" align="start">
+                        {#each fields as field}
+                            <div class="inline-flex content-center"><Checkbox />{fieldLabelFromFieldId(field.id)}</div>
+                        {/each}
+                    </PopoverContent>
+                </Popover>
             </div>
         </CardContent>
     </Card>
-
+    <div>
+        {#each groupMap as [key, val]}
+        <Card>
+            <CardContent>
+                    <div>{fields[key].label}: {JSON.stringify(val)}</div>
+                    
+                </CardContent>
+            </Card>
+        {/each}
+    </div>
+    {#if searchQuery.length > 0}
+    <div class="w-full grid lg:grid-cols-2 sm:grid-cols-1 xl:grid-cols-3 gap-x-4 overflow-y-scroll">
+        {#each uniqueFields as field}
+            <table class="rounded-xl border overflow-hidden mb-4">
+                <colgroup>
+                    <col class="w-[200px]">
+                    <col class="w-[400px]">
+                </colgroup>
+                <thead>
+                    <tr class="text-center bg-accent">
+                        <th class="border-b border-r p-2">Submitted Date</th>
+                        <th class="border-b p-2">{fieldLabelFromFieldId(field.id)}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {#each filteredResponses as response}
+                        {@const fieldEntry = response.data.find(entry => entry.field.id === field.id)}
+                        <tr class="text-center border-x not-last:border-b ">
+                            <td class="border-r p-2 last:rounded-b-xl">
+                                <div class="inline-flex gap-x-3 bg-accent/50 py-1 px-2 rounded-lg border">
+                                    <Calendar class="text-white/70"/>
+                                    {formatDate(new Date(response.createdAt))}
+                                </div>
+                            </td>
+                            <td class="border-l p-2">{fieldEntry ? getFieldValue(fieldEntry) : '-'}</td>
+                        </tr>
+                    {/each}
+                </tbody>
+            </table>
+        {/each}
+    </div>
+    {:else}
     <div class="w-full h-[calc(100lvh-402px)] grid lg:grid-cols-2 sm:grid-cols-1 xl:grid-cols-3 gap-x-4 overflow-y-scroll">
         {#each uniqueFields as field}
             <table class="rounded-xl border overflow-hidden mb-4">
@@ -177,7 +257,7 @@ const uniqueFields = responses.length > 0 ? responses[0].data.map(entry => entry
                     {#each responses as response}
                         {@const fieldEntry = response.data.find(entry => entry.field.id === field.id)}
                         <tr class="text-center border-x not-last:border-b ">
-                            <td class="border-r p-2 last:rounded-b-xl"><div class="inline-flex gap-x-3 bg-accent/50 py-1 px-2 rounded-lg border">
+                            <td class="border-r p-2 last:rounded-b-xl text-sm"><div class="inline-flex gap-x-3 bg-accent/50 py-1 px-2 rounded-lg border">
                                 <Calendar class="text-white/70"/>
                                 {formatDate(new Date(response.createdAt))}
                             </div></td>
@@ -188,6 +268,8 @@ const uniqueFields = responses.length > 0 ? responses[0].data.map(entry => entry
             </table>
         {/each}
     </div>
+
+    {/if}
 
     <!-- The table below shows the submission date, and the amount of answers provided. Upon clicking the row, you can then see the full response from the survey.  -->
 

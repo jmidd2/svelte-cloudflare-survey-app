@@ -88,7 +88,8 @@ export async function getResponsesByFormId(
   return db
     .select().from(schema.submissions)
     .where(eq(schema.submissions.formId, formId))
-    .orderBy(desc(schema.submissions.createdAt));
+    .orderBy(desc(schema.submissions.createdAt))
+    .groupBy(schema.submissions.id);
 }
 
 
@@ -201,11 +202,18 @@ export async function addFormField(
  * Get all fields for a form
  */
 export async function getFormFields(db: DrizzleClient, formId: string) {
-  return db
+  const results = await  db
     .select()
     .from(schema.formFields)
     .where(eq(schema.formFields.formId, formId))
     .orderBy(asc(schema.formFields.orderIndex));
+    let i = 0
+    return results.reduce((acc, val, index) => {
+      i++;
+      acc[val.id] = val
+      acc.length = i;
+      return acc
+    }, {length:i})
 }
 
 /**

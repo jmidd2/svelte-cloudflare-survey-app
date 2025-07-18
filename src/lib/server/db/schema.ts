@@ -1,6 +1,7 @@
 import type { InferMember, Invitation } from 'better-auth/plugins';
 import { type InferSelectModel, relations, type SQL, sql } from 'drizzle-orm';
 import {
+  int,
   integer,
   sqliteTable,
   text,
@@ -276,6 +277,14 @@ export const formFields = sqliteTable('form_fields', {
   ...timestamps,
 });
 
+export const submissionFormFields = sqliteTable('submission_form_fields', {
+  id: int().primaryKey({ autoIncrement: true }),
+  submissionId: text('submission_id').notNull().references(() => submissions.id, { onDelete: 'cascade'}),
+  fieldId: text('field_id').notNull().references(() => formFields.id, { onDelete: 'cascade'}),
+  data: text('data', { mode: 'json' }).$type<string | number | boolean | Array<string> | Array<number>>().notNull(), // JSON string with form data
+  ...timestamps
+})
+
 export type NewSubmissionData =
   | {
       field: {
@@ -318,7 +327,7 @@ export const submissions = sqliteTable('submissions', {
   formId: text('form_id')
     .notNull()
     .references(() => forms.id, { onDelete: 'cascade' }),
-  data: text('data', { mode: 'json' }).$type<NewSubmissionData[]>().notNull(), // JSON string with form data
+  // data: text('data', { mode: 'json' }).$type<NewSubmissionData[]>().notNull(), // JSON string with form data
   ipHash: text('ip_hash'), // Anonymized IP hash
   userAgentHash: text('user_agent_hash'), // Anonymized user agent hash
   createdAt: timestamps.createdAt,
@@ -357,12 +366,24 @@ export const formsRelations = relations(forms, ({ many, one }) => ({
   submissions: many(submissions),
 }));
 
-export const formFieldRelations = relations(formFields, ({ one }) => ({
+export const formFieldRelations = relations(formFields, ({ one, many }) => ({
   form: one(forms, {
     fields: [formFields.formId],
     references: [forms.id],
   }),
+  fieldSubmissions: many(submissionFormFields)
 }));
+
+export const submissionFormFieldsRelations = relations(submissionFormFields,  ({ one }) => ({
+  field: one(formFields, {
+    fields: [submissionFormFields.fieldId],
+    references: [formFields.id],
+  }),
+  formSubmission: one(submissions, {
+    fields: [submissionFormFields.submissionId],
+    references: [submissions.id],
+  }),
+}))
 
 export const submissionRelations = relations(submissions, ({ one }) => ({
   form: one(forms, {
