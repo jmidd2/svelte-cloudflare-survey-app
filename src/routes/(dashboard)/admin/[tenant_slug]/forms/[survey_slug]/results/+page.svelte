@@ -16,6 +16,9 @@ import {
   SelectItem,
   SelectTrigger,
 } from '$lib/components/ui/select';
+import type { NewSubmissionData } from '$lib/server/db/schema.js';
+  import { FIELD_LABELS } from '$lib/utils/form-fields/index.js';
+  import Badge from '$lib/components/ui/badge/badge.svelte';
 
 const { data } = $props();
 const survey = $derived(data.survey);
@@ -100,15 +103,16 @@ const toggleRowExpansion = (rowId: string) => {
     expandedRows = newExpanded
 }
 
-function getFieldValue(item) {
+function getFieldValue(item: NewSubmissionData) {
     switch (item.field.type) {
       case "checkbox":
-        return item.submitted.values.map(x => " " + x).join(",");
-      case "radio":
-      case "select":
-        return item.submitted.value;
+    return item.submitted.values.map((value: string | number) => " " + value).join(",");
+      case "yes-no":
+        return item.submitted.value ? "Yes" : "No";
+      case "date":
+        return formatDate(new Date(+item.submitted.value));
       default:
-        return "N/A";
+        return typeof item.submitted.value === "string" ? (item.submitted.value.slice(0,1).toUpperCase() + item.submitted.value.slice(1)) : item.submitted.value;
     }
   }
 
@@ -155,7 +159,6 @@ function getFieldValue(item) {
             </div>
         </CardContent>
     </Card>
-    <!-- This is the table version of the survey results. Needs to be fixed to scroll properly at all screen sizes -->
     <Card class="bg-black/0 p-0">
         <CardContent class="p-0">
             <table class="w-full">
@@ -164,7 +167,7 @@ function getFieldValue(item) {
                         <th class="text-center">Date/Time Submitted</th>
                         <th class="text-center">Something</th>
                         <th class="text-center">Extra</th>
-                        <th class="text-center">Status</th> <!--Maybe something to show if all fields have been completed, archived survey-->
+                        <th class="text-center">Answers</th> <!--Maybe something to show if all fields have been completed, archived survey-->
                         <th></th>
                     </tr>
                 </thead>
@@ -177,14 +180,14 @@ function getFieldValue(item) {
                                     {formatDate(new Date(response.createdAt))}
                                 </div>
                                 </td>
-                            <td class="text-center content-center">
-                                N/A
+                            <td class="text-center content-center text-muted">
+                               -
+                            </td>
+                            <td class="text-center content-center text-muted">
+                               -
                             </td>
                             <td class="text-center content-center">
-                                N/A
-                            </td>
-                            <td class="text-center content-center">
-                                N/A
+                                {response.data.length} / {fields.length}
                             </td>
                             <td class="content-center">
                                 {#if expandedRows.has(response.id)}
@@ -198,14 +201,16 @@ function getFieldValue(item) {
                             <tr>
                                 <td>
                                     <div class="w-full bg-card p-4">
-                                        <h4 class="mb-4">Full Response</h4>
-                                        <div class="grid  sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
-                                            {#each response.data as item}
+                                            <h4 class="mb-4">Full Response</h4>
+                                            <div class="grid sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
+                                                {#each response.data as item}
                                                 <div class="flex flex-col">
-                                                    <p class="text-secondary text-left">{fieldLabelFromFieldId(item.field.id)}:</p>
+                                                        <p class="text-secondary text-left">{fieldLabelFromFieldId(item.field.id)}: <Badge class="text-[10px] items-center ml-2 opacity-50" variant="secondary">
+                                                            {FIELD_LABELS[item.field.type]}
+                                                        </Badge></p>
                                                     <p class="text-left mb-2">{getFieldValue(item)}</p>
                                                 </div>
-                                            {/each}
+                                                {/each}
                                         </div>
                                     </div>
                                 </td>
