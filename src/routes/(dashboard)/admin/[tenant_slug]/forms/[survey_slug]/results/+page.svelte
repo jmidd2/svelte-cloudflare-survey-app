@@ -31,48 +31,44 @@ const FormStates = {
     ACTIVE: 'Active',
     DRAFT: 'Draft',
     ARCHIVED: 'Archived',
-};
-let selectedStatus = $state<keyof typeof FormStates>(FormStates.ALL);
+} as const;
+
+type FormState = (typeof FormStates)[keyof typeof FormStates];
+
+let selectedStatus: FormState = $state(FormStates.ALL);
 $inspect(data);
 
-// Add filtered responses derived state
-// Try using $state instead of $derived
-let filteredResponses = $state([]);
-
-// Use $effect to handle the filtering
-$effect(() => {
+const filteredResponses = $derived.by(() => {
     if (!searchQuery.trim()) {
-        filteredResponses = responses.map(response => ({
-        ...response,
-      matchingData: response.data, // Show all data when no search
-    }));
-    return;
+        return responses.map(response => ({
+            ...response,
+            matchingData: response.data, // Show all data when no search
+        }));
     }
 
     const query = searchQuery.toLowerCase().trim();
 
-    const filtered = responses
+    return responses
         .map(response => {
-      // Find only the matching field-value pairs
-        const matchingData = response.data.filter((entry, index) => {
-        const fieldLabel = fields[index]?.label?.toLowerCase() || '';
-        const fieldLabelMatch = fieldLabel.includes(query);
+            // Find only the matching field-value pairs
+            const matchingData = response.data.filter((entry, index) => {
+                const fieldLabel = fields[index]?.label?.toLowerCase() || '';
+                const fieldLabelMatch = fieldLabel.includes(query);
 
-        const submittedValue =
-            entry.submitted?.value?.toString().toLowerCase() || '';
-        const valueMatch = submittedValue.includes(query);
+                const submittedValue =
+                    entry.submitted?.value?.toString().toLowerCase() || '';
+                const valueMatch = submittedValue.includes(query);
 
-        return fieldLabelMatch || valueMatch;
-    });
-    
-    return {
-        ...response,
-        matchingData,
-        originalDataLength: response.data.length,
-    };
-}).filter(response => response.matchingData.length > 0); // Only keep responses that have matches
-
-filteredResponses = filtered;
+                return fieldLabelMatch || valueMatch;
+            });
+            
+            return {
+                ...response,
+                matchingData,
+                originalDataLength: response.data.length,
+            };
+        })
+        .filter(response => response.matchingData.length > 0); // Only keep responses that have matches
 });
 
 //TODO: move to utils file
