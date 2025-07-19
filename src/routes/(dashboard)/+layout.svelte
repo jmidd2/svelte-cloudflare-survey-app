@@ -37,10 +37,8 @@ let toastId: string | number | undefined;
             isSiteAdmin={data.user?.role?.includes('admin')}>
 </Header>
 
-<Sidebar.Provider class="top-[65px] lg:min-h-[calc(100vh-65px)]">
-  <div class="flex w-full">
-    {@render children()}
-  </div>
+<Sidebar.Provider class="flex w-full">
+  {@render children()}
 </Sidebar.Provider>
 <!-- Footer -->
 <Footer />

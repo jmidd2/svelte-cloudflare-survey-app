@@ -93,13 +93,12 @@ const navigationItems = $derived<NavigationItem[]>([
     href: `/admin/${tenant?.slug}/settings`,
     icon: Settings,
     current: pathname.includes('/settings'),
-    disabled: true,
   },
 ]);
 </script>
 
 <Sidebar.Root class={`
-    fixed top-[65px] z-20 w-(--sidebar-width) transform translate-x-0 lg:static lg:inset-0
+    fixed top-[65px] z-20 w-(--sidebar-width) transform translate-x-0
   `} variant="sidebar" collapsible="icon">
   <Sidebar.Header>
     <div class="flex items-center gap-3 w-full ">

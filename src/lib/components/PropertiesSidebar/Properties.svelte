@@ -1,4 +1,7 @@
 <script lang="ts">
+import { PlusIcon, XIcon } from '@lucide/svelte';
+import { toast } from 'svelte-sonner';
+import { z } from 'zod/v4';
 import { applyAction, enhance } from '$app/forms';
 import EditFieldOptionList from '$lib/components/EditFieldOptionList.svelte';
 import { Button } from '$lib/components/ui/button/index.js';
@@ -25,9 +28,6 @@ import {
 } from '$lib/utils/index.js';
 import { saveFieldSchema } from '$lib/validation-schema';
 import { getSurveyEditor } from '$stores/survey-editor.svelte';
-import { PlusIcon, XIcon } from '@lucide/svelte';
-import { toast } from 'svelte-sonner';
-import { z } from 'zod/v4';
 
 const editor = getSurveyEditor();
 const selectedField = $derived(editor.selectedField);
@@ -47,7 +47,7 @@ function parseFormData(formData: FormData) {
 }
 </script>
 {#if selectedField}
-  <div class="h-full bg-card flex flex-col">
+  <div class="lg:sticky lg:top-[65px] h-[calc(100vh-65px)] bg-card flex flex-col">
     <!-- Header -->
     <div class="flex items-center justify-between p-4 border-b border-border">
       <h2 class="font-semibold">Properties</h2>
