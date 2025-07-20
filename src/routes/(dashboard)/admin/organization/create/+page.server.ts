@@ -1,14 +1,10 @@
-import { type AuthApi, canManageOrganization } from '$lib/server/auth';
-import { type InsertOrganization, organizations } from '$lib/server/db/schema';
-import { requireActionPermission, withSuperForm } from '$lib/server/utils/';
-import { generateUrlSlug } from '$lib/utils';
-import { createOrganizationSchema } from '$lib/validation-schema';
 import { constants } from 'node:http2';
 import { type Actions, fail, redirect } from '@sveltejs/kit';
-import { generateId } from 'better-auth';
-import { APIError } from 'better-call';
 import { superValidate } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
+import { type AuthApi, checkOrganizationSlug } from '$lib/server/auth';
+import { withSuperForm } from '$lib/server/utils/';
+import { createOrganizationSchema } from '$lib/validation-schema';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, request }) => {
@@ -92,45 +88,5 @@ async function createOrganization(
       error: e,
       message: 'There was an error creating the Organization.',
     };
-  }
-}
-
-async function checkOrganizationSlug(
-  authApi: AuthApi,
-  headers: Headers,
-  slug: string
-): Promise<boolean> {
-  try {
-    /**
-     *
-     * Who made this api??
-     * this will throw an APIError like:
-     *
-     * [APIError: slug is taken] {
-     *   status: 'BAD_REQUEST',
-     *   body: { code: 'SLUG_IS_TAKEN', message: 'slug is taken' },
-     *   headers: {},
-     *   statusCode: 400
-     * }
-     * when the slug is taken and { status: true } when it's available
-     * so now instead of handling this with a false status or something, it has to be done in the catch
-     */
-    await authApi.checkOrganizationSlug({
-      headers,
-      body: {
-        slug,
-      },
-    });
-
-    return true;
-  } catch (e) {
-    if (e instanceof APIError) {
-      if (e.body?.code === 'SLUG_IS_TAKEN') {
-        return false;
-      }
-    }
-
-    console.error('error creating organization', e);
-    throw e;
   }
 }

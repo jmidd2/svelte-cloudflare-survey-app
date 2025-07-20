@@ -1,6 +1,8 @@
 import { type Auth, type BetterAuthOptions, betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin, emailOTP, organization } from 'better-auth/plugins';
+import { sveltekitCookies } from 'better-auth/svelte-kit';
+import { getRequestEvent } from '$app/server';
 import type { DrizzleClient } from '../db';
 import * as schema from '../db/schema';
 import type { EmailService } from '../email';
@@ -77,6 +79,7 @@ function createBetterAuth(
       },
     },
     plugins: [
+      sveltekitCookies(getRequestEvent),
       admin(),
       emailOTP({
         async sendVerificationOTP({ otp, email, type }) {

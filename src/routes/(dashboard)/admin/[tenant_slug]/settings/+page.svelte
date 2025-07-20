@@ -96,10 +96,15 @@ const updateForm = superForm(data.form, {
 
       // toast.success('Form Saved!');
     }
+
     if (type === 'failure') {
       pageState.isLoading = false;
       if (data?.message) toast.error(data.message);
       else toast.error('There was an error');
+    }
+
+    if (type === 'success') {
+      toast.success('Organization saved!');
     }
   },
   onUpdated: ({ form: { valid, message, data } }) => {
