@@ -125,13 +125,12 @@ function toggleFieldSelection(fieldId: string) {
     </div>
     
     <div class="flex flex-col">
-        <h1 class="text-3xl font-bold text-foreground">{survey.title}</h1>
+        <h1 class="text-3xl font-bold text-foreground">{survey.title} - Results</h1>
         <p class="text-muted-foreground mt-1">{survey.description}</p>
     </div>
     
-    <p class="text-xl font-semibold mb-4">Results</p>
     
-    <Card class="mb-4 w-3/4">
+    <Card class="mb-4 max-w-[50rem] mx-auto">
         <CardContent class="px-6">
             <div class="flex flex-col sm:flex-row gap-4">
                 <div class="relative flex-1">
@@ -148,7 +147,7 @@ function toggleFieldSelection(fieldId: string) {
                         <Filter class="h-4 w-4" />
                         Select Questions ({selectedFields.size}/{fields.length})
                     </PopoverTrigger>
-                    <PopoverContent side="left" align="start" class="w-80">
+                    <PopoverContent  align="start" class="w-60">
                         <div class="space-y-2">
                             <div class="font-medium text-sm mb-3">Select questions to display:</div>
                             {#each fields as field}
@@ -157,9 +156,9 @@ function toggleFieldSelection(fieldId: string) {
                                         checked={selectedFields.has(field.id)}
                                         onCheckedChange={() => toggleFieldSelection(field.id)}
                                     />
-                                    <label class="text-sm cursor-pointer flex-1" onclick={() => toggleFieldSelection(field.id)}>
+                                    <button type="button" class="text-sm text-start cursor-pointer flex-1" onclick={() => toggleFieldSelection(field.id)}>
                                         {field.label}
-                                    </label>
+                                    </button>
                                 </div>
                             {/each}
                         </div>
@@ -170,42 +169,46 @@ function toggleFieldSelection(fieldId: string) {
     </Card>
 
     {#if searchQuery.length > 0}
-        <p class="text-sm text-muted-foreground mb-4">
+        <p class="text-sm text-muted-foreground mb-4 text-center">
             Found {filteredSubmissions.length} result{filteredSubmissions.length !== 1 ? "s" : ""} 
             {#if searchQuery}for "{searchQuery}"{/if}
         </p>
     {/if}
 
-    <!-- Display results in a grid of tables, one per selected field -->
-    <div class="w-3/4 grid lg:grid-cols-1 sm:grid-cols-1 xl:grid-cols-1 gap-4 overflow-y-scroll max-h-[calc(100vh-400px)]">
-        {#each fields.filter(field => selectedFields.has(field.id)) as field}
-            <Dialog>
+    <!-- Display results in a grid of tables, one per selected field    -->
+    <div class="mx-auto max-w-[50rem] grid lg:grid-cols-1 sm:grid-cols-1 xl:grid-cols-1 gap-4 max-h-[calc(100vh-404px)]" >
+        {#each fields.filter(field => selectedFields.has(field.id)) as field, i}
+            <Dialog >
                 <DialogTrigger>
-                    <Card class="overflow-hidden" onclick={() =>{}}>
+                    <Card class=" {i === fields.length -1 ? 'mb-4' : ''}">
                         <CardHeader class=" py-1">
                             <h3 class="font-medium text-center">{field.label}</h3>
                 </CardHeader>
                 <!-- <Separator /> -->
                 <CardContent class="p-0">
-                    <div class="max-h-96 ">
+                    <div class="max-h-96">
                         <div class="grid grid-cols-[1fr_auto_1fr]">
-                            <div class="w-full content-center text-center text-2xl">
-                                <div class="inline-flex items-end gap-x-2">{field.fieldSubmissions.length}
-                                    <p class="text-sm text-gray-400">{field.fieldSubmissions.length > 1 ? 'submissions' : 'submission'}</p>
+                            <div class=" content-center text-center text-2xl">
+                                <div class="inline-flex items-end gap-x-2">{searchQuery ? filteredSubmissions.length : field.fieldSubmissions.length}
+                                    {#if (searchQuery && filteredSubmissions.length > 1) || (!searchQuery && field.fieldSubmissions.length > 1)}
+                                        <p class="text-sm text-gray-400">submissions</p>
+                                    {:else}
+                                        <p class="text-sm text-gray-400">submission</p>
+                                    {/if}
                                 </div>
                             </div>
                             <Separator orientation="vertical"/>
                             <div>
-                                <p class="mb-4">Latest Responses:</p>
+                                <p class="mb-4 italic text-sm">Latest Responses:</p>
                                 {#each filteredSubmissions
                                         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
                                         .filter(submission => submission.fields.get(field.id))
                                         .slice(0, LATEST_LIMIT) as submission}
                                         {@const fieldData = submission.fields.get(field.id)}
                                     
-                                        <div class=" hover:bg-accent/20 grid grid-cols-[1fr_1fr] mx-20">
-                                            <p class="place-self-center">{formatDate(submission.createdAt)}</p>
-                                            <p class="p-2 text-sm font-medium">
+                                        <div class=" grid grid-cols-[auto_1fr] mx-4 mb-2 pb-2 not-last:border-b">
+                                            <p class="inline-flex items-center gap-x-2 px-2 rounded-lg border bg-accent/50 text-white/50"><Calendar class="w-4 h-4"/>{formatDate(submission.createdAt)}</p>
+                                            <p class="p-2 text-sm font-medium ">
                                                 {getFieldValue(fieldData.data, field.type)}
                                             </p>
                                         </div>
@@ -253,7 +256,7 @@ function toggleFieldSelection(fieldId: string) {
     </div>
 
     {#if filteredSubmissions.length === 0 && (searchQuery.length > 0 || selectedFields.size < fields.length)}
-        <Card class="p-8 text-center">
+        <Card class="p-8 text-center max-w-[50rem] mx-auto">
             <p class="text-muted-foreground">
                 No results found. Try adjusting your search or field selection.
             </p>
