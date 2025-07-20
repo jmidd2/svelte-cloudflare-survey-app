@@ -20,4 +20,3 @@ export const load: LayoutServerLoad = async function ({
 };
 
 // TODO: Add prerender where needed like the pricing, contact, etc.
-// FIXME: Fields with options cannot be added for some reason

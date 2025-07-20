@@ -43,6 +43,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '$lib/components/ui/dialog';
+import {
+  FieldErrors,
+  FormControl,
+  FormField,
+  FormLabel,
+} from '$lib/components/ui/form';
 import { Input } from '$lib/components/ui/input';
 import { Label } from '$lib/components/ui/label';
 import {
@@ -68,8 +74,8 @@ const updateOrgSchema = z.object({
 const { data, form } = $props();
 
 let tenant = $derived(data.tenant);
-let isOwner = $derived(data.isOrgOwner);
-let isAdmin = $derived(data.isOrgAdmin);
+const isOrgOwner = $derived(data.tenant?.isOwner ?? false);
+const isOrgAdmin = $derived(data.tenant?.isAdmin ?? false);
 
 const updateForm = superForm(data.form, {
   resetForm: false,
@@ -110,7 +116,7 @@ const updateForm = superForm(data.form, {
   },
 });
 
-const { form: updateFormData, enhance: superEnhance } = updateForm;
+const { form: updateFormData, enhance: enhanceUpdate } = updateForm;
 
 // Get breadcrumb context for loading states
 // const breadcrumbStatus = getBreadcrumbContext();
@@ -140,8 +146,8 @@ let showDeleteDialog = $state(false);
 
 // Auto-generate slug from name
 $effect(() => {
-  if (!slugManuallyEdited && formData.name && formData.name !== tenant?.name) {
-    formData.slug = formData.name
+  if (!slugManuallyEdited && $updateFormData.name) {
+    $updateFormData.slug = $updateFormData.name
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '');
@@ -252,7 +258,7 @@ async function handleSubmit(event: Event) {
 
 // Handle organization deletion
 async function handleDeleteOrganization() {
-  if (!isOwner) {
+  if (!isOrgOwner) {
     toast.error('Only organization owners can delete the organization');
     return;
   }
@@ -336,7 +342,7 @@ const timezones = [
     </p>
   </div>
 
-  <form onsubmit={handleSubmit} class="space-y-8 pb-10">
+  <form method="POST" action="?/update-org" use:enhanceUpdate class="space-y-8 pb-10">
     <!-- Basic Information -->
     <Card>
       <CardHeader>
@@ -383,165 +389,199 @@ const timezones = [
 <!--        <Separator />-->
 
         <!-- Organization Name -->
-        <div class="space-y-2">
-          <Label for="name">Organization Name *</Label>
-          <Input
-              id="name"
-              bind:value={formData.name}
-              placeholder="Enter organization name"
-              required
-          />
-        </div>
+          <FormField form={updateForm} name="name">
+            <FormControl>
+              {#snippet children({props})}
+                <FormLabel>Organization Name *</FormLabel>
+                <Input
+                    {...props}
+                    bind:value={$updateFormData.name}
+                    placeholder="Enter organization name"
+                />
+                <FieldErrors />
+              {/snippet}
+            </FormControl>
+          </FormField>
 
         <!-- Organization Slug -->
-        <div class="space-y-2">
-          <Label for="slug">Organization URL *</Label>
-          <div class="flex items-center gap-2">
-            <span class="text-sm text-muted-foreground whitespace-nowrap">formbuilder.com/org/</span>
-            <Input
-                id="slug"
-                bind:value={formData.slug}
-                oninput={handleSlugChange}
-                placeholder="organization-slug"
-                class="flex-1"
-                required
-            />
-          </div>
-          <p class="text-sm text-muted-foreground">
-            This will be used in your organization's URL. Only lowercase letters, numbers, and hyphens allowed.
-          </p>
-        </div>
+          <FormField form={updateForm} name="slug">
+            <FormControl>
+              {#snippet children({props})}
+                <FormLabel>Organization URL *</FormLabel>
+                <div class="flex items-center gap-2">
+                  <span class="text-sm text-muted-foreground whitespace-nowrap">formbuilder.com/org/</span>
+                  <Input
+                      {...props}
+                      bind:value={$updateFormData.slug}
+                      oninput={handleSlugChange}
+                      placeholder="organization-slug"
+                      class="flex-1"
+                  />
+                </div>
+                <p class="text-sm text-muted-foreground">
+                  This will be used in your organization's URL. Only lowercase letters, numbers, and hyphens allowed.
+                </p>
+                <FieldErrors />
+              {/snippet}
+            </FormControl>
+          </FormField>
 
         <!-- Description -->
-        <div class="space-y-2">
-          <Label for="description">Description</Label>
-          <Textarea
-              id="description"
-              bind:value={formData.description}
-              placeholder="Brief description of your organization"
-              rows={3}
-          />
+          <FormField form={updateForm} name="description">
+            <FormControl>
+              {#snippet children({props})}
+                <FormLabel>Description</FormLabel>
+                <Textarea
+                    {...props}
+                    bind:value={$updateFormData.description}
+                    placeholder="Brief description of your organization"
+                    rows={3}
+                />
+                <FieldErrors />
+              {/snippet}
+            </FormControl>
+          </FormField>
+        <!-- Save Button -->
+        <div class="flex items-center justify-between">
+          <div class="text-sm text-muted-foreground">
+            {#if !isOrgAdmin}
+              <div class="flex items-center gap-2 text-amber-600">
+                <AlertTriangle class="h-4 w-4" />
+                You need admin permissions to modify these settings
+              </div>
+            {/if}
+          </div>
+
+          <Button type="submit" disabled={isLoading || !isOrgAdmin} class="min-w-32">
+            {#if isLoading}
+              <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              Saving...
+            {:else}
+              <SaveIcon class="h-4 w-4 mr-2" />
+              Save Changes
+            {/if}
+          </Button>
         </div>
       </CardContent>
     </Card>
 
     <!-- Contact Information -->
-    <Card>
-      <CardHeader>
-        <CardTitle class="flex items-center gap-2">
-          <Mail class="h-5 w-5" />
-          Contact Information
-        </CardTitle>
-        <CardDescription>
-          How people can reach your organization
-        </CardDescription>
-      </CardHeader>
-      <CardContent class="space-y-6">
-        <!-- Website -->
-        <div class="space-y-2">
-          <Label for="website" class="flex items-center gap-2">
-            <Globe class="h-4 w-4" />
-            Website
-          </Label>
-          <Input
-              id="website"
-              bind:value={formData.website}
-              placeholder="https://example.com"
-          />
-        </div>
+<!--    <Card>-->
+<!--      <CardHeader>-->
+<!--        <CardTitle class="flex items-center gap-2">-->
+<!--          <Mail class="h-5 w-5" />-->
+<!--          Contact Information-->
+<!--        </CardTitle>-->
+<!--        <CardDescription>-->
+<!--          How people can reach your organization-->
+<!--        </CardDescription>-->
+<!--      </CardHeader>-->
+<!--      <CardContent class="space-y-6">-->
+<!--        &lt;!&ndash; Website &ndash;&gt;-->
+<!--        <div class="space-y-2">-->
+<!--          <Label for="website" class="flex items-center gap-2">-->
+<!--            <Globe class="h-4 w-4" />-->
+<!--            Website-->
+<!--          </Label>-->
+<!--          <Input-->
+<!--              id="website"-->
+<!--              bind:value={formData.website}-->
+<!--              placeholder="https://example.com"-->
+<!--          />-->
+<!--        </div>-->
 
-        <!-- Email -->
-        <div class="space-y-2">
-          <Label for="email" class="flex items-center gap-2">
-            <Mail class="h-4 w-4" />
-            Contact Email
-          </Label>
-          <Input
-              id="email"
-              type="email"
-              bind:value={formData.email}
-              placeholder="contact@example.com"
-          />
-        </div>
+<!--        &lt;!&ndash; Email &ndash;&gt;-->
+<!--        <div class="space-y-2">-->
+<!--          <Label for="email" class="flex items-center gap-2">-->
+<!--            <Mail class="h-4 w-4" />-->
+<!--            Contact Email-->
+<!--          </Label>-->
+<!--          <Input-->
+<!--              id="email"-->
+<!--              type="email"-->
+<!--              bind:value={formData.email}-->
+<!--              placeholder="contact@example.com"-->
+<!--          />-->
+<!--        </div>-->
 
-        <!-- Phone -->
-        <div class="space-y-2">
-          <Label for="phone" class="flex items-center gap-2">
-            <Phone class="h-4 w-4" />
-            Phone Number
-          </Label>
-          <Input
-              id="phone"
-              bind:value={formData.phone}
-              placeholder="+1 (555) 123-4567"
-          />
-        </div>
+<!--        &lt;!&ndash; Phone &ndash;&gt;-->
+<!--        <div class="space-y-2">-->
+<!--          <Label for="phone" class="flex items-center gap-2">-->
+<!--            <Phone class="h-4 w-4" />-->
+<!--            Phone Number-->
+<!--          </Label>-->
+<!--          <Input-->
+<!--              id="phone"-->
+<!--              bind:value={formData.phone}-->
+<!--              placeholder="+1 (555) 123-4567"-->
+<!--          />-->
+<!--        </div>-->
 
-        <!-- Address -->
-        <div class="space-y-2">
-          <Label for="address" class="flex items-center gap-2">
-            <MapPin class="h-4 w-4" />
-            Address
-          </Label>
-          <Textarea
-              id="address"
-              bind:value={formData.address}
-              placeholder="123 Main St, City, State 12345"
-              rows={2}
-          />
-        </div>
-      </CardContent>
-    </Card>
+<!--        &lt;!&ndash; Address &ndash;&gt;-->
+<!--        <div class="space-y-2">-->
+<!--          <Label for="address" class="flex items-center gap-2">-->
+<!--            <MapPin class="h-4 w-4" />-->
+<!--            Address-->
+<!--          </Label>-->
+<!--          <Textarea-->
+<!--              id="address"-->
+<!--              bind:value={formData.address}-->
+<!--              placeholder="123 Main St, City, State 12345"-->
+<!--              rows={2}-->
+<!--          />-->
+<!--        </div>-->
+<!--      </CardContent>-->
+<!--    </Card>-->
 
     <!-- Branding & Appearance -->
-    <Card>
-      <CardHeader>
-        <CardTitle class="flex items-center gap-2">
-          <Palette class="h-5 w-5" />
-          Branding & Appearance
-        </CardTitle>
-        <CardDescription>
-          Customize the look and feel of your organization
-        </CardDescription>
-      </CardHeader>
-      <CardContent class="space-y-6">
-        <!-- Primary Color -->
-        <div class="space-y-2">
-          <Label for="primaryColor">Primary Color</Label>
-          <div class="flex items-center gap-4">
-            <Input
-                id="primaryColor"
-                type="color"
-                bind:value={formData.primaryColor}
-                class="w-20 h-10 p-1 border rounded"
-            />
-            <Input
-                bind:value={formData.primaryColor}
-                placeholder="#d85a1f"
-                class="flex-1"
-            />
-          </div>
-          <p class="text-sm text-muted-foreground">
-            This color will be used for buttons, links, and other UI elements
-          </p>
-        </div>
+<!--    <Card>-->
+<!--      <CardHeader>-->
+<!--        <CardTitle class="flex items-center gap-2">-->
+<!--          <Palette class="h-5 w-5" />-->
+<!--          Branding & Appearance-->
+<!--        </CardTitle>-->
+<!--        <CardDescription>-->
+<!--          Customize the look and feel of your organization-->
+<!--        </CardDescription>-->
+<!--      </CardHeader>-->
+<!--      <CardContent class="space-y-6">-->
+<!--        &lt;!&ndash; Primary Color &ndash;&gt;-->
+<!--        <div class="space-y-2">-->
+<!--          <Label for="primaryColor">Primary Color</Label>-->
+<!--          <div class="flex items-center gap-4">-->
+<!--            <Input-->
+<!--                id="primaryColor"-->
+<!--                type="color"-->
+<!--                bind:value={formData.primaryColor}-->
+<!--                class="w-20 h-10 p-1 border rounded"-->
+<!--            />-->
+<!--            <Input-->
+<!--                bind:value={formData.primaryColor}-->
+<!--                placeholder="#d85a1f"-->
+<!--                class="flex-1"-->
+<!--            />-->
+<!--          </div>-->
+<!--          <p class="text-sm text-muted-foreground">-->
+<!--            This color will be used for buttons, links, and other UI elements-->
+<!--          </p>-->
+<!--        </div>-->
 
-        <!-- Timezone -->
-        <div class="space-y-2">
-          <Label for="timezone">Timezone</Label>
-          <Select type="single" bind:value={formData.timezone}>
-            <SelectTrigger>
-              {formData.timezone ? formData.timezone : 'Select a timezone'}
-            </SelectTrigger>
-            <SelectContent>
-              {#each timezones as tz}
-                <SelectItem value={tz}>{tz}</SelectItem>
-              {/each}
-            </SelectContent>
-          </Select>
-        </div>
-      </CardContent>
-    </Card>
+<!--        &lt;!&ndash; Timezone &ndash;&gt;-->
+<!--        <div class="space-y-2">-->
+<!--          <Label for="timezone">Timezone</Label>-->
+<!--          <Select type="single" bind:value={formData.timezone}>-->
+<!--            <SelectTrigger>-->
+<!--              {formData.timezone ? formData.timezone : 'Select a timezone'}-->
+<!--            </SelectTrigger>-->
+<!--            <SelectContent>-->
+<!--              {#each timezones as tz}-->
+<!--                <SelectItem value={tz}>{tz}</SelectItem>-->
+<!--              {/each}-->
+<!--            </SelectContent>-->
+<!--          </Select>-->
+<!--        </div>-->
+<!--      </CardContent>-->
+<!--    </Card>-->
 
     <!-- Organization Settings -->
 <!--    <Card>-->
@@ -651,32 +691,10 @@ const timezones = [
 <!--        </div>-->
 <!--      </CardContent>-->
 <!--    </Card>-->
-
-    <!-- Save Button -->
-    <div class="flex items-center justify-between pt-6 border-t">
-      <div class="text-sm text-muted-foreground">
-        {#if !isAdmin}
-          <div class="flex items-center gap-2 text-amber-600">
-            <AlertTriangle class="h-4 w-4" />
-            You need admin permissions to modify these settings
-          </div>
-        {/if}
-      </div>
-
-      <Button type="submit" disabled={isLoading || !isAdmin} class="min-w-32">
-        {#if isLoading}
-          <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-          Saving...
-        {:else}
-          <SaveIcon class="h-4 w-4 mr-2" />
-          Save Changes
-        {/if}
-      </Button>
-    </div>
   </form>
 
   <!-- Danger Zone -->
-  {#if isOwner}
+  {#if isOrgOwner}
     <Card class="border-destructive/50">
       <CardHeader>
         <CardTitle class="flex items-center gap-2 text-destructive">
@@ -714,50 +732,53 @@ const timezones = [
 <!-- Delete Confirmation Dialog -->
 <Dialog bind:open={showDeleteDialog}>
   <DialogContent class="sm:max-w-md">
-    <DialogHeader>
-      <DialogTitle class="flex items-center gap-2 text-destructive">
-        <AlertTriangle class="h-5 w-5" />
-        Delete Organization
-      </DialogTitle>
-      <DialogDescription>
-        This action cannot be undone. This will permanently delete the organization
-        <strong>"{tenant.name}"</strong> and all associated data.
-      </DialogDescription>
-    </DialogHeader>
+    <form method="POST" action="?/delete-org" use:enhance class="contents">
+      <input type="hidden" name="id" value="{tenant.id}" />
+      <DialogHeader>
+        <DialogTitle class="flex items-center gap-2 text-destructive">
+          <AlertTriangle class="h-5 w-5" />
+          Delete Organization
+        </DialogTitle>
+        <DialogDescription>
+          This action cannot be undone. This will permanently delete the organization
+          <strong>"{tenant.name}"</strong> and all associated data.
+        </DialogDescription>
+      </DialogHeader>
 
-    <div class="space-y-4">
-      <Alert class="border-destructive/50 bg-destructive/5">
-        <AlertTriangle class="h-4 w-4" />
-        <AlertDescription class="text-sm">
-          <strong>This will delete:</strong>
-          <ul class="list-disc list-inside mt-2 space-y-1">
-            <li>All forms and form responses</li>
-            <li>All organization members</li>
-            <li>All organization settings</li>
-            <li>All associated data</li>
-          </ul>
-        </AlertDescription>
-      </Alert>
+      <div class="space-y-4">
+        <Alert class="border-destructive/50 bg-destructive/5">
+          <AlertTriangle class="h-4 w-4" />
+          <AlertDescription class="text-sm">
+            <strong>This will delete:</strong>
+            <ul class="list-disc list-inside mt-2 space-y-1">
+              <li>All forms and form responses</li>
+              <li>All organization members</li>
+              <li>All organization settings</li>
+              <li>All associated data</li>
+            </ul>
+          </AlertDescription>
+        </Alert>
 
-      <div class="space-y-2">
-        <Label for="confirmDelete">
-          Type <strong>{tenant.name}</strong> to confirm:
-        </Label>
-        <Input
-            id="confirmDelete"
-            placeholder={tenant.name}
-        />
+        <div class="space-y-2">
+          <Label for="confirmDelete">
+            Type <strong>{tenant.name}</strong> to confirm:
+          </Label>
+          <Input
+              id="confirmDelete"
+              placeholder={tenant.name}
+          />
+        </div>
       </div>
-    </div>
 
-    <DialogFooter class="gap-2">
-      <Button variant="outline" onclick={() => showDeleteDialog = false}>
-        Cancel
-      </Button>
-      <Button variant="destructive" onclick={handleDeleteOrganization}>
-        <Trash2 class="h-4 w-4 mr-2" />
-        Delete Organization
-      </Button>
-    </DialogFooter>
+      <DialogFooter class="gap-2">
+        <Button variant="outline" type="button" onclick={() => showDeleteDialog = false}>
+          Cancel
+        </Button>
+        <Button variant="destructive" type="submit">
+          <Trash2 class="h-4 w-4 mr-2" />
+          Delete Organization
+        </Button>
+      </DialogFooter>
+    </form>
   </DialogContent>
 </Dialog>
