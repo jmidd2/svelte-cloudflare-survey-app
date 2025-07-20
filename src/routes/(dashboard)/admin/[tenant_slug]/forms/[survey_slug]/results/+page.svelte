@@ -1,169 +1,143 @@
 <script lang="ts">
-import { ArrowLeft, Calendar, ChevronDown, ChevronUp, Filter, Search } from '@lucide/svelte';
+import { ArrowLeft, Calendar, Filter, Search } from '@lucide/svelte';
 import { page } from '$app/state';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '$lib/components/ui/accordion';
 import { Button } from '$lib/components/ui/button';
 import { Card, CardContent, CardHeader } from '$lib/components/ui/card';
 import { Input } from '$lib/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-} from '$lib/components/ui/select';
-import type { NewSubmissionData } from '$lib/server/db/schema.js';
-  import { FIELD_LABELS } from '$lib/utils/form-fields/index.js';
-  import Badge from '$lib/components/ui/badge/badge.svelte';
-  import { DropdownMenu } from '$lib/components/ui/dropdown-menu';
-  import DropdownMenuTrigger from '$lib/components/ui/dropdown-menu/dropdown-menu-trigger.svelte';
-  import DropdownMenuContent from '$lib/components/ui/dropdown-menu/dropdown-menu-content.svelte';
-  import DropdownMenuLabel from '$lib/components/ui/dropdown-menu/dropdown-menu-label.svelte';
-  import DropdownMenuItem from '$lib/components/ui/dropdown-menu/dropdown-menu-item.svelte';
-  import { Checkbox } from '$lib/components/ui/checkbox';
-  import PopoverTrigger from '$lib/components/ui/popover/popover-trigger.svelte';
-  import PopoverContent from '$lib/components/ui/popover/popover-content.svelte';
-  import { Popover } from '$lib/components/ui/popover';
-  import { SvelteMap } from 'svelte/reactivity';
+import { Checkbox } from '$lib/components/ui/checkbox';
+import PopoverTrigger from '$lib/components/ui/popover/popover-trigger.svelte';
+import PopoverContent from '$lib/components/ui/popover/popover-content.svelte';
+import { Popover } from '$lib/components/ui/popover';
+  import { Separator } from '$lib/components/ui/separator/index.js';
+  import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '$lib/components/ui/dialog/index.js';
 
 const { data } = $props();
+console.log(data)
 const survey = $derived(data.survey);
-const responses = $derived(data.responses);
-const fields = $derived(data.fields);
-const lineLimit = 3;
+const fields = $derived(data.responses || []); // Assuming the array of fields is in data.responses
+const LATEST_LIMIT = 3;
+
 let searchQuery = $state('');
-const FormStates = {
-    ALL: 'All',
-    ACTIVE: 'Active',
-    DRAFT: 'Draft',
-    ARCHIVED: 'Archived',
-} as const;
+let selectedFields = $state(new Set(fields.map(field => field.id))); // All fields selected by default
 
-type FormState = (typeof FormStates)[keyof typeof FormStates];
+// Transform the data structure to get all unique submissions
+const allSubmissions = $derived.by(() => {
+    const submissionMap = new Map();
+    
+    fields.forEach(field => {
+        field.fieldSubmissions?.forEach(submission => {
+            const submissionId = submission.submissionId;
+            if (!submissionMap.has(submissionId)) {
+                submissionMap.set(submissionId, {
+                    id: submissionId,
+                    createdAt: submission.formSubmission.createdAt,
+                    fields: new Map()
+                });
+            }
+            
+            submissionMap.get(submissionId).fields.set(field.id, {
+                field: field,
+                data: submission.data
+            });
+        });
+    });
+    
+    return Array.from(submissionMap.values());
+});
 
-let selectedStatus: FormState = $state(FormStates.ALL);
-$inspect(data);
-
-const filteredResponses = $derived.by(() => {
-    if (!searchQuery.trim()) {
-        return responses.map(response => ({
-            ...response,
-            matchingData: response.data, // Show all data when no search
-        }));
+// Filter submissions based on search query and selected fields
+const filteredSubmissions = $derived.by(() => {
+    if (!searchQuery.trim() && selectedFields.size === fields.length) {
+        return allSubmissions;
     }
 
     const query = searchQuery.toLowerCase().trim();
 
-    return responses
-        .map(response => {
-            // Find only the matching field-value pairs
-            const matchingData = response.data.filter((entry, index) => {
-                const fieldLabel = fields[index]?.label?.toLowerCase() || '';
-                const fieldLabelMatch = fieldLabel.includes(query);
+    return allSubmissions.filter(submission => {
+        // Check if submission has any data for selected fields
+        const hasSelectedFieldData = Array.from(selectedFields).some(fieldId => 
+            submission.fields.has(fieldId)
+        );
+        
+        if (!hasSelectedFieldData) return false;
 
-                const submittedValue =
-                    entry.submitted?.value?.toString().toLowerCase() || '';
-                const valueMatch = submittedValue.includes(query);
+        // If no search query, return all submissions with selected field data
+        if (!query) return true;
 
-                return fieldLabelMatch || valueMatch;
-            });
+        // Search within the submission data
+        return Array.from(submission.fields.values()).some(fieldData => {
+            if (!selectedFields.has(fieldData.field.id)) return false;
             
-            return {
-                ...response,
-                matchingData,
-                originalDataLength: response.data.length,
-            };
-        })
-        .filter(response => response.matchingData.length > 0); // Only keep responses that have matches
+            const fieldLabel = fieldData.field.label?.toLowerCase() || '';
+            const fieldValue = fieldData.data?.toString().toLowerCase() || '';
+            
+            return fieldLabel.includes(query) || fieldValue.includes(query);
+        });
+    });
 });
 
-//TODO: move to utils file
 function formatDate(date: string | Date): string {
     return new Date(date).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
-        hour: 'numeric',
-        minute: 'numeric',
     });
 }
 
-function fieldLabelFromFieldId(fieldId: string) {
-    const field = fields.find(field => field.id === fieldId);
-    return field ? field.label : '...';
-}
-
-let expandedRows = $state(new Set())
-
-const toggleRowExpansion = (rowId: string) => {
-    const newExpanded = new Set(expandedRows)
-    if( newExpanded.has(rowId)){
-        newExpanded.delete(rowId)
-    }else{
-        newExpanded.add(rowId)
-    }
-    expandedRows = newExpanded
-}
-
-function getFieldValue(item: NewSubmissionData) {
-    switch (item.field.type) {
-      case "checkbox":
-    return item.submitted.values.map((value: string | number) => " " + value).join(",");
-      case "yes-no":
-        return item.submitted.value ? "Yes" : "No";
-      case "date":
-        return formatDate(new Date(+item.submitted.value));
-      default:
-        return typeof item.submitted.value === "string" ? (item.submitted.value.slice(0,1).toUpperCase() + item.submitted.value.slice(1)) : item.submitted.value;
-    }
-  }
-
-// const uniqueFields = fields.length > 0 ? fields.map(entry => entry) : [];
-let uniqueFields
-
-const groupMap = $derived.by(()=>{
-    const groupedByMap = new Map<string, Array<{ createdAt: Date;  submitted: { value: string | number | boolean } | { values: Array<string | number> } } >>();
-    for (const r of responses) {
-        for (const fieldResponse of r.data) {
-            if (groupedByMap.has(fieldResponse.field.id)) {
-                groupedByMap.get(fieldResponse.field.id)?.push({ createdAt: r.createdAt, submitted: fieldResponse.submitted})
-            } else {
-                groupedByMap.set(fieldResponse.field.id, [{ createdAt: r.createdAt, submitted: fieldResponse.submitted}])
+function getFieldValue(data: any, fieldType: string) {
+    if (!data) return '-';
+    
+    switch (fieldType) {
+        case "checkbox":
+            // Assuming data could be an array or comma-separated string
+            if (Array.isArray(data)) {
+                return data.join(', ');
             }
-        }
+            return data.toString();
+        case "yes-no":
+            return data ? "Yes" : "No";
+        case "date":
+            return formatDate(new Date(+data));
+        default:
+            return typeof data === "string" ? 
+                (data.slice(0,1).toUpperCase() + data.slice(1)) : 
+                data?.toString() || '-';
     }
-    return groupedByMap
-})
+}
 
-$inspect(groupMap)
+function toggleFieldSelection(fieldId: string) {
+    if (selectedFields.has(fieldId)) {
+        selectedFields.delete(fieldId);
+    } else {
+        selectedFields.add(fieldId);
+    }
+    selectedFields = new Set(selectedFields); // Trigger reactivity
+}
+
+
 
 </script>
-<!-- this is the width I had to use on this outer div for the scrolling table -->
-<!-- max-w-[calc(100vw-var(--sidebar-width)-15px)] -->
 
 <div class="p-6 space-y-8">
-  <div class="flex items-center gap-4 mb-4">
-    <Button variant="ghost" size="sm" href={`/admin/${data.tenant?.slug}/forms`} class="gap-2">
-      <ArrowLeft class="h-4 w-4" />
-      Back to Forms
-    </Button>
-  </div>
+    <div class="flex items-center gap-4 mb-4">
+        <Button variant="ghost" size="sm" href={`/admin/${data.tenant?.slug}/forms`} class="gap-2">
+            <ArrowLeft class="h-4 w-4" />
+            Back to Forms
+        </Button>
+    </div>
+    
     <div class="flex flex-col">
         <h1 class="text-3xl font-bold text-foreground">{survey.title}</h1>
         <p class="text-muted-foreground mt-1">{survey.description}</p>
     </div>
+    
     <p class="text-xl font-semibold mb-4">Results</p>
-    <Card class="mb-4">
+    
+    <Card class="mb-4 w-3/4">
         <CardContent class="px-6">
             <div class="flex flex-col sm:flex-row gap-4">
                 <div class="relative flex-1">
-                    <Search
-                        class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground"
-                    />
+                    <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                         placeholder="Search results by question or answer..."
                         bind:value={searchQuery}
@@ -171,320 +145,118 @@ $inspect(groupMap)
                     />
                 </div>
 
-                <!-- <Select type="single" bind:value={selectedStatus} >
-                    <SelectTrigger class="w-full sm:w-48">
-                        <Filter class="h-4 w-4 mr-2" />
-                        {selectedStatus === FormStates.ALL ? "All" : selectedStatus}
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="All">All</SelectItem>
-                        <SelectItem value="Active">Active</SelectItem>
-                        <SelectItem value="Draft">Draft</SelectItem>
-                        <SelectItem value="Archived">Archived</SelectItem>
-                    </SelectContent>
-                </Select> -->
-
                 <Popover>
-                    <PopoverTrigger  class="w-full sm:w-48 inline-flex content-center">
-                        <Filter class="h-5 w-5 mr-2" />
-                        Select Questions
+                    <PopoverTrigger class="w-full sm:w-48 inline-flex items-center justify-center gap-2 bg-background border border-input rounded-md px-3 py-2 text-sm">
+                        <Filter class="h-4 w-4" />
+                        Select Questions ({selectedFields.size}/{fields.length})
                     </PopoverTrigger>
-                    <PopoverContent side="left" align="start">
-                        {#each fields as field}
-                            <div class="inline-flex content-center"><Checkbox />{fieldLabelFromFieldId(field.id)}</div>
-                        {/each}
+                    <PopoverContent side="left" align="start" class="w-80">
+                        <div class="space-y-2">
+                            <div class="font-medium text-sm mb-3">Select questions to display:</div>
+                            {#each fields as field}
+                                <div class="flex items-center space-x-2">
+                                    <Checkbox 
+                                        checked={selectedFields.has(field.id)}
+                                        onCheckedChange={() => toggleFieldSelection(field.id)}
+                                    />
+                                    <label class="text-sm cursor-pointer flex-1" onclick={() => toggleFieldSelection(field.id)}>
+                                        {field.label}
+                                    </label>
+                                </div>
+                            {/each}
+                        </div>
                     </PopoverContent>
                 </Popover>
             </div>
         </CardContent>
     </Card>
-    <div>
-        {#each groupMap as [key, val]}
-        <Card>
-            <CardContent>
-                    <div>{fields[key].label}: {JSON.stringify(val)}</div>
-                    
-                </CardContent>
-            </Card>
-        {/each}
-    </div>
-    {#if searchQuery.length > 0}
-    <div class="w-full grid lg:grid-cols-2 sm:grid-cols-1 xl:grid-cols-3 gap-x-4 overflow-y-scroll">
-        {#each uniqueFields as field}
-            <table class="rounded-xl border overflow-hidden mb-4">
-                <colgroup>
-                    <col class="w-[200px]">
-                    <col class="w-[400px]">
-                </colgroup>
-                <thead>
-                    <tr class="text-center bg-accent">
-                        <th class="border-b border-r p-2">Submitted Date</th>
-                        <th class="border-b p-2">{fieldLabelFromFieldId(field.id)}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {#each filteredResponses as response}
-                        {@const fieldEntry = response.data.find(entry => entry.field.id === field.id)}
-                        <tr class="text-center border-x not-last:border-b ">
-                            <td class="border-r p-2 last:rounded-b-xl">
-                                <div class="inline-flex gap-x-3 bg-accent/50 py-1 px-2 rounded-lg border">
-                                    <Calendar class="text-white/70"/>
-                                    {formatDate(new Date(response.createdAt))}
-                                </div>
-                            </td>
-                            <td class="border-l p-2">{fieldEntry ? getFieldValue(fieldEntry) : '-'}</td>
-                        </tr>
-                    {/each}
-                </tbody>
-            </table>
-        {/each}
-    </div>
-    {:else}
-    <div class="w-full h-[calc(100lvh-402px)] grid lg:grid-cols-2 sm:grid-cols-1 xl:grid-cols-3 gap-x-4 overflow-y-scroll">
-        {#each uniqueFields as field}
-            <table class="rounded-xl border overflow-hidden mb-4">
-                <colgroup>
-                    <col class="w-[200px]">
-                    <col class="w-[400px]">
-                </colgroup>
-                <thead>
-                    <tr class="text-center bg-accent">
-                        <th class="border-b border-r p-2">Submitted Date</th>
-                        <th class="border-b p-2">{fieldLabelFromFieldId(field.id)}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {#each responses as response}
-                        {@const fieldEntry = response.data.find(entry => entry.field.id === field.id)}
-                        <tr class="text-center border-x not-last:border-b ">
-                            <td class="border-r p-2 last:rounded-b-xl text-sm"><div class="inline-flex gap-x-3 bg-accent/50 py-1 px-2 rounded-lg border">
-                                <Calendar class="text-white/70"/>
-                                {formatDate(new Date(response.createdAt))}
-                            </div></td>
-                            <td class="border-l p-2">{fieldEntry ? getFieldValue(fieldEntry) : '-'}</td>
-                        </tr>
-                    {/each}
-                </tbody>
-            </table>
-        {/each}
-    </div>
 
+    {#if searchQuery.length > 0}
+        <p class="text-sm text-muted-foreground mb-4">
+            Found {filteredSubmissions.length} result{filteredSubmissions.length !== 1 ? "s" : ""} 
+            {#if searchQuery}for "{searchQuery}"{/if}
+        </p>
     {/if}
 
-    <!-- The table below shows the submission date, and the amount of answers provided. Upon clicking the row, you can then see the full response from the survey.  -->
-
-    <!-- <Card class="bg-black/0 p-0">
-        <CardContent class="p-0">
-            <table class="w-full">
-                <thead class="bg-accent/50 text-lg">
-                    <tr class="grid grid-cols-[1fr_1fr_1fr_1fr_50px] py-2">
-                        <th class="text-center">Date/Time Submitted</th>
-                        <th class="text-center">Something</th>
-                        <th class="text-center">Extra</th>
-                        <th class="text-center">Answers</th> 
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody class="">
-                    {#each responses.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) as response}
-                        <tr id={response.id} class="grid grid-cols-[1fr_1fr_1fr_1fr_50px] py-2 not-last:border-b" onclick={() => toggleRowExpansion(response.id)}>
-                            <td class="text-center">
-                                <div class="inline-flex gap-x-3 bg-accent/50 py-1 px-2 rounded-lg border">
-                                    <Calendar class="text-white/70"/>
-                                    {formatDate(new Date(response.createdAt))}
-                                </div>
-                                </td>
-                            <td class="text-center content-center text-muted">
-                               -
-                            </td>
-                            <td class="text-center content-center text-muted">
-                               -
-                            </td>
-                            <td class="text-center content-center">
-                                {response.data.length} / {fields.length}
-                            </td>
-                            <td class="content-center">
-                                {#if expandedRows.has(response.id)}
-                                    <ChevronUp class="w-4 h-4" />
-                                {:else}
-                                    <ChevronDown class="w-4 h-4" />
-                                {/if}
-                            </td>
-                        </tr>
-                        {#if expandedRows.has(response.id)}
-                            <tr>
-                                <td>
-                                    <div class="w-full bg-card p-4">
-                                            <h4 class="mb-4">Full Response</h4>
-                                            <div class="grid sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
-                                                {#each response.data as item}
-                                                <div class="flex flex-col">
-                                                        <p class="text-secondary text-left">{fieldLabelFromFieldId(item.field.id)}: <Badge class="text-[10px] items-center ml-2 opacity-50" variant="secondary">
-                                                            {FIELD_LABELS[item.field.type]}
-                                                        </Badge></p>
-                                                    <p class="text-left mb-2">{getFieldValue(item)}</p>
-                                                </div>
-                                                {/each}
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        {/if}
-                    {/each}
-                </tbody>
-            </table>
-        </CardContent>
-    </Card> -->
-
-    <!-- Desktop View using a side-scrolling table-->
-    <!-- <div class="hidden lg:block overflow-x-scroll rounded-xl border">
-        <table class="w-full ">
-            <thead class="bg-accent/50 text-lg">
-                <tr class="grid py-2" style="grid-template-columns: repeat({data.fields.length + 1}, minmax(280px, 1fr))">
-                    {#each data.fields as entry, index}
-                        {#if index === 0}
-                            <th class="text-center">Date/Time Submitted</th>
-                        {/if}
-                            <th class="text-center">{fieldLabelFromFieldId(entry.id)}</th>
-                    {/each}
-                </tr>
-            </thead>
-            <tbody>
-                {#each responses.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) as response}
-                    <tr class="grid text-center" style="grid-template-columns: repeat({data.fields.length + 1}, 1fr)">
-                        <td class="border-b flex justify-center py-2">
-                            <p class="py-1 text-gray-200 border px-2 rounded-lg bg-gray-500/30 inline-flex gap-x-2">
-                                <Calendar class="text-gray-300" />
-                                {formatDate(new Date(response.createdAt))}
-                            </p>
-                        </td>
-                        {#each data.fields as field}
-                            {@const submittedEntry = response.data.find(entry => entry.field.id === field.id)}
-                            <td class="border-b content-center {!submittedEntry && 'text-gray-500'}">
-                                {submittedEntry ? getFieldValue(submittedEntry) : '-'}
-                            </td>
-                        {/each}
-                    </tr>
-                {/each}
-            </tbody>
-        </table>
-    </div> -->
-    
-    <!-- Mobile view using cards, and accordion -->
-    <!-- <div class="block lg:hidden"> -->
-        <!-- Show results count when searching -->
-        <!-- {#if searchQuery.length > 0}
-        <p class="text-sm text-muted-foreground mb-4">
-            Found {filteredResponses.length} result{filteredResponses.length !== 1
-        ? "s"
-        : ""} for "{searchQuery}"
-        </p> -->
-        
-        <!-- Use filteredResponses instead of responses -->
-        <!-- {#each filteredResponses as response}
-        {@const maxLabelLength = Math.max(...fields.map(field => field.label.length))}
-        {@const labelWidth = `${maxLabelLength * 0.6}rem`}
-        <Card class="hover:shadow-lg transition-shadow space-y-4 mb-2">
-            <CardHeader class="flex justify-between mb-3">
-                <div
-                    class="flex items-center gap-x-2 text-gray-200 border px-2 rounded-lg bg-gray-500/30 -ml-1"
-                    >
-                    <Calendar class="h-4 w-4" />
-                    <p>{formatDate(response.createdAt)}</p>
-                </div>
-            </CardHeader>
-            <CardContent>
-                    <div class="flex flex-col items-center md:grid md:grid-cols-[auto_1fr] gap-2 mb-1" style="grid-template-columns: {labelWidth} auto;">
-                        {#if response.matchingData.length > 0}
-                            {#each response.matchingData as entry, index}
-                                <p class="text-gray-400 truncate">{fieldLabelFromFieldId(entry.field.id)}:</p>
-                                <p class="font-semibold">{entry.submitted.value}</p>
-                            {/each}
-                            {:else}
-                            {#each response.data.slice(0, lineLimit) as entry, index}
-                                <p class="text-gray-400 truncate">{fieldLabelFromFieldId(entry.field.id)}:</p>
-                                <p class="font-semibold">{entry.submitted.value}</p>
-                            {/each}
-                            {#if response.data.length > lineLimit}
-                            <Accordion type="single" collapsible class="w-full">
-                                    <AccordionItem value="additional-items">
-                                        <AccordionTrigger
-                                        class="py-2 px-0 text-gray-100 italic hover:no-underline"
-                                        >
-                                        +{response.data.length - lineLimit} more
-                                    </AccordionTrigger>
-                                    <AccordionContent>
-                                        <div class="grid grid-cols-[auto_1fr] gap-2 mb-1">
-                                                {#each response.data.slice(lineLimit) as entry, index}
-                                                    <p class="font-semibold">
-                                                        {fields[index + lineLimit].label}:
-                                                    </p>
-                                                    <p>{entry.submitted.value}</p>
-                                                {/each}
-                                            </div>
-                                        </AccordionContent>
-                                    </AccordionItem>
-                                </Accordion>
-                            {/if}
-                        {/if}
-                    </div>
-                </CardContent>
-            </Card>
-        {:else}
-            {#if searchQuery.length > 0}
-                <Card class="p-8 text-center">
-                    <p class="text-muted-foreground">
-                    No results found for "{searchQuery}"
-                </p>
-            </Card>
-            {/if}
-            {/each}
-            {/if}
-            {#if !searchQuery}
-            {#each responses as response}
-            {@const maxLabelLength = Math.max(...fields.map(field => field.label.length))}
-            {@const labelWidth = `${maxLabelLength * 0.6}rem`}
-            <Card class="hover:shadow-lg transition-shadow space-y-4 mb-4">
-                <CardHeader class="flex justify-between mb-3">
-                    <div
-                    class="flex items-center gap-x-2 text-gray-200 border px-2 rounded-lg bg-gray-500/30 -ml-1"
-                        >
-                        <Calendar class="h-4 w-4" />
-                        <p>{formatDate(response.createdAt)}</p>
-                    </div>
+    <!-- Display results in a grid of tables, one per selected field -->
+    <div class="w-3/4 grid lg:grid-cols-1 sm:grid-cols-1 xl:grid-cols-1 gap-4 overflow-y-scroll max-h-[calc(100vh-400px)]">
+        {#each fields.filter(field => selectedFields.has(field.id)) as field}
+            <Dialog>
+                <DialogTrigger>
+                    <Card class="overflow-hidden" onclick={() =>{}}>
+                        <CardHeader class=" py-1">
+                            <h3 class="font-medium text-center">{field.label}</h3>
                 </CardHeader>
-                <CardContent>
-                    <div class="flex flex-col items-center md:grid md:grid-cols-[auto_1fr] gap-2 mb-1" style="grid-template-columns: {labelWidth} auto;">
-                        {#each response.data.slice(0, lineLimit) as entry, index}
-                        <p class="text-gray-400 truncate">{fieldLabelFromFieldId(entry.field.id)}:</p>
-                        <p class="font-semibold">{entry.submitted.value}</p>
-                        {/each}
-
-                        {#if response.data.length > lineLimit}
-                        <Accordion type="single" collapsible class="w-full col-span-2">
-                            <AccordionItem value="additional-items">
-                                    <AccordionTrigger
-                                    class="py-2 px-0 text-gray-100 italic hover:no-underline"
-                                    >
-                                    +{response.data.length - lineLimit} more
-                                    </AccordionTrigger>
-                                    <AccordionContent>
-                                        <div class="grid gap-2 mb-1" style="grid-template-columns: {labelWidth} 1fr;">
-                                            {#each response.data.slice(lineLimit) as entry, index}
-                                            <p class="text-gray-400 truncate">
-                                                {fieldLabelFromFieldId(entry.field.id)}:
+                <!-- <Separator /> -->
+                <CardContent class="p-0">
+                    <div class="max-h-96 ">
+                        <div class="grid grid-cols-[1fr_auto_1fr]">
+                            <div class="w-full content-center text-center text-2xl">
+                                <div class="inline-flex items-end gap-x-2">{field.fieldSubmissions.length}
+                                    <p class="text-sm text-gray-400">{field.fieldSubmissions.length > 1 ? 'submissions' : 'submission'}</p>
+                                </div>
+                            </div>
+                            <Separator orientation="vertical"/>
+                            <div>
+                                <p class="mb-4">Latest Responses:</p>
+                                {#each filteredSubmissions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) as submission, count}
+                                    {@const fieldData = submission.fields.get(field.id)}
+                                    {#if fieldData && count < LATEST_LIMIT}
+                                        <div class=" hover:bg-accent/20 grid grid-cols-[1fr_1fr] mx-20">
+                                            <p class="place-self-center">{formatDate(submission.createdAt)}</p>
+                                            <p class="p-2 text-sm font-medium">
+                                                {getFieldValue(fieldData.data, field.type)}
                                             </p>
-                                            <p class="font-semibold">{entry.submitted.value}</p>
-                                            {/each}
                                         </div>
-                                    </AccordionContent>
-                                </AccordionItem>
-                            </Accordion>
-                        {/if}
+                                    {/if}
+                                {/each}
+                                {#if filteredSubmissions.filter(s => s.fields.has(field.id)).length === 0}
+                                <div>
+                                    <p colspan="2" class="p-4 text-center text-muted-foreground text-sm">
+                                        No responses found
+                                    </p>
+                                </div>
+                                {/if}
+                            </div>
+                        </div>
                     </div>
                 </CardContent>
             </Card>
+        </DialogTrigger>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>
+                    <h3 class="font-medium text-center">{field.label}</h3>
+                </DialogTitle>
+            </DialogHeader>
+            <div class="w-full">
+                <table class="w-full">
+                    <thead>
+                        <tr class="text-center">
+                            <th>Id</th>
+                            <th>Answer</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {#each field.fieldSubmissions.sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt)) as entry, index}
+                        <tr class="text-center">
+                            <td>{index + 1}</td>
+                            <td>{entry.data}</td>
+                        </tr>
+                        {/each}
+                    </tbody>
+                </table>
+            </div>
+        </DialogContent>
+            </Dialog>
         {/each}
-        {/if}
-    </div> -->
+    </div>
+
+    {#if filteredSubmissions.length === 0 && (searchQuery.length > 0 || selectedFields.size < fields.length)}
+        <Card class="p-8 text-center">
+            <p class="text-muted-foreground">
+                No results found. Try adjusting your search or field selection.
+            </p>
+        </Card>
+    {/if}
 </div>

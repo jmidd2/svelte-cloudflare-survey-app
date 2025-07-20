@@ -11,14 +11,20 @@ export const load = async function ({ locals, params }) {
   // const responses = await getResponsesByFormId(locals.db, survey.id);
   // const fields = await getFormFields(locals.db, survey.id)
   const test = await locals.db.query.formFields.findMany({
+    where: (formFields, { eq }) => eq(formFields.formId, survey.id),
     with:{
-      fieldSubmissions: {with: {formSubmission: true}}
-    }
+      fieldSubmissions: {
+        with: {
+          formSubmission: true,
+        }
+      }
+    },
+    orderBy: (formFields, { desc }) => [desc(formFields.formId)],
   })
+
   console.log(test)
   return {
     survey,
-    responses,
-    fields,
+    responses: test,
   };
 };

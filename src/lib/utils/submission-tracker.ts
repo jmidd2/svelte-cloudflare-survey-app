@@ -19,7 +19,7 @@ export interface SubmissionInfo {
 }
 
 const DEFAULT_LIMITS: SubmissionLimits = {
-  maxSubmissions: 3, // Max 3 submissions
+  maxSubmissions: 30, // Max 3 submissions
   timeWindowMs: 24 * 60 * 60 * 1000, // 24 hours
 };
 
