@@ -114,8 +114,6 @@ function toggleFieldSelection(fieldId: string) {
     selectedFields = new Set(selectedFields); // Trigger reactivity
 }
 
-
-
 </script>
 
 <div class="p-6 space-y-8">
@@ -199,16 +197,18 @@ function toggleFieldSelection(fieldId: string) {
                             <Separator orientation="vertical"/>
                             <div>
                                 <p class="mb-4">Latest Responses:</p>
-                                {#each filteredSubmissions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) as submission, count}
-                                    {@const fieldData = submission.fields.get(field.id)}
-                                    {#if fieldData && count < LATEST_LIMIT}
+                                {#each filteredSubmissions
+                                        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                                        .filter(submission => submission.fields.get(field.id))
+                                        .slice(0, LATEST_LIMIT) as submission}
+                                        {@const fieldData = submission.fields.get(field.id)}
+                                    
                                         <div class=" hover:bg-accent/20 grid grid-cols-[1fr_1fr] mx-20">
                                             <p class="place-self-center">{formatDate(submission.createdAt)}</p>
                                             <p class="p-2 text-sm font-medium">
                                                 {getFieldValue(fieldData.data, field.type)}
                                             </p>
                                         </div>
-                                    {/if}
                                 {/each}
                                 {#if filteredSubmissions.filter(s => s.fields.has(field.id)).length === 0}
                                 <div>
@@ -229,19 +229,19 @@ function toggleFieldSelection(fieldId: string) {
                     <h3 class="font-medium text-center">{field.label}</h3>
                 </DialogTitle>
             </DialogHeader>
-            <div class="w-full">
+            <div class="w-full border rounded-xl">
                 <table class="w-full">
-                    <thead>
+                    <thead class="bg-accent">
                         <tr class="text-center">
-                            <th>Id</th>
+                            <th>#</th>
                             <th>Answer</th>
                         </tr>
                     </thead>
                     <tbody>
                         {#each field.fieldSubmissions.sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt)) as entry, index}
                         <tr class="text-center">
-                            <td>{index + 1}</td>
-                            <td>{entry.data}</td>
+                            <td class="border-r border-b">{index + 1}</td>
+                            <td class="border-b ">{entry.data}</td>
                         </tr>
                         {/each}
                     </tbody>
