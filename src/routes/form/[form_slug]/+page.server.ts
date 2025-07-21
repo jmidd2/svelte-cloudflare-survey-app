@@ -18,6 +18,7 @@ import { type Actions, error, fail, type ServerLoadEvent } from '@sveltejs/kit';
 import { asc, eq } from 'drizzle-orm';
 import { v4 as uuid } from 'uuid';
 import type { PageServerLoad } from './$types';
+import { generateId } from 'better-auth';
 
 type SubmittedFields =
   | {
@@ -324,7 +325,7 @@ export const actions = {
         hashSubmission(getClientUserAgent(request.headers))
       );
 
-      const submissionId = uuid();
+      const submissionId = generateId();
 
       await locals.db.insert(submissions).values({
       id: submissionId,

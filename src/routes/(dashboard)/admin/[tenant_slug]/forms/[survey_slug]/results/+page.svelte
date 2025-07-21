@@ -244,7 +244,7 @@ function toggleFieldSelection(fieldId: string) {
                         {#each field.fieldSubmissions.sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt)) as entry, index}
                         <tr class="text-center">
                             <td class="border-r border-b">{index + 1}</td>
-                            <td class="border-b ">{entry.data}</td>
+                            <td class="border-b ">{field.type === 'date'? formatDate(+entry.data) : entry.data}</td>
                         </tr>
                         {/each}
                     </tbody>
