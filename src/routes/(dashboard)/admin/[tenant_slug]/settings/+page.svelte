@@ -68,14 +68,14 @@ import { formDialogManager } from '$stores/SurveyDialog.svelte';
 const updateOrgSchema = z.object({
   name: z.string().min(2),
   slug: z.string(),
-  description: z.string(),
+  description: z.string().optional(),
 });
 
 const { data, form } = $props();
 
 let tenant = $derived(data.tenant);
 const isOrgOwner = $derived(data.tenant?.isOwner ?? false);
-const isOrgAdmin = $derived(data.tenant?.isAdmin ?? false);
+const isOrgAdmin = $derived((isOrgOwner || data.tenant?.isAdmin) ?? false);
 
 const updateForm = superForm(data.form, {
   resetForm: false,
@@ -91,6 +91,7 @@ const updateForm = superForm(data.form, {
   onResult: ({ result: { type, status, data } }) => {
     console.log('onResult', type, status);
     if (type === 'redirect' && status === 303) {
+      toast.success('Organization saved!')
       pageState.isLoading = false;
       // pageState.isSaved = true;
 
@@ -123,41 +124,24 @@ const updateForm = superForm(data.form, {
 
 const { form: updateFormData, enhance: enhanceUpdate } = updateForm;
 
-// Get breadcrumb context for loading states
-// const breadcrumbStatus = getBreadcrumbContext();
-
-// Form state
-let formData = $derived({
-  name: tenant?.name || '',
-  slug: tenant?.slug || '',
-  description: tenant?.description || '',
-  website: tenant?.website || '',
-  email: tenant?.email || '',
-  phone: tenant?.phone || '',
-  address: tenant?.address || '',
-  logo: null as File | null,
-  // primaryColor: tenant?.primaryColor || '#d85a1f',
-  allowPublicSignup: tenant?.allowPublicSignup ?? false,
-  requireApproval: true,
-  maxMembers: tenant?.maxMembers || 50,
-  timezone: tenant?.timezone || 'UTC',
-});
-
 // UI state
 let isLoading = $state(false);
 let logoPreview = $derived(tenant?.logo || '');
 let slugManuallyEdited = $state(false);
 let showDeleteDialog = $state(false);
 
-// Auto-generate slug from name
-$effect(() => {
-  if (!slugManuallyEdited && $updateFormData.name) {
-    $updateFormData.slug = $updateFormData.name
+function handleNameChange(
+  event: Event & {
+    currentTarget: EventTarget & HTMLInputElement;
+  }
+) {
+  if (!slugManuallyEdited && event.currentTarget?.value) {
+    $updateFormData.slug = event.currentTarget?.value
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '');
   }
-});
+}
 
 // Validation functions
 function validateEmail(email: string): boolean {
@@ -181,106 +165,33 @@ function validateSlug(slug: string): boolean {
 }
 
 // Handle logo upload
-function handleLogoUpload(event: Event) {
-  const target = event.target as HTMLInputElement;
-  const file = target.files?.[0];
+// function handleLogoUpload(event: Event) {
+//   const target = event.target as HTMLInputElement;
+//   const file = target.files?.[0];
 
-  if (file) {
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file');
-      return;
-    }
+//   if (file) {
+//     // Validate file type
+//     if (!file.type.startsWith('image/')) {
+//       toast.error('Please select an image file');
+//       return;
+//     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size must be less than 5MB');
-      return;
-    }
+//     // Validate file size (max 5MB)
+//     if (file.size > 5 * 1024 * 1024) {
+//       toast.error('Image size must be less than 5MB');
+//       return;
+//     }
 
-    formData.logo = file;
+//     // formData.logo = file;
 
-    // Create preview
-    const reader = new FileReader();
-    reader.onload = e => {
-      logoPreview = e.target?.result as string;
-    };
-    reader.readAsDataURL(file);
-  }
-}
-
-// Handle form submission
-async function handleSubmit(event: Event) {
-  event.preventDefault();
-
-  // Validation
-  if (!formData.name.trim()) {
-    toast.error('Organization name is required');
-    return;
-  }
-
-  if (!validateSlug(formData.slug)) {
-    toast.error(
-      'Slug must be at least 3 characters and contain only lowercase letters, numbers, and hyphens'
-    );
-    return;
-  }
-
-  if (formData.email && !validateEmail(formData.email)) {
-    toast.error('Please enter a valid email address');
-    return;
-  }
-
-  if (formData.website && !validateUrl(formData.website)) {
-    toast.error('Please enter a valid website URL');
-    return;
-  }
-
-  isLoading = true;
-  // breadcrumbStatus.isLoading = true;
-
-  // try {
-  //   // Simulate API call
-  //   await new Promise(resolve => setTimeout(resolve, 2000));
-  //
-  //   // Here you would make the actual API call to update the organization
-  //   console.log('Updating organization:', formData);
-  //
-  //   toast.success('Organization settings updated successfully!');
-  //   breadcrumbStatus.isSaved = true;
-  //
-  //   setTimeout(() => {
-  //     breadcrumbStatus.isSaved = false;
-  //   }, 3000);
-  // } catch (error) {
-  //   toast.error('Failed to update organization settings. Please try again.');
-  //   console.error('Error updating organization:', error);
-  // } finally {
-  //   isLoading = false;
-  //   breadcrumbStatus.isLoading = false;
-  // }
-}
-
-// Handle organization deletion
-async function handleDeleteOrganization() {
-  if (!isOrgOwner) {
-    toast.error('Only organization owners can delete the organization');
-    return;
-  }
-
-  try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    toast.success('Organization deleted successfully');
-    // Redirect would happen here
-    console.log('Organization deleted');
-  } catch (error) {
-    toast.error('Failed to delete organization');
-  }
-
-  showDeleteDialog = false;
-}
+//     // Create preview
+//     const reader = new FileReader();
+//     reader.onload = e => {
+//       logoPreview = e.target?.result as string;
+//     };
+//     reader.readAsDataURL(file);
+//   }
+// }
 
 // Generate new API key
 // async function generateApiKey() {
@@ -343,11 +254,12 @@ const timezones = [
       Organization Settings
     </h1>
     <p class="text-muted-foreground mt-1">
-      Manage your organization's information, branding, and preferences
+      Manage your organization's information
     </p>
   </div>
 
   <form method="POST" action="?/update-org" use:enhanceUpdate class="space-y-8 pb-10">
+    <input type="hidden" name="id" bind:value={tenant.id} />
     <!-- Basic Information -->
     <Card>
       <CardHeader>
@@ -401,6 +313,7 @@ const timezones = [
                 <Input
                     {...props}
                     bind:value={$updateFormData.name}
+                    oninput={handleNameChange}
                     placeholder="Enter organization name"
                 />
                 <FieldErrors />

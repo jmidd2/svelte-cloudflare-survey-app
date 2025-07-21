@@ -1,8 +1,15 @@
 <script lang="ts">
 import { FileText } from '@lucide/svelte';
+import clsx from 'clsx';
+
+interface FooterProps {
+  class?: string;
+}
+
+const { class: className }: FooterProps = $props();
 </script>
 
-<footer class="border-t border-border py-12 mt-5 lg:mt-0 bg-muted/20">
+<footer class={clsx("border-t border-border py-12 mt-5 lg:mt-0 bg-muted/20", className)}>
   <div class="container mx-auto px-4">
     <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
       <div>
