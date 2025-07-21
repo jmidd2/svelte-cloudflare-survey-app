@@ -8,13 +8,21 @@ import { Checkbox } from '$lib/components/ui/checkbox';
 import PopoverTrigger from '$lib/components/ui/popover/popover-trigger.svelte';
 import PopoverContent from '$lib/components/ui/popover/popover-content.svelte';
 import { Popover } from '$lib/components/ui/popover';
-  import { Separator } from '$lib/components/ui/separator/index.js';
-  import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '$lib/components/ui/dialog/index.js';
+import { Separator } from '$lib/components/ui/separator/index.js';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '$lib/components/ui/dialog/index.js';
+import * as Chart from '$lib/components/ui/chart/index.js';
+import {AreaChart } from 'layerchart';
+
+import TrendingUpIcon from "@lucide/svelte/icons/trending-up";
+import { curveNatural } from "d3-shape";
+import { scaleLinear, scaleUtc } from "d3-scale";
+  import type { Item } from '$lib/components/ui/radio-group/index.js';
 
 const { data } = $props();
 console.log(data)
 const survey = $derived(data.survey);
 const fields = $derived(data.responses || []); // Assuming the array of fields is in data.responses
+// const metrics = $derived(data.metrics);
 const LATEST_LIMIT = 3;
 
 let searchQuery = $state('');
@@ -114,6 +122,14 @@ function toggleFieldSelection(fieldId: string) {
     selectedFields = new Set(selectedFields); // Trigger reactivity
 }
 
+const chartData = $derived(data.metrics.map((item) => ({
+    ...item,
+    monthYear: new Date(item.monthYear)
+})));
+
+  const chartConfig = {
+    submissionCount: { label: "Submissions", color: "var(--chart-1)" },
+  } satisfies Chart.ChartConfig;
 </script>
 
 <div class="p-6 space-y-8">
@@ -133,10 +149,58 @@ function toggleFieldSelection(fieldId: string) {
         <p class="text-muted-foreground mt-1">{survey.description}</p>
     </div>
     
-    <!-- <div class="w-full flex justify-center gap-x-4">
-        <div class="w-[400px] h-[250px] bg-accent border rounded-xl content-center text-center">Chart 1</div>
-        <div class="w-[400px] h-[250px] bg-accent border rounded-xl content-center text-center">Chart 2</div>
-    </div> -->
+    <div class=" flex justify-center gap-x-4">
+        <Card class="bg-card px-8 py-6 flex flex-col">
+            <p class="w-full text-left text-xl">Responses Per Month</p>
+            <Chart.Container config={chartConfig} class='w-[300px]'>
+                <AreaChart
+                    data={chartData}
+                    x="monthYear"
+                    y="submissionCount"
+                    xScale={scaleUtc()}
+                    series={[
+                    {
+                        key: "submissionCount",
+                        label: "Submissions",
+                        color: chartConfig.submissionCount.color,
+                    },
+            ]}
+            axis="both"
+            props={{
+                area: {
+                    curve: curveNatural,
+                    "fill-opacity": 0.4,
+                    line: { class: "stroke-1" },
+                    motion: "tween",
+                },
+                xAxis: {
+                    format: (v: Date) => v.toLocaleDateString("en-US", { month: "short" }),
+                },
+                yAxis: {
+                    format: (d: number) => d.toString(),
+                    ticks: 1,
+                }
+            }}
+        >
+        {#snippet tooltip()}
+        <Chart.Tooltip
+        labelFormatter={(v: Date) =>
+                    v.toLocaleDateString("en-US", { month: "long" })}
+                    indicator="line"
+                    />
+                    {/snippet}
+                </AreaChart>
+            </Chart.Container>
+        </Card>
+        <Card class="w-[400px] ">
+            <CardHeader>
+                <p class="text-lg">Total Responses</p>
+            </CardHeader>
+            <div class="flex justify-center items-center content-center h-full mb-8">
+                <p class="text-4xl text-primary">{allSubmissions.length}</p>
+            </div>
+        </Card>
+    </div>
     
     <Card class="mb-4 max-w-[50rem] mx-auto">
         <CardContent class="px-6">

@@ -1,7 +1,7 @@
 import type { D1Database } from '@cloudflare/workers-types';
 import type { Client } from '@libsql/client';
 import { instrumentD1WithSentry } from '@sentry/cloudflare';
-import { and, asc, desc, eq, type SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, sql, type SQL } from 'drizzle-orm';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 import type { LibSQLDatabase } from 'drizzle-orm/libsql';
 import type { tsImport } from 'tsx/esm/api';
@@ -214,6 +214,32 @@ export async function getFormFields(db: DrizzleClient, formId: string) {
       acc.length = i;
       return acc
     }, {length:i})
+}
+
+export async function getSubmissionData(db: DrizzleClient, formId: string){
+  return await db.query.formFields.findMany({
+    where: (formFields, { eq }) => eq(formFields.formId, formId),
+    with:{
+      fieldSubmissions: {
+        with: {
+          formSubmission: true,
+        }
+      }
+    },
+    orderBy: (formFields, { desc }) => [desc(formFields.formId)],
+  })
+}
+
+export async function getSubmissionMetrics(db: DrizzleClient, formId: string) {
+  return await db
+  .select({
+    monthYear: sql<string>`strftime('%Y-%m', datetime(${schema.submissions.createdAt}, 'unixepoch'))`,
+    submissionCount: count()
+  })
+  .from(schema.submissions)
+  .where(eq(schema.submissions.formId, formId))
+  .groupBy(sql`strftime('%Y-%m', datetime(${schema.submissions.createdAt}, 'unixepoch'))`)
+  .orderBy(sql`strftime('%Y-%m', datetime(${schema.submissions.createdAt}, 'unixepoch')) DESC`);
 }
 
 /**

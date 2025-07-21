@@ -1,4 +1,4 @@
-import { getFormBySlug, getFormFields, getResponsesByFormId } from '$lib/server/db';
+import { getFormBySlug, getFormFields, getResponsesByFormId, getSubmissionData, getSubmissionMetrics } from '$lib/server/db';
 import { constants } from 'node:http2';
 import { error } from '@sveltejs/kit';
 
@@ -10,21 +10,13 @@ export const load = async function ({ locals, params }) {
 
   // const responses = await getResponsesByFormId(locals.db, survey.id);
   // const fields = await getFormFields(locals.db, survey.id)
-  const test = await locals.db.query.formFields.findMany({
-    where: (formFields, { eq }) => eq(formFields.formId, survey.id),
-    with:{
-      fieldSubmissions: {
-        with: {
-          formSubmission: true,
-        }
-      }
-    },
-    orderBy: (formFields, { desc }) => [desc(formFields.formId)],
-  })
+  const responses = await getSubmissionData(locals.db, survey.id);
+  const metrics = await getSubmissionMetrics(locals.db, survey.id);
+  console.log('metrics',metrics)
 
-  console.log(test)
   return {
     survey,
-    responses: test,
+    responses,
+    metrics
   };
 };
