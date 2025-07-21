@@ -1,5 +1,5 @@
 <script lang="ts">
-import { ArrowLeft, Calendar, Filter, Search } from '@lucide/svelte';
+import { ArrowDown, ArrowLeft, Calendar, Download, Filter, Search } from '@lucide/svelte';
 import { page } from '$app/state';
 import { Button } from '$lib/components/ui/button';
 import { Card, CardContent, CardHeader } from '$lib/components/ui/card';
@@ -117,10 +117,14 @@ function toggleFieldSelection(fieldId: string) {
 </script>
 
 <div class="p-6 space-y-8">
-    <div class="flex items-center gap-4 mb-4">
+    <div class="flex justify-between items-center gap-4 mb-4">
         <Button variant="ghost" size="sm" href={`/admin/${data.tenant?.slug}/forms`} class="gap-2">
             <ArrowLeft class="h-4 w-4" />
             Back to Forms
+        </Button>
+        <Button variant="secondary" size="default" class="gap-2" disabled>
+            <Download class="h-4 w-4" />
+            Export Responses
         </Button>
     </div>
     
@@ -129,6 +133,10 @@ function toggleFieldSelection(fieldId: string) {
         <p class="text-muted-foreground mt-1">{survey.description}</p>
     </div>
     
+    <!-- <div class="w-full flex justify-center gap-x-4">
+        <div class="w-[400px] h-[250px] bg-accent border rounded-xl content-center text-center">Chart 1</div>
+        <div class="w-[400px] h-[250px] bg-accent border rounded-xl content-center text-center">Chart 2</div>
+    </div> -->
     
     <Card class="mb-4 max-w-[50rem] mx-auto">
         <CardContent class="px-6">
@@ -143,7 +151,7 @@ function toggleFieldSelection(fieldId: string) {
                 </div>
 
                 <Popover>
-                    <PopoverTrigger class="w-full sm:w-48 inline-flex items-center justify-center gap-2 bg-background border border-input rounded-md px-3 py-2 text-sm">
+                    <PopoverTrigger class="w-full sm:w-48 inline-flex items-center justify-center gap-2 bg-accent border border-input rounded-md px-3 py-1 text-sm">
                         <Filter class="h-4 w-4" />
                         Select Questions ({selectedFields.size}/{fields.length})
                     </PopoverTrigger>
