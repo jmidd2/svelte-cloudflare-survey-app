@@ -12,12 +12,11 @@ export const load = async function ({ locals, params }) {
   const fields = await getFormFields(locals.db, survey.id)
   const responses = await getSubmissionData(locals.db, survey.id);
   const metrics = await getSubmissionMetrics(locals.db, survey.id);
-  console.log('metrics',metrics)
 
   return {
     survey,
     responses,
     metrics,
-    fields
+    fields,
   };
 };

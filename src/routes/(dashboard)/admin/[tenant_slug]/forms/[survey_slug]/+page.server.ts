@@ -45,12 +45,12 @@ export const load: PageServerLoad = async function ({
   if (!survey) throw error(constants.HTTP_STATUS_NOT_FOUND, 'Survey not found');
 
   depends('survey-fields:latest');
-  const fields = await getFormFields(locals.db, survey.id);
+  // const fields = await getFormFields(locals.db, survey.id);
 
   return {
     session,
     survey,
-    fields,
+    // fields,
     tenant,
     editForm: await superValidate(zod4(editFormSchema)),
   };

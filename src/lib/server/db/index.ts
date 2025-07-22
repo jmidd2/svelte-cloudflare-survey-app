@@ -202,18 +202,24 @@ export async function addFormField(
  * Get all fields for a form
  */
 export async function getFormFields(db: DrizzleClient, formId: string) {
-  const results = await  db
+
+  return await db
     .select()
     .from(schema.formFields)
     .where(eq(schema.formFields.formId, formId))
     .orderBy(asc(schema.formFields.orderIndex));
-    let i = 0
-    return results.reduce((acc, val, index) => {
-      i++;
-      acc[val.id] = val
-      acc.length = i;
-      return acc
-    }, {length:i})
+  // const results = await  db
+  //   .select()
+  //   .from(schema.formFields)
+  //   .where(eq(schema.formFields.formId, formId))
+  //   .orderBy(asc(schema.formFields.orderIndex));
+  //   let i = 0
+  //   return results.reduce((acc, val, index) => {
+  //     i++;
+  //     acc[val.id] = val
+  //     acc.length = i;
+  //     return acc
+  //   }, {length:i})
 }
 
 export async function getSubmissionData(db: DrizzleClient, formId: string){
