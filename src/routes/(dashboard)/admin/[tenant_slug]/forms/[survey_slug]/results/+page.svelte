@@ -28,9 +28,10 @@
 
   import TrendingUpIcon from "@lucide/svelte/icons/trending-up";
   import { curveNatural } from "d3-shape";
-  import {scaleUtc } from "d3-scale";
+  import { scaleUtc } from "d3-scale";
 
   const { data } = $props();
+  console.log(data)
   const survey = $derived(data.survey);
   const fields = $derived(data.responses || []); // Assuming the array of fields is in data.responses
   // const metrics = $derived(data.metrics);
@@ -49,7 +50,7 @@
         if (!submissionMap.has(submissionId)) {
           submissionMap.set(submissionId, {
             id: submissionId,
-            createdAt: submission.formSubmission.createdAt,
+            createdAt: submission.createdAt,
             fields: new Map(),
           });
         }
@@ -65,22 +66,22 @@
   });
 
   $effect(() => {
-  if (!searchQuery.trim()){
+    if (!searchQuery.trim()) {
       selectedFields = new Set(fields.map((field) => field.id));
       return;
-  } 
-  
-  const query = searchQuery.toLowerCase().trim();
-  
-  // Find all fields that match the search query
-  const matchingFieldIds = fields
-    .filter(field => field.label?.toLowerCase().includes(query))
-    .map(field => field.id);
-  
-  if (matchingFieldIds.length > 0) {
-    selectedFields = new Set(matchingFieldIds);
-  }
-});
+    }
+
+    const query = searchQuery.toLowerCase().trim();
+
+    // Find all fields that match the search query
+    const matchingFieldIds = fields
+      .filter((field) => field.label?.toLowerCase().includes(query))
+      .map((field) => field.id);
+
+    if (matchingFieldIds.length > 0) {
+      selectedFields = new Set(matchingFieldIds);
+    }
+  });
 
   // Filter submissions based on search query and selected fields
   const filteredSubmissions = $derived.by(() => {
@@ -154,6 +155,25 @@
   const chartConfig = {
     submissionCount: { label: "Submissions", color: "var(--chart-1)" },
   } satisfies Chart.ChartConfig;
+
+function downloadJSON(data, filename = 'data.json') {
+    const jsonString = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+  
+  // Clean up
+  URL.revokeObjectURL(url);
+}
+
+function handleDownload() {
+    downloadJSON(fields, `${survey.title}-responses.json`);
+}
+
 </script>
 
 <div class="p-6 space-y-8">
@@ -167,7 +187,7 @@
       <ArrowLeft class="h-4 w-4" />
       Back to Forms
     </Button>
-    <Button variant="secondary" size="default" class="gap-2" disabled>
+    <Button variant="secondary" size="default" class="gap-2" onclick={handleDownload}>
       <Download class="h-4 w-4" />
       Export Responses
     </Button>
@@ -291,11 +311,11 @@
 
   <!-- Display results in a grid of tables, one per selected field    -->
   <div
-    class="mx-auto max-w-[50rem] grid lg:grid-cols-1 sm:grid-cols-1 xl:grid-cols-1 gap-4 "
+    class="mx-auto max-w-[50rem] grid lg:grid-cols-1 sm:grid-cols-1 xl:grid-cols-1 gap-4"
   >
     {#each fields.filter((field) => selectedFields.has(field.id)) as field}
       <Dialog>
-        <Card >
+        <Card>
           <CardHeader class=" py-1">
             <h3 class="font-medium text-xl text-center">{field.label}</h3>
           </CardHeader>

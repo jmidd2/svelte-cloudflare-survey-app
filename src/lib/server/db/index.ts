@@ -217,7 +217,7 @@ export async function getFormFields(db: DrizzleClient, formId: string) {
 }
 
 export async function getSubmissionData(db: DrizzleClient, formId: string){
-  return await db.query.formFields.findMany({
+  const result = await db.query.formFields.findMany({
     where: (formFields, { eq }) => eq(formFields.formId, formId),
     with:{
       fieldSubmissions: {
@@ -227,7 +227,18 @@ export async function getSubmissionData(db: DrizzleClient, formId: string){
       }
     },
     orderBy: (formFields, { desc }) => [desc(formFields.formId)],
-  })
+  });
+
+  return result.map(field => ({
+    id: field.id,
+    submittedAt: field.createdAt,
+    label: field.label,
+    fieldSubmissions: field.fieldSubmissions.map(submission => ({
+      submissionId: submission.submissionId,
+      data: submission.data,
+      createdAt: submission.createdAt
+    }))
+  }));
 }
 
 export async function getSubmissionMetrics(db: DrizzleClient, formId: string) {
