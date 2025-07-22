@@ -9,7 +9,7 @@ export const load = async function ({ locals, params }) {
     return error(constants.HTTP_STATUS_NOT_FOUND, 'survey not found');
 
   // const responses = await getResponsesByFormId(locals.db, survey.id);
-  // const fields = await getFormFields(locals.db, survey.id)
+  const fields = await getFormFields(locals.db, survey.id)
   const responses = await getSubmissionData(locals.db, survey.id);
   const metrics = await getSubmissionMetrics(locals.db, survey.id);
   console.log('metrics',metrics)
@@ -17,6 +17,7 @@ export const load = async function ({ locals, params }) {
   return {
     survey,
     responses,
-    metrics
+    metrics,
+    fields
   };
 };
