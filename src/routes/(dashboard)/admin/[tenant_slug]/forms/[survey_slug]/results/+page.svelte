@@ -37,7 +37,7 @@
   import DropdownMenuItem from "$lib/components/ui/dropdown-menu/dropdown-menu-item.svelte";
 
   const { data } = $props();
-  console.log(data);
+  console.log(data.responses);
   const survey = $derived(data.survey);
   const fields = $derived(data.responses || []); // Assuming the array of fields is in data.responses
   // const metrics = $derived(data.metrics);
@@ -177,12 +177,73 @@
     URL.revokeObjectURL(url);
   }
 
+  function convertToCSV(data){
+    const headers = [
+      'Field Id',
+      'Field Label',
+      'Field Submitted At',
+      'Submission ID',
+      'Response Data',
+      'Response Created At',
+    ];
+
+    const csvRows = [headers.join(',')];
+
+    data.forEach(field => {
+      const fieldId = field.id;
+      const fieldLabel = `${field.label}`;
+      const fieldSubmittedAt = field.submittedAt instanceof Date 
+        ? field.submittedAt.toISOString()
+        : field.submittedAt;
+
+      if(!field.fieldSubmissions || field.fieldSubmissions.length === 0){
+        csvRows.push([
+          fieldId,
+          fieldLabel,
+          fieldSubmittedAt,
+          '',
+          '',
+          ''
+        ].join(','));
+      } else {
+        field.fieldSubmissions.forEach(submission => {
+          const submissionId = submission.submissionId;
+          const responseData = `"${(submission.data || '').replace(/"/g, '""')}"`;
+          const responseCreatedAt = submission.createdAt instanceof Date
+            ? submission.createdAt.toISOString()
+            : submission.createdAt;
+
+            csvRows.push([
+              fieldId,
+              fieldLabel,
+              fieldSubmittedAt,
+              submissionId,
+              responseData,
+              responseCreatedAt
+            ]. join(','));
+        });
+      }
+    });
+    return csvRows.join('\n');
+  }
+
+  function downloadCSV(data, filename = '-response.csv'){
+    const csvString = convertToCSV(data);
+    const blob = new Blob([csvString], { type: 'text/csv'});
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  }
+
   function handleDownload() {
     switch (exportStyle) {
       case "JSON":
         return downloadJSON(fields, `${survey.title}-responses.json`);
       case "CSV":
-        return;
+        return downloadCSV(fields, `${survey.title}-responses.csv`);
     }
   }
   
@@ -220,7 +281,7 @@
             <DropdownMenuItem onclick={() => (exportStyle = "JSON")}
               >JSON</DropdownMenuItem
             >
-            <DropdownMenuItem disabled onclick={() => (exportStyle = "CSV")}
+            <DropdownMenuItem onclick={() => (exportStyle = "CSV")}
               >CSV</DropdownMenuItem
             >
           </DropdownMenuContent>
