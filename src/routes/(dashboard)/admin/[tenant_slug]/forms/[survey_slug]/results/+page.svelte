@@ -7,6 +7,7 @@
     Filter,
     Search,
     ChevronDown,
+    X,
   } from "@lucide/svelte";
   import { page } from "$app/state";
   import { Button } from "$lib/components/ui/button";
@@ -184,6 +185,7 @@
         return;
     }
   }
+  
 </script>
 
 <div class="h-[calc(100vh-65px)] flex flex-col overflow-hidden">
@@ -404,13 +406,15 @@
                         </tbody>
                       </table>
                     </div>
+                    
+                    {#if filteredSubmissions.filter( (s) => s.fields.has(field.id) ).length > 0}
                     <DialogTrigger class="w-full">
                       <div class="text-center mt-4">
                         <Button variant="outline">View All Responses</Button>
-                      </div></DialogTrigger
+                      </div>
+                    </DialogTrigger
                     >
-
-                    {#if filteredSubmissions.filter( (s) => s.fields.has(field.id) ).length === 0}
+                    {:else}
                       <div>
                         <p
                           colspan="2"
@@ -426,33 +430,33 @@
             </CardContent>
           </Card>
 
-          <DialogContent>
-            <DialogHeader>
+          <DialogContent class="max-h-[600px] flex flex-col">
+            <DialogHeader class="flex-shrink-0 z-10">
               <DialogTitle>
                 <h3 class="font-medium text-center">{field.label}</h3>
               </DialogTitle>
             </DialogHeader>
-            <div class="w-full border rounded-xl">
-              <table class="w-full">
-                <thead class="bg-accent">
-                  <tr class="text-center">
-                    <th>#</th>
-                    <th>Answer</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {#each field.fieldSubmissions.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)) as entry, index}
+            <div class="flex-1 overflow-auto">
+              <div class="w-full border rounded-xl">
+                <table class="w-full">
+                  <thead class="bg-accent">
                     <tr class="text-center">
-                      <td class="border-r border-b">{index + 1}</td>
-                      <td class="border-b"
-                        >{field.type === "date"
-                          ? formatDate(+entry.data)
-                          : entry.data}</td
-                      >
+                      <th class="py-1">#</th>
+                      <th>Answer</th>
                     </tr>
-                  {/each}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {#each field.fieldSubmissions.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)) as entry, index}
+                    <tr class="text-center">
+                      <td class="border-r border-b py-2">{index + 1}</td>
+                      <td class="border-b">
+                        {field.type === "date" ? formatDate(+entry.data) : entry.data}
+                      </td>
+                    </tr>
+                    {/each}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </DialogContent>
         </Dialog>

@@ -28,9 +28,8 @@ import { SurveyEditor, setSurveyEditor } from '$stores/survey-editor.svelte';
 import type { PageProps } from './$types';
 
 const { data, form }: PageProps = $props();
-console.log(data)
 
-const fieldsArray = Object.values(data.fields).sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+const fieldsArray = $derived(Object.values(data.fields).sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0)));
 // Create the survey editor instance
 const editor = new SurveyEditor(data.survey, fieldsArray);
 setSurveyEditor(editor);
