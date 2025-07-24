@@ -302,6 +302,9 @@ async function deleteAccount() {
     <p class="text-muted-foreground mt-2">
       Manage your account settings and profile information.
     </p>
+    <p class="text-muted-foreground mt-2">
+      For any issues or questions, please contact <a class="text-primary underline-offset-4 hover:underline" href="mailto:support@travisspark.com">support@travisspark.com</a>.
+    </p>
   </div>
 
   <div class="grid gap-6">
@@ -655,7 +658,6 @@ async function deleteAccount() {
           </div>
           <Button
               variant="destructive"
-              onclick={deleteAccount}
               class="w-full md:w-auto"
               disabled
           >
