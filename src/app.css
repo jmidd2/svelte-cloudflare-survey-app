@@ -67,12 +67,12 @@
   --chart-3: var(--color-spark-primary-300);
   --chart-4: var(--color-spark-secondary-300);
   --chart-5: var(--color-spark-primary-700);
-  --sidebar: oklch(0.985 0 0);
+  --sidebar: var(--card);
   --sidebar-foreground: oklch(0.141 0.005 285.823);
   --sidebar-primary: var(--color-spark-primary-600);
   --sidebar-primary-foreground: var(--color-spark-primary-50);
-  --sidebar-accent: var(--color-spark-secondary-50);
-  --sidebar-accent-foreground: var(--color-spark-secondary-700);
+  --sidebar-accent: var(--color-primary);
+  --sidebar-accent-foreground: var(--color-white);
   --sidebar-border: var(--color-spark-secondary-200);
   --sidebar-ring: var(--color-spark-primary-600);
 
@@ -109,8 +109,8 @@
   --chart-3: var(--color-spark-primary-600);
   --chart-4: var(--color-spark-secondary-600);
   --chart-5: var(--color-spark-primary-300);
-  --sidebar: oklch(0.21 0.006 285.885);
-  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar: var(--card);
+  --sidebar-foreground: var(--card-foreground);
   --sidebar-primary: var(--color-spark-primary-400);
   --sidebar-primary-foreground: var(--color-spark-primary-50);
   --sidebar-accent: var(--color-spark-secondary-800);
@@ -252,5 +252,19 @@ nav .signInButton button,
 
   .badge-destructive-outline {
     @apply border border-destructive text-destructive bg-transparent hover:bg-destructive hover:text-destructive-foreground;
+  }
+}
+
+div[data-slot="dropdown-menu-item"] {
+  display: flex;
+  &[data-highlighted] {
+    background-color: color-mix(in oklab, var(--background) 40%, transparent);
+  }
+
+  a {
+    flex-grow: 1;
+    display: flex;
+    gap: calc(var(--spacing) * 2);
+    align-items: center;
   }
 }

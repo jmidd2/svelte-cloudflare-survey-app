@@ -1,4 +1,7 @@
 <script lang="ts">
+import { PlusIcon, XIcon } from '@lucide/svelte';
+import { toast } from 'svelte-sonner';
+import { z } from 'zod/v4';
 import { applyAction, enhance } from '$app/forms';
 import EditFieldOptionList from '$lib/components/EditFieldOptionList.svelte';
 import { Button } from '$lib/components/ui/button/index.js';
@@ -25,9 +28,6 @@ import {
 } from '$lib/utils/index.js';
 import { saveFieldSchema } from '$lib/validation-schema';
 import { getSurveyEditor } from '$stores/survey-editor.svelte';
-import { PlusIcon, XIcon } from '@lucide/svelte';
-import { toast } from 'svelte-sonner';
-import { z } from 'zod/v4';
 
 const editor = getSurveyEditor();
 const selectedField = $derived(editor.selectedField);
@@ -47,8 +47,16 @@ function parseFormData(formData: FormData) {
 }
 </script>
 {#if selectedField}
+  <div class="lg:sticky lg:top-[65px] h-[calc(100vh-65px)] bg-card flex flex-col">
+    <!-- Header -->
+    <div class="flex items-center justify-between p-4 border-b border-border">
+      <h2 class="font-semibold">Properties</h2>
+      <Button onclick={() => { editor.selectedIndex = -1 }} variant="ghost" size="icon" class="size-8">
+        <XIcon class="h-4 w-4" />
+      </Button>
+    </div>
 <form
-    class="border-l h-full bg-muted/20 p-4 overflow-y-auto grid grid-rows-[auto_1fr_auto]"
+    class="flex-1 p-4 overflow-y-auto flex flex-col"
     method="post"
     action="?/save-field"
     use:enhance={({formData, cancel}) => {
@@ -98,9 +106,8 @@ function parseFormData(formData: FormData) {
             }}
 >
   <input type="hidden" name="fieldId" value={selectedField.id}>
-  <h2 class="font-semibold mb-4 flex items-center justify-between">Properties<Button onclick={() => { editor.selectedIndex = -1 }} variant="ghost" size="icon" class="size-8"><XIcon /></Button></h2>
-  <Tabs bind:value={tabValue}>
-    <TabsList class="grid w-full grid-cols-2">
+  <Tabs bind:value={tabValue} class="flex-1 flex flex-col">
+    <TabsList class="grid w-full grid-cols-2 mb-4">
       <TabsTrigger value="general">General</TabsTrigger>
       <TabsTrigger
           value="options"
@@ -109,7 +116,8 @@ function parseFormData(formData: FormData) {
         Options
       </TabsTrigger>
     </TabsList>
-    <TabsContent value="general" class="space-y-4 pt-4">
+    <div class="flex-1 overflow-y-auto">
+    <TabsContent value="general" class="space-y-4 mt-0">
       <div class="space-y-2">
         <Label for="type">Type</Label>
         <Select type="single" name="type" bind:value={selectedField.type}>
@@ -150,7 +158,7 @@ function parseFormData(formData: FormData) {
         </div>
       </div>
     </TabsContent>
-    <TabsContent value="options" class="space-y-4 pt-4">
+    <TabsContent value="options" class="space-y-4 mt-0">
       {#if fieldHasOptions(selectedField)}
         <EditFieldOptionList {areAllValid} bind:options={selectedField.options}/>
         <Button variant="outline" type="button" onclick={() => { selectedField.options.push({ id: crypto.randomUUID(), val: 'string', label: 'string' }); }}>
@@ -159,8 +167,10 @@ function parseFormData(formData: FormData) {
         </Button>
       {/if}
     </TabsContent>
+    </div>
   </Tabs>
-  <div class="mt-4">
+  <!-- Save Button - Fixed at bottom -->
+  <div class="pt-4 border-t border-border mt-auto">
     <Button type="submit" class="w-full" disabled={editor.isLoading || !areAllValid}>
       {#if editor.isSaved}
         Saved!
@@ -169,8 +179,8 @@ function parseFormData(formData: FormData) {
       {:else}
         Save
       {/if}
-      <!--{isLoading ? 'Saving...' : 'Save'}-->
     </Button>
   </div>
 </form>
+  </div>
 {/if}

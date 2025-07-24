@@ -53,6 +53,7 @@ export class SurveyEditor {
     operation: () => Promise<T>,
     delay = 1000
   ): Promise<T> {
+    console.log('performing async action');
     this.performingAsyncAction = true;
     try {
       return await operation();
@@ -186,6 +187,45 @@ export class SurveyEditor {
         // Revert on error - would need to store previous state
         console.error('Failed to delete field:', error);
         this.error = String(error);
+      }
+    });
+  }
+
+  async addFirstField(elementType: FormFieldType) {
+    return this.withLoading(async () => {
+      if (!this.survey) return;
+
+      const fieldData = generatePreviewFieldData(elementType, this.survey.id);
+
+      const formData = new FormData();
+      formData.append('formId', this.survey.id);
+      formData.set('orderIndex', String(1));
+
+      for (const [key, value] of Object.entries(fieldData)) {
+        if (value !== undefined && value !== null) {
+          if (key === 'options' && Array.isArray(value)) {
+            formData.append(key, JSON.stringify(value));
+          } else {
+            formData.append(key, String(value));
+          }
+        }
+      }
+
+      try {
+        const response = await fetch('?/addFormField', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (response.ok) {
+          await invalidate('survey-fields:latest');
+          // return { success: true };
+        }
+
+        // return { success: false, error: 'Failed to add field' };
+      } catch (e) {
+        console.error('Failed to add field:', e);
+        this.error = String(e);
       }
     });
   }

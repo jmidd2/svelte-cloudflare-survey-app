@@ -1,4 +1,6 @@
 // Form field type definitions with metadata
+import type { SelectOrganization } from '$lib/server/db/schema';
+
 export const FORM_FIELD_TYPES = {
   // Text input fields
   TEXT: 'text',
@@ -19,7 +21,7 @@ export const FORM_FIELD_TYPES = {
   CHECKBOX: 'checkbox',
 
   // Special fields
-  YES_NO: 'yes-no',
+  // YES_NO: 'yes-no',
 } as const;
 
 // Create the union type from the constant values
@@ -79,3 +81,9 @@ declare function saveSorted(args: SaveSortedFnArgs): Promise<void>;
 // Backward compatibility alias - can be removed later
 /** @deprecated Use FormFieldType instead */
 export type HtmlFormElements = FormFieldType;
+
+export interface OrganizationListItem extends SelectOrganization {
+  isAdmin: boolean;
+  isOwner: boolean;
+  memberCount: number;
+}

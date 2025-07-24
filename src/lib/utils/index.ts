@@ -14,11 +14,26 @@ function generateShortHash(length = 6): string {
     .slice(0, length);
 }
 
-export function generateUrlSlug(name: string): string {
+export function generateUrlSlug(name: string, withHash?: boolean): string {
+  if (withHash === undefined) {
+    withHash = true;
+  }
+
   const baseSlug = name
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
-  const hash = generateShortHash();
-  return `${baseSlug}-${hash}`;
+  const hash = withHash ? `-${generateShortHash()}` : '';
+  return `${baseSlug}${hash}`;
+}
+
+export function getInitials(name: string): string {
+  const allInitials = name
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase();
+  if (allInitials.length === 0) return '?';
+  if (allInitials.length === 1) return allInitials[0];
+  return `${allInitials[0]}${allInitials[allInitials.length - 1]}`;
 }

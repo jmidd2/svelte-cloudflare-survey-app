@@ -1,4 +1,4 @@
-import type { AuthProvider } from '$lib/auth';
+import type { AuthProvider } from '$lib/server/auth';
 import {
   adminClient,
   emailOTPClient,
@@ -19,3 +19,4 @@ export const authClient = createAuthClient({
 });
 
 export type Session = typeof authClient.$Infer.Session;
+export type AuthUser = Session['user'];

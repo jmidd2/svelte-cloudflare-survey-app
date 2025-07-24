@@ -6,25 +6,23 @@ workers_dev = true
 version_metadata = { binding = "CF_VERSION_METADATA" }
 upload_source_maps = true
 
+# jonathan.middleton@travisspark.com's CF account
+account_id = "55e973a30de739096f0791126a25839c"
+
 [observability.logs]
 enabled = true
 
 [assets]
 directory = "./public/"
 binding = "ASSETS"
-# Route configuration (uncomment and modify when ready for production)
-# routes = [
-#   { pattern = "yourdomain.com/*", zone_name = "yourdomain.com" }
-# ]
 
 # Environment variables visible to client and server code
 [vars]
 #ENVIRONMENT = "development"
 #APP_URL = "http://localhost:8788"
-# Replace with your Auth0 domain
-AUTH_AUTH0_ISSUER = "https://dev-f7wd881wsk8er6ir.us.auth0.com"
 AUTH_MAX_AGE = 86400
 EMAIL_FROM = "noreply@jmidd.dev"
+NODE_ENV = "dev"
 
 # Optional: Separate database for tenant management (if using multi-database approach)
 [[d1_databases]]
@@ -44,31 +42,62 @@ binding = "CACHE"
 id = "2843031524a84ca2b6d879c17ca94a5e"
 
 [env.staging]
-name = "feedback-system-staging"
+    # phoenix@travisspark.com's CF account
+    account_id = "d407438686c7c34424056b8a87db47c5"
+    name = "feedback-app-staging"
+    routes = [
+        { pattern = "staging.feedback.travisspark.com/*", zone_name = "travisspark.com" }
+    ]
+
+    version_metadata = { binding = "CF_VERSION_METADATA" }
+
+    [env.staging.vars]
+    AUTH_MAX_AGE = 86400
+    EMAIL_FROM = "noreply@jmidd.dev"
+    NODE_ENV = "staging"
+
+    [[env.staging.d1_databases]]
+    binding = "DB"
+    database_name = "staging-feedback-app"
+    migrations_dir = "./db/migrations"
+    database_id = "033a442a-0750-4887-ab3b-ae9f249287c7"
+
+    # Analytics Engine Configuration
+    [[env.staging.analytics_engine_datasets]]
+    binding = "ANALYTICS" # This is how you'll reference it in your code
+    dataset = "staging-feedback-analytics"
+
+    # KV Namespace for caching (optional but recommended)
+    [[env.staging.kv_namespaces]]
+    binding = "CACHE"
+    id = "d40c03d06a894cc19d67443c331c79a0"
 
 [env.production]
-name = "feedback-system-production"
-# Development environment specific settings
-#[env.dev]
-## Development-specific variables
-##vars = { ENVIRONMENT = "development", APP_URL = "http://localhost:8788", DATABASE_URL = "" }
-#vars = { ENVIRONMENT = "development" }
-#
-## Production environment specific settings
-#[env.production]
-## Production-specific variables
-##vars = { ENVIRONMENT = "production", APP_URL = "https://yourdomain.com", DATABASE_URL = "" }
-#vars = { ENVIRONMENT = "production" }
-#
-## Staging environment specific settings
-#[env.staging]
-## Staging-specific variables
-##vars = { ENVIRONMENT = "staging", APP_URL = "https://staging.yourdomain.com", DATABASE_URL = "" }
-#vars = { ENVIRONMENT = "staging" }
+    # phoenix@travisspark.com's CF account
+    account_id = "d407438686c7c34424056b8a87db47c5"
+    name = "feedback-app-prod"
+    routes = [
+        { pattern = "feedback.travisspark.com/*", zone_name = "travisspark.com" }
+    ]
 
+    version_metadata = { binding = "CF_VERSION_METADATA" }
+    [env.production.vars]
+    AUTH_MAX_AGE = 86400
+    EMAIL_FROM = "noreply@jmidd.dev"
+    NODE_ENV = "production"
 
-# Secrets: Set these using 'wrangler secret put <NAME>'
-# Required secrets:
-# - AUTH0_CLIENT_ID
-# - AUTH0_CLIENT_SECRET
-# - AUTH_SECRET
+    [[env.production.d1_databases]]
+    binding = "DB"
+    database_name = "prod-feedback-app"
+    migrations_dir = "./db/migrations"
+    database_id = "0403f210-43f1-4c81-a903-0b2f4d5d7ae3"
+
+    # Analytics Engine Configuration
+    [[env.production.analytics_engine_datasets]]
+    binding = "ANALYTICS" # This is how you'll reference it in your code
+    dataset = "prod-feedback-analytics"
+
+    # KV Namespace for caching (optional but recommended)
+    [[env.production.kv_namespaces]]
+    binding = "CACHE"
+    id = "ee0feef839614e6e92030f1954847386"

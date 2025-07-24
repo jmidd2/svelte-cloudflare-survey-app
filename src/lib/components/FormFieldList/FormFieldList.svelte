@@ -1,8 +1,13 @@
 <script lang="ts">
+import { Button } from '$lib/components/ui/button';
+import { Card, CardContent } from '$lib/components/ui/card';
 import { type FieldData, isFieldData, isNewFieldData } from '$lib/dnd';
 import type { SelectFormField } from '$lib/server/db/schema.js';
 import { getSurveyEditor } from '$stores/survey-editor.svelte';
-import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import {
+  dropTargetForElements,
+  monitorForElements,
+} from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import type {
   BaseEventPayload,
   ElementDragType,
@@ -10,6 +15,8 @@ import type {
 import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import type { Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/types';
 import { reorderWithEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/reorder-with-edge';
+import { FileText, Plus } from '@lucide/svelte';
+import type { Attachment } from 'svelte/attachments';
 import FormFieldItem from './FormFieldItem.svelte';
 
 // Get editor from context
@@ -25,8 +32,21 @@ async function handleDrop({
   location,
   source,
 }: BaseEventPayload<ElementDragType>) {
+  console.log(
+    'drop',
+    location.current.dropTargets,
+    source.data,
+    'surveyId: ',
+    surveyId
+  );
+
   const target = location.current.dropTargets[0];
   if (!(target && surveyId)) return;
+
+  if (fields.length === 0) {
+    await editor.addFirstField(source.data.type);
+    return;
+  }
 
   const sourceData = source.data;
   const targetData = target.data;
@@ -94,13 +114,42 @@ $effect(() => {
     onDrop: handleDrop,
   });
 });
+
+let dragState = $state<'idle' | 'dragging-over'>('idle');
+
+const attachDropTarget: Attachment = element => {
+  return dropTargetForElements({
+    element,
+    onDragEnter() {
+      dragState = 'dragging-over';
+    },
+    onDragLeave() {
+      dragState = 'idle';
+    },
+    onDrop() {
+      dragState = 'idle';
+    },
+  });
+};
 </script>
 
-<div class="grid grid-cols-1 gap-y-4 p-2">
-    {#each fields as field, index (field.id)}
-        <FormFieldItem
-                {field}
-                {index}
-        />
-    {/each}
+<div {@attach attachDropTarget} data-state={dragState} class={["grid grid-cols-1 gap-y-4 p-2 group/target"]}>
+  {#each fields as field, index (field.id)}
+    <FormFieldItem
+        {field}
+        {index}
+    />
+  {:else}
+    <Card class="group-data-[state=dragging-over]/target:bg-accent">
+      <CardContent class="p-12 text-center">
+        <FileText class="h-16 w-16 text-muted-foreground mx-auto mb-4"/>
+        <h3 class="text-xl font-medium text-foreground mb-2">
+          No fields yet
+        </h3>
+        <p class="text-muted-foreground mb-6">
+          Get started by adding your first field from the list on the left.
+        </p>
+      </CardContent>
+    </Card>
+  {/each}
 </div>

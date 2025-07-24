@@ -11,21 +11,23 @@ import {
 } from '$lib/components/ui/accordion/index.js';
 </script>
 
-<Accordion type="multiple" value={['toolbox']}>
-    <AccordionItem value="toolbox">
-        <AccordionTrigger class="px-4 py-3 bg-muted/10 hover:bg-muted/30 border-b-muted border-b hover:cursor-pointer">
-            Toolbox
-        </AccordionTrigger>
-        <AccordionContent class="px-4 pb-4 pt-1">
-          <ToolboxElementList />
-        </AccordionContent>
+<div class="lg:sticky lg:top-[65px] flex flex-col bg-card">
+  <Accordion type="multiple" value={['toolbox', 'form-elements']} class="flex-1">
+    <AccordionItem value="toolbox" class="border-b">
+      <AccordionTrigger class="rounded-none px-4 py-3 hover:bg-muted/50 text-sm font-medium">
+        Fields
+      </AccordionTrigger>
+      <AccordionContent class="px-4 pb-4">
+        <ToolboxElementList />
+      </AccordionContent>
     </AccordionItem>
-    <AccordionItem value="form-elements">
-        <AccordionTrigger class="px-4 py-3 bg-muted/10 hover:bg-muted/30 border-b-muted border-b hover:cursor-pointer">
-            Form Elements
-        </AccordionTrigger>
-        <AccordionContent class="px-4 pb-4 pt-1 border-b border-b-muted">
-            <ToolboxFormFieldList />
-        </AccordionContent>
+    <AccordionItem value="form-elements" class="border-b">
+      <AccordionTrigger class="rounded-none px-4 py-3 hover:bg-muted/50 text-sm font-medium">
+        Form Elements
+      </AccordionTrigger>
+      <AccordionContent class="px-4 pb-4">
+        <ToolboxFormFieldList />
+      </AccordionContent>
     </AccordionItem>
-</Accordion>
+  </Accordion>
+</div>

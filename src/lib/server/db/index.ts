@@ -4,6 +4,7 @@ import { instrumentD1WithSentry } from '@sentry/cloudflare';
 import { and, asc, desc, eq, type SQL } from 'drizzle-orm';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 import type { LibSQLDatabase } from 'drizzle-orm/libsql';
+import type { tsImport } from 'tsx/esm/api';
 import * as schema from './schema';
 
 /**
@@ -11,37 +12,85 @@ import * as schema from './schema';
  */
 export type DrizzleClient = Awaited<ReturnType<typeof createDbClient>>;
 
-export async function createDbClient<T extends typeof import('./schema')>({
+const enableLogger = process.env.DEBUG_DB === 'true';
+
+// Cache for database clients using symbols as keys
+const dbClientCache = new Map<symbol, DrizzleClient>();
+
+// Function to create a deterministic symbol for a given URL
+function getClientSymbol(dbUrl?: string, isD1?: boolean): symbol {
+  if (isD1) {
+    return Symbol.for('D1_DATABASE_CLIENT');
+  }
+  if (dbUrl) {
+    return Symbol.for(`LIBSQL_CLIENT_${dbUrl}`);
+  }
+  throw new Error('Invalid client parameters');
+}
+
+export type DbSchema = typeof import('./schema');
+
+export async function createDbClient({
   d1Database,
   dbUrl,
   schema,
 }: {
   d1Database?: D1Database;
   dbUrl?: string;
-  schema: T;
+  schema: DbSchema;
 }): Promise<
-  | (LibSQLDatabase<T> & { $client: Client })
-  | (DrizzleD1Database<T> & { $client: D1Database })
+  | (LibSQLDatabase<DbSchema> & { $client: Client })
+  | (DrizzleD1Database<DbSchema> & { $client: D1Database })
 > {
+  const cacheKey = getClientSymbol(dbUrl, !!d1Database);
+
+  // Check if we have a cached client
+  if (dbClientCache.has(cacheKey)) {
+    // biome-ignore lint/style/noNonNullAssertion: <has() checks for undefined>
+    return dbClientCache.get(cacheKey)!;
+  }
+
+  let client: DrizzleClient;
+
   if (dbUrl) {
     const { createClient } = await import('@libsql/client');
     const { drizzle } = await import('drizzle-orm/libsql');
 
-    const client = createClient({ url: dbUrl });
-    return drizzle(client, { schema, logger: true });
-  }
-
-  if (d1Database) {
+    const libsqlClient = createClient({ url: dbUrl });
+    client = drizzle(libsqlClient, {
+      schema,
+      logger: enableLogger,
+    }) as unknown as LibSQLDatabase<DbSchema> & { $client: Client };
+  } else if (d1Database) {
     const { drizzle } = await import('drizzle-orm/d1');
 
-    return drizzle(instrumentD1WithSentry(d1Database), {
+    client = drizzle(instrumentD1WithSentry(d1Database), {
       schema,
-      logger: true,
-    });
+      logger: enableLogger,
+    }) as unknown as DrizzleD1Database<DbSchema> & { $client: D1Database };
+  } else {
+    throw new Error('Unable to create Db');
   }
 
-  throw new Error('Unable to create Db');
+  // Cache the client
+  dbClientCache.set(cacheKey, client);
+
+  return client;
 }
+
+/**
+ * Get responses for form
+ */
+export async function getResponsesByFormId(
+  db: DrizzleClient,
+  formId: string
+){
+  return db
+    .select().from(schema.submissions)
+    .where(eq(schema.submissions.formId, formId))
+    .orderBy(desc(schema.submissions.createdAt));
+}
+
 
 /**
  * Get forms for a tenant
@@ -157,6 +206,17 @@ export async function getFormFields(db: DrizzleClient, formId: string) {
     .from(schema.formFields)
     .where(eq(schema.formFields.formId, formId))
     .orderBy(asc(schema.formFields.orderIndex));
+}
+
+/**
+ * Get field label by formId and fieldId
+ */
+export async function getFieldLabel(db: DrizzleClient, formId: string, fieldId: string)
+{
+  return db
+    .select()
+    .from(schema.formFields)
+    .where(eq(schema.formFields.formId, formId) && eq(schema.formFields.id, fieldId))
 }
 
 /**

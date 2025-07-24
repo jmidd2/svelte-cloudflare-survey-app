@@ -1,12 +1,20 @@
+import type { InferMember, Invitation } from 'better-auth/plugins';
 import { type InferSelectModel, relations, type SQL, sql } from 'drizzle-orm';
-import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import {
+  integer,
+  sqliteTable,
+  text,
+  unique,
+  uniqueIndex,
+} from 'drizzle-orm/sqlite-core';
 import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod/v4';
 import type { FormFieldType } from '../../types.d';
 import { ALL_FIELD_TYPES } from '../../utils/form-fields/constants';
 
 export type UserRoles = 'admin' | 'user';
-export type MemberRoles = 'owner' | 'admin' | 'member';
+export type OrganizationRoles = 'owner' | 'admin' | 'member';
+export type OrganizationMember = InferMember<{ teams: { enabled: false } }>;
 
 export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
@@ -102,7 +110,7 @@ export const members = sqliteTable('members', {
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
   role: text('role')
-    .$type<MemberRoles>()
+    .$type<OrganizationRoles>()
     .$default(() => 'member')
     .notNull(),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
@@ -115,7 +123,7 @@ export const invitations = sqliteTable('invitations', {
     .references(() => organizations.id, { onDelete: 'cascade' }),
   email: text('email').notNull(),
   role: text('role')
-    .$type<MemberRoles>()
+    .$type<OrganizationRoles>()
     .$default(() => 'member')
     .notNull(),
   status: text('status')
@@ -128,15 +136,38 @@ export const invitations = sqliteTable('invitations', {
     .references(() => users.id, { onDelete: 'cascade' }),
 });
 
+export const requests = sqliteTable(
+  'requests',
+  {
+    id: text('id').primaryKey(),
+    organizationId: text('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, {
+        onDelete: 'cascade',
+      }),
+    role: text('role')
+      .$type<OrganizationRoles>()
+      .$default(() => 'member')
+      .notNull(),
+    status: text('status')
+      .default('pending')
+      .$type<Invitation['status']>()
+      .notNull(),
+    expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
+  },
+  t => [uniqueIndex('user_organization_idx').on(t.userId, t.organizationId)]
+);
+
 const timestamps = {
   createdAt: integer('created_at', { mode: 'timestamp' })
     .notNull()
-    .default(sql`(unixepoch()
-                 )`),
+    .default(sql`(unixepoch())`),
   updatedAt: integer('updated_at', { mode: 'timestamp' })
     .notNull()
-    .default(sql`(unixepoch()
-                 )`),
+    .default(sql`(unixepoch())`),
 };
 
 // Forms table - stores form definitions
@@ -154,70 +185,69 @@ export const forms = sqliteTable('forms', {
   active: integer('active', { mode: 'boolean' }).notNull().default(true),
   slug: text('slug').$default(
     (): SQL<unknown> => sql`
-      lower(
-          trim(
-            replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(
-      ${forms.title},
-      ' ',
-      '-'
-      ),
-      '_',
-      '-'
-      ),
-      '&',
-      'and'
-      ),
-      '@',
-      'at'
-      ),
-      '#',
-      ''
-      ),
-      '%',
-      ''
-      ),
-      '+',
-      ''
-      ),
-      '=',
-      ''
-      ),
-      '!',
-      ''
-      ),
-      '?',
-      ''
-      ),
-      '.',
-      ''
-      ),
-      ',',
-      ''
-      ),
-      '--',
-      '-'
-      )
-      ||
-      '-'
-      ||
-      substr
-      (
-      lower
-      (
-      hex
-      (
-      randomblob
-      (
-      16
-      )
-      )
-      ),
-      1,
-      5
-      )
-      )
-      )
-  `
+        lower
+        ( trim(
+            replace (replace (replace (replace (replace (replace (replace (replace (replace (replace (replace (replace (replace (
+            ${forms.title},
+            ' ',
+            '-'
+            ),
+            '_',
+            '-'
+            ),
+            '&',
+            'and'
+            ),
+            '@',
+            'at'
+            ),
+            '#',
+            ''
+            ),
+            '%',
+            ''
+            ),
+            '+',
+            ''
+            ),
+            '=',
+            ''
+            ),
+            '!',
+            ''
+            ),
+            '?',
+            ''
+            ),
+            '.',
+            ''
+            ),
+            ',',
+            ''
+            ),
+            '--',
+            '-'
+            )
+            ||
+            '-'
+            ||
+            substr
+            (
+            lower
+            (
+            hex
+            (
+            randomblob
+            (
+            16
+            )
+            )
+            ),
+            1,
+            5
+            )
+            ))
+    `
   ),
   settings: text('settings', { mode: 'json' }).$type<{
     email: string;
@@ -342,6 +372,10 @@ export const submissionRelations = relations(submissions, ({ one }) => ({
 }));
 
 export type InsertOrganization = typeof organizations.$inferInsert;
+
+export type SelectOrganization = typeof organizations.$inferSelect;
+
+export type SelectRequest = typeof requests.$inferSelect;
 
 export type SelectFormField = InferSelectModel<typeof formFields>;
 
