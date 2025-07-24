@@ -481,7 +481,7 @@ function displayRole(role: string): string {
                             {#if isSiteAdmin}
                               <DropdownMenuSeparator/>
                               <DropdownMenuItem class="text-destructive">
-                                <form method="POST" action="?../remove-invite" class="inline" use:stdEnhance={() => {
+                                <form method="POST" action="?/remove-invite" class="inline" use:stdEnhance={() => {
                                   return async ({update, result}) => {
                                     if (result.type === 'redirect') {
                                       goto(result.location);
