@@ -168,7 +168,7 @@ $inspect(currentOrg);
       <!-- Left Section: Logo + Breadcrumbs -->
       <div class="flex items-center gap-4">
         <!-- Logo -->
-        <a href="/" class="flex items-center gap-2 font-bold text-xl text-foreground hover:text-primary transition-colors">
+        <a href={`/admin/${currentOrg?.slug ?? ''}`} class="flex items-center gap-2 font-bold text-xl text-foreground hover:text-primary transition-colors">
           <div class="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
             <FileText class="h-5 w-5 text-primary-foreground" />
           </div>
