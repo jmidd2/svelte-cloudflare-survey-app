@@ -46,7 +46,7 @@ let open = $derived(
             isSiteAdmin={data.user?.role?.includes('admin')}>
 </Header>
 
-  <div class="flex w-full">
+  <div class="flex w-full min-h-svh">
   {@render children()}
   </div>
 <!-- Footer -->
