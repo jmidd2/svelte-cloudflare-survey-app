@@ -7,6 +7,7 @@ import {
   type SelectFormFieldWithHash,
   type SelectFormWithFields,
   type SubmissionData,
+  submissionFormFields,
   submissions,
 } from '$lib/server/db/schema';
 import { genSlug } from '$lib/utils';
@@ -17,6 +18,7 @@ import { type Actions, error, fail, type ServerLoadEvent } from '@sveltejs/kit';
 import { asc, eq } from 'drizzle-orm';
 import { v4 as uuid } from 'uuid';
 import type { PageServerLoad } from './$types';
+import { generateId } from 'better-auth';
 
 type SubmittedFields =
   | {
@@ -323,14 +325,30 @@ export const actions = {
         hashSubmission(getClientUserAgent(request.headers))
       );
 
+      const submissionId = generateId();
+
       await locals.db.insert(submissions).values({
-        id: uuid(),
-        data,
-        formId: id,
-        ipHash: hashSubmission(getClientAddress()),
-        userAgentHash: hashSubmission(getClientUserAgent(request.headers)),
-        createdAt: new Date(Date.now()),
-      });
+      id: submissionId,
+      formId: id,
+      ipHash: hashSubmission(getClientAddress()),
+      userAgentHash: hashSubmission(getClientUserAgent(request.headers)),
+      createdAt: new Date(Date.now()),
+    });
+
+    // Then, create individual submission form field records
+    const submissionFormFieldsData = data.map(item => ({
+      submissionId: submissionId,
+      fieldId: item.field.id,
+      data: 'submitted' in item && 'values' in item.submitted 
+        ? item.submitted.values 
+        : 'submitted' in item && 'value' in item.submitted
+        ? item.submitted.value
+        : null,
+      createdAt: new Date(Date.now()),
+      updatedAt: new Date(Date.now()),
+    }));
+
+    await locals.db.insert(submissionFormFields).values(submissionFormFieldsData);
 
       return { success: true };
     } catch (e) {

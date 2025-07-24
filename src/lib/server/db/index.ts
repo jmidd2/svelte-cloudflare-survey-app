@@ -1,10 +1,9 @@
 import type { D1Database } from '@cloudflare/workers-types';
 import type { Client } from '@libsql/client';
 import { instrumentD1WithSentry } from '@sentry/cloudflare';
-import { and, asc, desc, eq, type SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, type SQL, sql } from 'drizzle-orm';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 import type { LibSQLDatabase } from 'drizzle-orm/libsql';
-import type { tsImport } from 'tsx/esm/api';
 import * as schema from './schema';
 
 /**
@@ -81,16 +80,14 @@ export async function createDbClient({
 /**
  * Get responses for form
  */
-export async function getResponsesByFormId(
-  db: DrizzleClient,
-  formId: string
-){
+export async function getResponsesByFormId(db: DrizzleClient, formId: string) {
   return db
-    .select().from(schema.submissions)
+    .select()
+    .from(schema.submissions)
     .where(eq(schema.submissions.formId, formId))
-    .orderBy(desc(schema.submissions.createdAt));
+    .orderBy(desc(schema.submissions.createdAt))
+    .groupBy(schema.submissions.id);
 }
-
 
 /**
  * Get forms for a tenant
@@ -201,22 +198,80 @@ export async function addFormField(
  * Get all fields for a form
  */
 export async function getFormFields(db: DrizzleClient, formId: string) {
-  return db
+  return await db
     .select()
     .from(schema.formFields)
     .where(eq(schema.formFields.formId, formId))
     .orderBy(asc(schema.formFields.orderIndex));
+  // const results = await  db
+  //   .select()
+  //   .from(schema.formFields)
+  //   .where(eq(schema.formFields.formId, formId))
+  //   .orderBy(asc(schema.formFields.orderIndex));
+  //   let i = 0
+  //   return results.reduce((acc, val, index) => {
+  //     i++;
+  //     acc[val.id] = val
+  //     acc.length = i;
+  //     return acc
+  //   }, {length:i})
+}
+
+export async function getSubmissionData(db: DrizzleClient, formId: string) {
+  const result = await db.query.formFields.findMany({
+    where: (formFields, { eq }) => eq(formFields.formId, formId),
+    with: {
+      fieldSubmissions: {
+        with: {
+          formSubmission: true,
+        },
+      },
+    },
+    orderBy: (formFields, { desc }) => [desc(formFields.formId)],
+  });
+
+  return result.map(field => ({
+    id: field.id,
+    submittedAt: field.createdAt,
+    label: field.label,
+    fieldSubmissions: field.fieldSubmissions.map(submission => ({
+      submissionId: submission.submissionId,
+      data: submission.data,
+      createdAt: submission.createdAt,
+    })),
+  }));
+}
+
+export async function getSubmissionMetrics(db: DrizzleClient, formId: string) {
+  return await db
+    .select({
+      monthYear: sql<string>`strftime('%Y-%m', datetime(${schema.submissions.createdAt}, 'unixepoch'))`,
+      submissionCount: count(),
+    })
+    .from(schema.submissions)
+    .where(eq(schema.submissions.formId, formId))
+    .groupBy(
+      sql`strftime('%Y-%m', datetime(${schema.submissions.createdAt}, 'unixepoch'))`
+    )
+    .orderBy(
+      sql`strftime('%Y-%m', datetime(${schema.submissions.createdAt}, 'unixepoch')) DESC`
+    );
 }
 
 /**
  * Get field label by formId and fieldId
  */
-export async function getFieldLabel(db: DrizzleClient, formId: string, fieldId: string)
-{
+export async function getFieldLabel(
+  db: DrizzleClient,
+  formId: string,
+  fieldId: string
+) {
   return db
     .select()
     .from(schema.formFields)
-    .where(eq(schema.formFields.formId, formId) && eq(schema.formFields.id, fieldId))
+    .where(
+      eq(schema.formFields.formId, formId) && eq(schema.formFields.id, fieldId)
+    );
 }
 
 /**
