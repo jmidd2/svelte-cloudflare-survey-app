@@ -24,13 +24,12 @@ const fields = $derived(data.fields);
 const lineLimit = 3;
 let searchQuery = $state('');
 const FormStates = {
-    ALL: 'All',
-    ACTIVE: 'Active',
-    DRAFT: 'Draft',
-    ARCHIVED: 'Archived',
+  ALL: 'All',
+  ACTIVE: 'Active',
+  DRAFT: 'Draft',
+  ARCHIVED: 'Archived',
 };
 let selectedStatus = $state<keyof typeof FormStates>(FormStates.ALL);
-$inspect(data);
 
 // Add filtered responses derived state
 // Try using $state instead of $derived
@@ -38,58 +37,56 @@ let filteredResponses = $state([]);
 
 // Use $effect to handle the filtering
 $effect(() => {
-    if (!searchQuery.trim()) {
-        filteredResponses = responses.map(response => ({
-        ...response,
+  if (!searchQuery.trim()) {
+    filteredResponses = responses.map(response => ({
+      ...response,
       matchingData: response.data, // Show all data when no search
     }));
     return;
-    }
+  }
 
-    const query = searchQuery.toLowerCase().trim();
+  const query = searchQuery.toLowerCase().trim();
 
-    const filtered = responses
-        .map(response => {
+  const filtered = responses
+    .map(response => {
       // Find only the matching field-value pairs
-        const matchingData = response.data.filter((entry, index) => {
+      const matchingData = response.data.filter((entry, index) => {
         const fieldLabel = fields[index]?.label?.toLowerCase() || '';
         const fieldLabelMatch = fieldLabel.includes(query);
 
         const submittedValue =
-            entry.submitted?.value?.toString().toLowerCase() || '';
+          entry.submitted?.value?.toString().toLowerCase() || '';
         const valueMatch = submittedValue.includes(query);
 
         return fieldLabelMatch || valueMatch;
-    });
-    
-    return {
+      });
+
+      return {
         ...response,
         matchingData,
         originalDataLength: response.data.length,
-    };
-}).filter(response => response.matchingData.length > 0); // Only keep responses that have matches
+      };
+    })
+    .filter(response => response.matchingData.length > 0); // Only keep responses that have matches
 
-filteredResponses = filtered;
+  filteredResponses = filtered;
 });
 
 //TODO: move to utils file
 function formatDate(date: string | Date): string {
-    return new Date(date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: 'numeric',
-    });
+  return new Date(date).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+  });
 }
 
 function fieldLabelFromFieldId(fieldId: string) {
-    const field = fields.find(field => field.id === fieldId);
-    return field ? field.label : '...';
+  const field = fields.find(field => field.id === fieldId);
+  return field ? field.label : '...';
 }
-
-
-
 </script>
 
 <div class="p-6 space-y-8">

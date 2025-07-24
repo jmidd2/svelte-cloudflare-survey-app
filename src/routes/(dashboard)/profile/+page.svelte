@@ -54,7 +54,7 @@ let profileImageFile = $state(null);
 let previewUrl = $state('');
 
 const { data } = $props();
-$inspect(data);
+
 const userEditSchema = z.object({
   firstName: z.string().min(2),
   lastName: z.string().min(2),

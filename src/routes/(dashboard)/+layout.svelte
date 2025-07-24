@@ -3,6 +3,7 @@ import { page } from '$app/state';
 import Footer from '$lib/components/Footer.svelte';
 import { DashboardHeader as Header } from '$lib/components/header';
 import * as Sidebar from '$lib/components/ui/sidebar';
+import { useSidebar } from '$lib/components/ui/sidebar';
 
 const { children, data } = $props();
 
@@ -29,7 +30,12 @@ let toastId: string | number | undefined;
 //     }
 //   }
 // });
+const sidebar = useSidebar();
+$inspect(sidebar);
+
+let open = $state(true);
 </script>
+<Sidebar.Provider bind:open class="block">
 <Header     {user}
             {organizationList}
             {currentOrg}
@@ -37,8 +43,9 @@ let toastId: string | number | undefined;
             isSiteAdmin={data.user?.role?.includes('admin')}>
 </Header>
 
-<Sidebar.Provider class="flex w-full">
+  <div class="flex w-full">
   {@render children()}
-</Sidebar.Provider>
+  </div>
 <!-- Footer -->
-<Footer class="ml-56" />
+<Footer class={`${open ? 'ml-54' : 'ml-0'} transition-all`} />
+</Sidebar.Provider>

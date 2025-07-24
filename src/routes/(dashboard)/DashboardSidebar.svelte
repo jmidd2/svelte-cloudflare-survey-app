@@ -105,8 +105,6 @@ const navigationItems = $derived<NavigationItem[]>([
     current: pathname.includes('/settings'),
   },
 ]);
-
-$inspect(sidebar.state);
 </script>
 
 <Sidebar.Root class={`

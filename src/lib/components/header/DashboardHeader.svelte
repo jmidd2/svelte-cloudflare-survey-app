@@ -159,7 +159,6 @@ function buildUrl(url: URL, slug: string): string {
 
   return basePath;
 }
-$inspect(currentOrg);
 </script>
 
 <header class="sticky top-0 z-45 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
