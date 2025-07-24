@@ -341,11 +341,16 @@ export class EmailService {
       html = options.html;
     }
 
-    if (this.isDisabled) {
+    if (this.isDisabled && process.env.NODE_ENV === 'development') {
       console.log('📧 Email sending disabled - would have sent email to:', to);
       console.log('📧 Subject:', subject);
       console.log('📧 From:', options.from || this.defaultFrom);
       console.log('📧 HTML content:', html);
+      return;
+    }
+
+    if (this.isDisabled) {
+      console.log('📧 Email sending disabled - would have sent email to:', to);
       return;
     }
 

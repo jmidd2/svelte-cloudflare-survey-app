@@ -192,7 +192,7 @@
     data.forEach(field => {
       const fieldId = field.id;
       const fieldLabel = `${field.label}`;
-      const fieldSubmittedAt = field.submittedAt instanceof Date 
+      const fieldSubmittedAt = field.submittedAt instanceof Date
         ? field.submittedAt.toISOString()
         : field.submittedAt;
 
@@ -246,7 +246,7 @@
         return downloadCSV(fields, `${survey.title}-responses.csv`);
     }
   }
-  
+
 </script>
 
 <div class="h-[calc(100vh-65px)] flex flex-col overflow-hidden">
@@ -467,7 +467,7 @@
                         </tbody>
                       </table>
                     </div>
-                    
+
                     {#if filteredSubmissions.filter( (s) => s.fields.has(field.id) ).length > 0}
                     <DialogTrigger class="w-full">
                       <div class="text-center mt-4">

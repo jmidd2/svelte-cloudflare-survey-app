@@ -73,6 +73,10 @@ function openShareDialog(survey: SelectForm) {
   formDialogManager.openDialog('share');
 }
 
+function openInviteDialog() {
+  formDialogManager.openDialog('invite');
+}
+
 function openAddDialog() {
   formDialogManager.openDialog('edit');
 }
@@ -334,7 +338,8 @@ const recentActivity = $derived([
               <FileText class="h-4 w-4 mr-2" />
               Create New Form
             </Button>
-            <Button variant="outline" class="w-full justify-start" disabled>
+            <!-- \\TODO: Add dialog for invite members -->
+            <Button variant="outline" class="w-full justify-start" href={page.url.pathname + '/members/requests'}>
               <Users class="h-4 w-4 mr-2" />
               Invite New Members
             </Button>

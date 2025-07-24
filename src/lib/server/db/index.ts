@@ -4,7 +4,6 @@ import { instrumentD1WithSentry } from '@sentry/cloudflare';
 import { and, asc, count, desc, eq, sql, type SQL } from 'drizzle-orm';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 import type { LibSQLDatabase } from 'drizzle-orm/libsql';
-import type { tsImport } from 'tsx/esm/api';
 import * as schema from './schema';
 
 /**
@@ -257,6 +256,17 @@ export async function getSubmissionMetrics(db: DrizzleClient, formId: string) {
   .where(eq(schema.submissions.formId, formId))
   .groupBy(sql`strftime('%Y-%m', datetime(${schema.submissions.createdAt}, 'unixepoch'))`)
   .orderBy(sql`strftime('%Y-%m', datetime(${schema.submissions.createdAt}, 'unixepoch')) DESC`);
+}
+
+/**
+ * Get field label by formId and fieldId
+ */
+export async function getFieldLabel(db: DrizzleClient, formId: string, fieldId: string)
+{
+  return db
+    .select()
+    .from(schema.formFields)
+    .where(eq(schema.formFields.formId, formId) && eq(schema.formFields.id, fieldId))
 }
 
 /**

@@ -21,7 +21,7 @@ export const FORM_FIELD_TYPES = {
   CHECKBOX: 'checkbox',
 
   // Special fields
-  YES_NO: 'yes-no',
+  // YES_NO: 'yes-no',
 } as const;
 
 // Create the union type from the constant values

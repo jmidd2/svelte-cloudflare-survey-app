@@ -1,4 +1,7 @@
 <script lang="ts">
+import { Mail, MapPin, Phone } from '@lucide/svelte';
+import { toast } from 'svelte-sonner';
+import { Badge } from '$lib/components/ui/badge';
 import { Button } from '$lib/components/ui/button';
 import {
   Card,
@@ -10,8 +13,6 @@ import {
 import { Input } from '$lib/components/ui/input';
 import { Label } from '$lib/components/ui/label';
 import { Textarea } from '$lib/components/ui/textarea';
-import { Mail, MapPin, Phone } from '@lucide/svelte';
-import { toast } from 'svelte-sonner';
 
 // Form state
 let formData = $state({
@@ -142,16 +143,17 @@ function clearError(field: string) {
       <!-- Contact Form -->
       <Card>
         <CardHeader>
-          <CardTitle>Send us a Message</CardTitle>
+          <CardTitle>Send us a Message
+            <Badge variant="outline" class="text-xs">Soon</Badge></CardTitle>
           <CardDescription>
             Fill out the form below and we'll get back to you as soon as possible.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onsubmit={handleSubmit} class="space-y-6">
+          <form class="space-y-6">
             <!-- Name Field -->
             <div class="space-y-2">
-              <Label for="name">Name *</Label>
+              <Label class="text-muted" for="name">Name *</Label>
               <Input
                   id="name"
                   type="text"
@@ -159,7 +161,7 @@ function clearError(field: string) {
                   bind:value={formData.name}
                   oninput={() => clearError('name')}
                   class={errors.name ? 'border-destructive' : ''}
-                  disabled={isSubmitting}
+                  disabled={true}
               />
               {#if errors.name}
                 <p class="text-sm text-destructive">{errors.name}</p>
@@ -168,7 +170,7 @@ function clearError(field: string) {
 
             <!-- Email Field -->
             <div class="space-y-2">
-              <Label for="email">Email *</Label>
+              <Label class="text-muted" for="email">Email *</Label>
               <Input
                   id="email"
                   type="email"
@@ -176,7 +178,7 @@ function clearError(field: string) {
                   bind:value={formData.email}
                   oninput={() => clearError('email')}
                   class={errors.email ? 'border-destructive' : ''}
-                  disabled={isSubmitting}
+                  disabled={true}
               />
               {#if errors.email}
                 <p class="text-sm text-destructive">{errors.email}</p>
@@ -185,7 +187,7 @@ function clearError(field: string) {
 
             <!-- Subject Field -->
             <div class="space-y-2">
-              <Label for="subject">Subject *</Label>
+              <Label class="text-muted" for="subject">Subject *</Label>
               <Input
                   id="subject"
                   type="text"
@@ -193,7 +195,7 @@ function clearError(field: string) {
                   bind:value={formData.subject}
                   oninput={() => clearError('subject')}
                   class={errors.subject ? 'border-destructive' : ''}
-                  disabled={isSubmitting}
+                  disabled={true}
               />
               {#if errors.subject}
                 <p class="text-sm text-destructive">{errors.subject}</p>
@@ -202,7 +204,7 @@ function clearError(field: string) {
 
             <!-- Message Field -->
             <div class="space-y-2">
-              <Label for="message">Message *</Label>
+              <Label class="text-muted" for="message">Message *</Label>
               <Textarea
                   id="message"
                   placeholder="Tell us how we can help you..."
@@ -210,7 +212,7 @@ function clearError(field: string) {
                   bind:value={formData.message}
                   oninput={() => clearError('message')}
                   class={errors.message ? 'border-destructive' : ''}
-                  disabled={isSubmitting}
+                  disabled={true}
               />
               {#if errors.message}
                 <p class="text-sm text-destructive">{errors.message}</p>
@@ -221,7 +223,7 @@ function clearError(field: string) {
             <Button
                 type="submit"
                 class="w-full"
-                disabled={isSubmitting}
+                disabled={true}
             >
               {#if isSubmitting}
                 <div class="flex items-center gap-2">

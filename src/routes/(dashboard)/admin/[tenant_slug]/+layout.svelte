@@ -40,7 +40,5 @@ const counts = $derived({
   <div class="md:hidden flex items-center justify-between px-2 py-1 border-b border-border bg-background">
     <Sidebar.Trigger />
   </div>
-  <div class="overflow-auto">
     {@render children()}
-  </div>
 </main>

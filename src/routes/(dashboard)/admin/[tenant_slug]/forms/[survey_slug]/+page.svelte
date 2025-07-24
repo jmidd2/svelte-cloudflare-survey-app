@@ -29,9 +29,8 @@ import type { PageProps } from './$types';
 
 const { data, form }: PageProps = $props();
 
-const fieldsArray = $derived(Object.values(data.fields).sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0)));
 // Create the survey editor instance
-const editor = new SurveyEditor(data.survey, fieldsArray);
+const editor = new SurveyEditor(data.survey, data.fields);
 setSurveyEditor(editor);
 
 $effect(() => {
@@ -122,10 +121,8 @@ onClickOutside(
   <title>Edit Form - {editor.survey?.title}</title>
 </svelte:head>
 
-<!-- 2-Column Layout that works within existing admin layout -->
-<div class="flex h-full bg-background overflow-hidden max-h-[calc(100vh_-_65px)]">
-  <!-- Left Sidebar: Toolbox (collapsible on mobile) -->
-  <div class={["fixed z-25 h-[calc(100vh-65px)] left-0 lg:relative lg:translate-x-0 lg:flex w-64 border-r border-border flex-col bg-card", { '-translate-x-full': !mobileToolboxShowing, 'translate-x-0': mobileToolboxShowing }]}>
+<div class="flex h-full bg-background">
+  <div class={["fixed h-full z-25 left-0 lg:relative lg:translate-x-0 lg:flex w-64 border-r border-border flex-col bg-card", { '-translate-x-full': !mobileToolboxShowing, 'translate-x-0 overflow-auto max-h-[calc(100vh-65px)]': mobileToolboxShowing }]}>
     {#if mobileToolboxShowing}
       <div class="flex items-center justify-between p-4 border-b border-border">
         <h2 class="font-semibold">Toolbox</h2>
@@ -140,8 +137,8 @@ onClickOutside(
   <!-- Main Content Area -->
   <div class="flex-1 flex flex-col min-w-0">
     <!-- Mobile Toolbox Toggle -->
-    <div class="lg:hidden border-b border-border p-4 bg-card">
-      <Button variant="outline" onclick={() => { mobileToolboxShowing = !mobileToolboxShowing}}>
+    <div class="sticky top-[65px] lg:hidden border-b border-border p-4 bg-card backdrop-blur supports-[backdrop-filter]:bg-background/60 z-50">
+      <Button variant="outline" class="backdrop-blur-none bg-background" onclick={() => { mobileToolboxShowing = !mobileToolboxShowing}}>
         {#if mobileToolboxShowing}
           <XIcon class="h-4 w-4 mr-2" />
           {:else}
@@ -152,7 +149,7 @@ onClickOutside(
     </div>
 
     <!-- Form Editor Content -->
-    <div class="flex-1 flex overflow-hidden">
+    <div class="flex-1 flex">
       <!-- Center: Form Editor -->
       <div class="flex-1 flex flex-col min-w-0">
         <div class="flex-1 p-4 lg:p-6 overflow-auto">
@@ -204,7 +201,7 @@ onClickOutside(
       {#if selectedField}
         <div bind:this={propertiesContainer}
             transition:slide={{ axis: 'x', duration: 300 }}
-            class="fixed right-0 w-100 top-[65px] xl:top-0 bottom-0 xl:relative xl:bg-transparent bg-card border-l border-border flex-shrink-0"
+            class="fixed w-100 right-0 top-[65px] xl:relative xl:top-0 bottom-0 xl:bg-transparent bg-card border-l border-border flex-shrink-0"
         >
           <PropertiesSidebar />
         </div>

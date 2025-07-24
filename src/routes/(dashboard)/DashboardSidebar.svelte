@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 import { Badge } from '$lib/components/ui/badge';
 import * as Collapsible from '$lib/components/ui/collapsible';
 import * as Sidebar from '$lib/components/ui/sidebar';
+import { useSidebar } from '$lib/components/ui/sidebar';
 import type { OrganizationListItem } from '$lib/types';
 import { cn, getInitials } from '$lib/utils';
 
@@ -39,6 +40,12 @@ interface NavigationItem {
   items?: Partial<NavigationItem>[];
 }
 
+const sidebar = useSidebar();
+const SIDEBAR_STATE = {
+  COLLAPSED: 'collapsed',
+  EXPANDED: 'expanded',
+};
+
 // Navigation items
 const navigationItems = $derived<NavigationItem[]>([
   {
@@ -56,9 +63,12 @@ const navigationItems = $derived<NavigationItem[]>([
   },
   {
     name: 'Members',
-    href: '', //`/admin/${tenant?.slug}/members`,
+    href: `/admin/${tenant?.slug}/members/active`,
     icon: Users,
-    current: false, //pathname.endsWith('/members'),
+    current:
+      sidebar.state === SIDEBAR_STATE.COLLAPSED
+        ? pathname.includes('/members')
+        : false,
     // badge: data.memberCount || 0,
     items: [
       {
@@ -93,13 +103,12 @@ const navigationItems = $derived<NavigationItem[]>([
     href: `/admin/${tenant?.slug}/settings`,
     icon: Settings,
     current: pathname.includes('/settings'),
-    disabled: true,
   },
 ]);
 </script>
 
 <Sidebar.Root class={`
-    fixed top-[65px] z-20 w-(--sidebar-width) transform translate-x-0 lg:static lg:inset-0
+    fixed top-[65px] z-20 w-(--sidebar-width) transform translate-x-0
   `} variant="sidebar" collapsible="icon">
   <Sidebar.Header>
     <div class="flex items-center gap-3 w-full ">
@@ -130,7 +139,7 @@ const navigationItems = $derived<NavigationItem[]>([
   <Sidebar.Content class="px-1 py-2">
     {#each navigationItems as item}
       <Sidebar.Group class="p-1">
-        {#if item.items}
+        {#if item.items && sidebar.state === SIDEBAR_STATE.EXPANDED}
           <Sidebar.Menu>
             <Collapsible.Root open class="group/collapsible">
               <Sidebar.MenuItem>

@@ -167,7 +167,7 @@ function buildUrl(url: URL, slug: string): string {
       <!-- Left Section: Logo + Breadcrumbs -->
       <div class="flex items-center gap-4">
         <!-- Logo -->
-        <a href="/" class="flex items-center gap-2 font-bold text-xl text-foreground hover:text-primary transition-colors">
+        <a href={`/admin/${currentOrg?.slug ?? ''}`} class="flex items-center gap-2 font-bold text-xl text-foreground hover:text-primary transition-colors">
           <div class="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
             <FileText class="h-5 w-5 text-primary-foreground" />
           </div>
@@ -175,7 +175,7 @@ function buildUrl(url: URL, slug: string): string {
         </a>
 
         <!-- Organization Context -->
-        {#if showOrgContext && currentOrg}
+        {#if currentOrg}
             <Popover bind:open>
               <PopoverTrigger bind:ref={triggerRef}>
                 {#snippet child({ props })}
@@ -339,21 +339,21 @@ function buildUrl(url: URL, slug: string): string {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem disabled>
-                <a class="flex items-center gap-2" href="/profile" aria-disabled="true">
+              <DropdownMenuItem class="">
+                <a href="/profile" aria-disabled="true">
                   <User class="mr-2 h-4 w-4" />
                   <span>Profile</span>
                 </a>
               </DropdownMenuItem>
-              <DropdownMenuItem disabled>
-                <a class="flex items-center gap-2" href="/settings" aria-disabled="true">
+              <DropdownMenuItem class="data-highlighted:bg-background/40" disabled>
+                <a href="/settings" aria-disabled="true">
                   <Settings class="mr-2 h-4 w-4" />
                   <span>Settings</span>
                 </a>
               </DropdownMenuItem>
               {#if isSiteAdmin}
-                <DropdownMenuItem disabled>
-                  <a class="inline-flex items-center gap-2" href={`/admin`} aria-disabled="true">
+                <DropdownMenuItem class="data-highlighted:bg-background/40" disabled>
+                  <a href={`/admin`} aria-disabled="true">
                     <Building2 class="mr-2 h-4 w-4" />
                     <span>Site Dashboard</span>
                   </a>

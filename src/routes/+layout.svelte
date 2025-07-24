@@ -22,6 +22,4 @@ $effect(() => {
 </script>
 <ModeWatcher />
 <Toaster richColors position="top-center" expand closeButton visibleToasts={5} />
-<div class="flex flex-col">
-  {@render children()}
-</div>
+{@render children()}

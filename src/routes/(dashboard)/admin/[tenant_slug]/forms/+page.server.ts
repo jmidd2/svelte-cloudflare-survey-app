@@ -24,6 +24,7 @@ export const load: PageServerLoad = async ({ parent, locals, request }) => {
   const isAdmin = await canManageOrganization(locals.auth, request.headers);
 
   const forms = await getFormsByTenant(locals.db, data.tenant.id);
+
   return {
     forms,
     isAdmin,
