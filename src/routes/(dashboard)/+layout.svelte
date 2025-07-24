@@ -33,7 +33,10 @@ let toastId: string | number | undefined;
 const sidebar = useSidebar();
 $inspect(sidebar);
 
-let open = $state(true);
+let open = $derived(
+  page.url.pathname !== '/profile' &&
+    page.url.pathname !== '/admin/organization/create'
+);
 </script>
 <Sidebar.Provider bind:open class="block">
 <Header     {user}
