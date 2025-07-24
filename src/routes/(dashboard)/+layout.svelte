@@ -41,4 +41,4 @@ let toastId: string | number | undefined;
   {@render children()}
 </Sidebar.Provider>
 <!-- Footer -->
-<Footer class="ml-42" />
+<Footer class="ml-56" />
