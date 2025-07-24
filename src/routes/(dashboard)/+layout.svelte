@@ -39,17 +39,16 @@ let open = $derived(
 );
 </script>
 <Sidebar.Provider bind:open class="block">
-<Header     {user}
-            {organizationList}
-            {currentOrg}
-            {showOrgContext}
-            isSiteAdmin={data.user?.role?.includes('admin')}>
-</Header>
+  <Header     {user}
+              {organizationList}
+              {currentOrg}
+              {showOrgContext}
+              isSiteAdmin={data.user?.role?.includes('admin')}>
+  </Header>
 
   <div class="flex w-full min-h-svh">
   {@render children()}
   </div>
-</Sidebar.Provider>
 <!-- Footer -->
-<Footer class={`${open ? 'ml-54' : 'ml-0'} transition-all`} />
+  <Footer class={`${open ? 'ml-54' : 'ml-0'} transition-all`} />
 </Sidebar.Provider>
