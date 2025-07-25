@@ -28,6 +28,7 @@ export function generateUrlSlug(name: string, withHash?: boolean): string {
 }
 
 export function getInitials(name: string): string {
+  if (!name) return '?';
   const allInitials = name
     .split(' ')
     .map(n => n[0])

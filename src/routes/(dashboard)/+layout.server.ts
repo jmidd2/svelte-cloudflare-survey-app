@@ -53,53 +53,63 @@ export const load: LayoutServerLoad = async function ({
 
   const hasOrgAdminRole = organizations.some(o => o.isAdmin || o.isOwner);
 
-  let tenant;
-  let currentOrg: OrganizationListItem | undefined = {};
+  let userOrg;
+  let orgBeingViewed: OrganizationListItem | undefined;
 
   if (tenant_slug) {
     // const tenant = await getTenantBySlug(locals.db, tenant_slug);
-    tenant = await locals.auth.getFullOrganization({
+    userOrg = await locals.auth.getFullOrganization({
       headers: request.headers,
       query: { organizationSlug: tenant_slug },
     });
-    currentOrg = organizations.find(org => org.slug === tenant_slug);
-    if (!(currentOrg && tenant)) throw new Error('could not find organization');
+    orgBeingViewed = organizations.find(org => org.slug === tenant_slug);
+    if (!(orgBeingViewed && userOrg))
+      throw new Error('could not find organization');
   } else if (organizations.length > 0) {
-    tenant = await locals.auth.getFullOrganization({
+    userOrg = await locals.auth.getFullOrganization({
       headers: request.headers,
       query: { organizationId: organizations[0].id },
     });
   }
 
-  console.log('currentorg', currentOrg);
-  console.log('tenat', tenant);
+  let pendingRequests = 0;
+  let pendingInvites = 0;
+  let currentMemberCount = 0;
 
-  await locals.auth.setActiveOrganization({
-    headers: request.headers,
-    body: {
-      organizationId: tenant.id,
-    },
-  });
+  if (userOrg) {
+    await locals.auth.setActiveOrganization({
+      headers: request.headers,
+      body: {
+        organizationId: userOrg.id,
+      },
+    });
 
-  // Cache these results in Cloudflare KV grouping by org/tenant id
-  const pendingRequests = await locals.db.$count(
-    requestsTable,
-    eq(requestsTable.status, 'pending')
-  );
-  const pendingInvites = await locals.db.$count(
-    invitations,
-    eq(invitations.status, 'pending')
-  );
-  const currentMemberCount = await locals.db.$count(
-    members,
-    eq(members.organizationId, tenant.id)
-  );
+    // Cache these results in Cloudflare KV grouping by org/tenant id
+    pendingRequests = await locals.db.$count(
+      requestsTable,
+      eq(requestsTable.status, 'pending')
+    );
+    pendingInvites = await locals.db.$count(
+      invitations,
+      eq(invitations.status, 'pending')
+    );
+    currentMemberCount = await locals.db.$count(
+      members,
+      eq(members.organizationId, userOrg.id)
+    );
+  }
+
+  let tenant;
+
+  if (orgBeingViewed || userOrg) {
+    tenant = { ...orgBeingViewed, ...userOrg };
+  }
 
   return {
     pendingRequests,
     pendingInvites,
     currentMemberCount,
-    tenant: { ...currentOrg, ...tenant },
+    tenant,
     hasOrgAdminRole,
     organizations,
   };

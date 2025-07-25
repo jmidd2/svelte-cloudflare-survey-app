@@ -1,4 +1,5 @@
 <script lang="ts">
+import { ArrowRight, Building2, Plus, Users } from '@lucide/svelte';
 import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 import { Badge } from '$lib/components/ui/badge';
 import { Button } from '$lib/components/ui/button';
@@ -10,7 +11,6 @@ import {
   CardTitle,
 } from '$lib/components/ui/card';
 import { getInitials } from '$lib/utils';
-import { ArrowRight, Building2, Plus, Users } from '@lucide/svelte';
 
 const { data } = $props();
 
@@ -22,8 +22,6 @@ const isLoading = $state(false);
 <svelte:head>
   <title>Admin Dashboard</title>
 </svelte:head>
-
-<div class="min-h-screen bg-background">
   <div class="container mx-auto px-4 py-8 max-w-4xl">
     <!-- Header -->
     <div class="text-center mb-8 space-y-4">
@@ -34,14 +32,14 @@ const isLoading = $state(false);
         Select an organization to manage or create a new one
       </p>
       <div class="flex flex-col sm:flex-row gap-3 justify-center">
-      <Button href="/onboarding">
+      <Button href="/admin/organization/create">
         <Plus class="h-4 w-4 mr-2" />
         Create Organization
       </Button>
-      <Button variant="outline" href="/onboarding">
-        <Users class="h-4 w-4 mr-2" />
-        Join Organization
-      </Button>
+<!--      <Button variant="outline" href="/onboarding">-->
+<!--        <Users class="h-4 w-4 mr-2" />-->
+<!--        Join Organization-->
+<!--      </Button>-->
     </div>
     </div>
 
@@ -120,4 +118,3 @@ const isLoading = $state(false);
       </div>
     {/if}
   </div>
-</div>
