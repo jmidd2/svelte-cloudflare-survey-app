@@ -35,7 +35,8 @@ $inspect(sidebar);
 
 let open = $derived(
   page.url.pathname !== '/profile' &&
-    page.url.pathname !== '/admin/organization/create'
+    page.url.pathname !== '/admin/organization/create' &&
+    page.url.pathname !== '/admin'
 );
 </script>
 <Sidebar.Provider bind:open class="block">
