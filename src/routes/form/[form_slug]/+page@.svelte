@@ -47,8 +47,8 @@ function createSlug({ label, hash }: SelectFormFieldWithHash) {
 }
 
 const handleSubmit: SubmitFunction = () => {
+  isSubmitting = true;
   return async ({ result, update }) => {
-    isSubmitting = true;
 
     if (result.type === 'success') {
       // Record the submission
