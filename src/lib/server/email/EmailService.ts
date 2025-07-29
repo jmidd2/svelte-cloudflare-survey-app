@@ -107,22 +107,20 @@ export class EmailService {
       case 'welcome': {
         const welcome =
           options.name === '' ? 'Welcome!' : `Welcome ${options.name}!`;
-        // TypeScript knows options.name is available here
         return {
-          subject: 'Welcome to our platform!',
+          subject: 'Welcome to FormBuilder!',
           html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2>${welcome}</h2>
-            <p>Thank you for joining our platform. We're excited to have you on board!</p>
-            <p>If you have any questions, feel free to reach out to our support team.</p>
-            <p>Best regards,<br>The Team</p>
+            <p>Thank you for joining FormBuilder by Phoenix Spark. We're excited to have you on board!</p>
+            <p>If you have any questions, feel free to reach out to our <a href="mailto:support@travisspark.com">support team</a>.</p>
+            <p>Best regards,<br>The Phoenix Spark Team</p>
           </div>
         `,
         };
       }
 
       case 'email-verification':
-        // TypeScript knows options.url is available here
         return {
           subject: 'Verify your email address',
           html: `
@@ -132,13 +130,12 @@ export class EmailService {
             <p><a href="${options.url}" style="background-color: #007cba; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">Verify Email</a></p>
             <p>Or copy and paste this URL into your browser: ${options.url}</p>
             <p>This link will expire in 24 hours.</p>
-            <p>If you didn't request this verification, please contact us.</p>
+            <p>If you didn't request this verification, please <a href="mailto:support@travisspark.com">contact us</a>.</p>
           </div>
         `,
         };
 
       case 'email-forget-password':
-        // TypeScript knows options.url is available here
         return {
           subject: 'Reset your password',
           html: `
@@ -148,7 +145,7 @@ export class EmailService {
             <p><a href="${options.url}" style="background-color: #007cba; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">Verify Email</a></p>
             <p>Or copy and paste this URL into your browser: ${options.url}</p>
             <p>This link will expire in 10 minutes.</p>
-            <p>If you didn't request a password reset, please contact us.</p>
+            <p>If you didn't request a password reset, please <a href="mailto:support@travisspark.com">contact us</a>.</p>
           </div>
         `,
         };
@@ -170,7 +167,6 @@ export class EmailService {
       //   };
 
       case 'forget-password':
-        // TypeScript knows options.otp is available here
         return {
           subject: 'Reset your password',
           html: `
@@ -181,13 +177,12 @@ export class EmailService {
               ${options.otp}
             </div>
             <p>This code will expire in 10 minutes.</p>
-            <p>If you didn't request a password reset, please contact us.</p>
+            <p>If you didn't request a password reset, please <a href="mailto:support@travisspark.com">contact us</a>.</p>
           </div>
         `,
         };
 
       case 'sign-in':
-        // TypeScript knows options.otp is available here
         return {
           subject: 'Sign in to your account',
           html: `
@@ -198,7 +193,7 @@ export class EmailService {
               ${options.otp}
             </div>
             <p>This code will expire in 10 minutes.</p>
-            <p>If you didn't request this sign-in, please contact us.</p>
+            <p>If you didn't request this sign-in, please <a href="mailto:support@travisspark.com">contact us</a>.</p>
           </div>
         `,
         };
