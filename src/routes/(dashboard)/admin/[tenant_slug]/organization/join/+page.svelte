@@ -153,7 +153,7 @@ const handleJoinRequest: SubmitFunction = () => {
             </div>
 
           <!-- Organizations List -->
-            <ScrollArea class="space-y-3 max-h-96 overflow-y-auto">
+            <ScrollArea class="space-y-3 overflow-y-auto">
                 <div class="space-y-3 p-3">
                     {#each filteredOrganizations as org}
                         <Card class={`cursor-pointer transition-colors ${selectedOrganization?.id === org.id ? 'ring-2 ring-primary bg-accent' : 'hover:bg-accent'}`}

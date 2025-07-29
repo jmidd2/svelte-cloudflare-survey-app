@@ -351,7 +351,7 @@ const recentActivity = $derived([
               <Plus class="h-4 w-4 mr-2" />
               Create New Organization
             </Button>
-            <Button variant="outline" class="w-full justify-start" href="/admin/organization/join">
+            <Button variant="outline" class="w-full justify-start" href="/admin/{tenantSlug}/organization/join">
               <Plus class="h-4 w-4 mr-2" />
               Join An Organization
             </Button>

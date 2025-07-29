@@ -1,7 +1,7 @@
 <script lang="ts">
 import { page } from '$app/state';
 import * as Sidebar from '$lib/components/ui/sidebar';
-import DashboardSidebar from '../../../DashboardSidebar.svelte';
+import DashboardSidebar from '../../../../DashboardSidebar.svelte';
 
 const { children, data } = $props();
 

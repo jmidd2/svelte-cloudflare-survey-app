@@ -11,6 +11,8 @@ import {
 export const load = async function ({ locals, parent }) {
   const { tenant, user } = await parent();
 
+  console.log('tenant: ',tenant)
+
   if (!user) redirect(constants.HTTP_STATUS_SEE_OTHER, '/login');
   if (!tenant) redirect(constants.HTTP_STATUS_SEE_OTHER, '/admin');
 
