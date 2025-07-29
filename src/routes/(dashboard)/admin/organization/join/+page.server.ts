@@ -64,7 +64,7 @@ const createOrganizationSchema = z.object({
 });
 
 const requestJoinSchema = z.object({
-  organizationId: z.string().length(36),
+  organizationId: z.string().min(32).max(36),
 });
 
 export const actions: Actions = {
