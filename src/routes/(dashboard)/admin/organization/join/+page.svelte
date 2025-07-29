@@ -90,24 +90,48 @@ const filteredOrganizations = $derived.by(() => {
 
 $effect(() => console.log('selectedOrg: ', selectedOrganization))
 
+
+
+const handleJoinRequest: SubmitFunction = () => {
+  loading = true;
+
+  return async ({ result }) => {
+    console.log('result: ', result)
+
+    if (result.type === 'redirect') {
+      goto(result.location);
+    } else if (result.type === 'success') {
+      status = { type: 'success', message: 'Join request sent successfully!' };
+    //   setTimeout(() => {
+    //     goto('/');
+    //   }, 2000);
+    } else {
+      status = {
+        type: 'error',
+        message: 'There was an error sending your request. Please try again.',
+      };
+    }
+
+    loading = false;
+  };
+};
 </script>
 <svelte:head>
     <title>Join An Organization</title>
 </svelte:head>
 
-<div class="flex w-full items-center justify-center bg-background p-4">
-    <Card>
-        <CardHeader class="text-center">
-            <CardTitle class="text-2xl flex items-center justify-center gap-2">
-                <Search class="h-6 w-6" />
+<div class="flex flex-col w-full bg-background p-4">
+    <!-- <Card> -->
+        <div class="flex flex-col gap-y-2 p-4">
+            <h4 class="text-3xl flex font-bold gap-2">
                 Join an Organization
-            </CardTitle>
-            <CardDescription>
+            </h4>
+            <p>
                 Search and request to join an existing organization
-            </CardDescription>
-        </CardHeader>
+            </p>
+        </div>
 
-        <CardContent>
+        <div class="p-6">
             {#if status}
                 <Alert class={`mb-4 ${status.type === 'error' ? 'border-destructive/50 bg-destructive/5' : 'border-green-200 bg-green-50 dark:bg-green-950/20'}`}>
                     <AlertDescription class={status.type === 'error' ? 'text-destructive' : 'text-green-800 dark:text-green-200'}>
@@ -188,6 +212,7 @@ $effect(() => console.log('selectedOrg: ', selectedOrganization))
                 use:enhance={handleJoinRequest}
             >
                 <input type="hidden" name="organizationId" value={selectedOrganization?.id} />
+                <p>{selectedOrganization?.id}</p>
 
                 <Alert class="mb-4">
                     <Clock class="h-4 w-4" />
@@ -202,6 +227,6 @@ $effect(() => console.log('selectedOrg: ', selectedOrganization))
                     </Button>
                 </div>
             </form>
-        </CardContent>
-    </Card>
+        </div>
+    <!-- </Card> -->
 </div>

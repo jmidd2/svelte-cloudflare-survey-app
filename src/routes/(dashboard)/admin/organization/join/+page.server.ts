@@ -64,7 +64,7 @@ const createOrganizationSchema = z.object({
 });
 
 const requestJoinSchema = z.object({
-  organizationId: z.string().length(32),
+  organizationId: z.string().length(36),
 });
 
 export const actions: Actions = {
@@ -147,6 +147,7 @@ export const actions: Actions = {
       const id = generateId();
       const defaultExpiration = 60 * 60 * 48 * 1000; // 2 Days
       const expiresAt = new Date(Date.now() + defaultExpiration);
+      
       try {
         await locals.db
           .insert(requests)
@@ -167,7 +168,7 @@ export const actions: Actions = {
       cookies.set('flash_message', 'Request to join sent', {
         path: '/',
       });
-      return redirect(303, '/');
+      //return redirect(303, '/');
     }
   ),
   original: async ({ request, locals }) => {
