@@ -1,7 +1,7 @@
 import { constants } from 'node:http2';
 import { redirect } from '@sveltejs/kit';
 import type { Organization } from 'better-auth/plugins';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import {
   invitations,
   members,
@@ -87,11 +87,17 @@ export const load: LayoutServerLoad = async function ({
     // Cache these results in Cloudflare KV grouping by org/tenant id
     pendingRequests = await locals.db.$count(
       requestsTable,
-      eq(requestsTable.status, 'pending')
+      and(
+        eq(requestsTable.organizationId, userOrg.id),  //match users current org id for requests for that org
+        eq(requestsTable.status, 'pending')
+      )
     );
     pendingInvites = await locals.db.$count(
       invitations,
-      eq(invitations.status, 'pending')
+      and(
+        eq(invitations.organizationId, userOrg.id), // match users current org id for invitations for that org
+        eq(invitations.status, 'pending')
+      )
     );
     currentMemberCount = await locals.db.$count(
       members,
