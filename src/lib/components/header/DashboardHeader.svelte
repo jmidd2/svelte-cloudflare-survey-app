@@ -6,6 +6,7 @@ import {
   CrownIcon,
   FileText,
   LogOut,
+  MergeIcon,
   Moon,
   PlusIcon,
   Settings,
@@ -231,8 +232,8 @@ function buildUrl(url: URL, slug: string): string {
                     </CommandGroup>
                     <CommandSeparator/>
                     <CommandGroup>
-                      <CommandLinkItem onSelect={closeAndFocusTrigger} keywords={['join organization', 'join']} href="/admin/organization/join" value="join-organization" class="flex items-center gap-2">
-                        <PlusIcon class="" />
+                      <CommandLinkItem onSelect={closeAndFocusTrigger} keywords={['join organization', 'join']} href="/admin/{currentOrg.slug}/organization/join" value="join-organization" class="flex items-center gap-2">
+                        <MergeIcon class="" />
                         Join An Organization
                       </CommandLinkItem>
                       <CommandLinkItem onSelect={closeAndFocusTrigger} keywords={['create organization', 'create']} href="/admin/organization/create" value="create-organization" class="flex items-center gap-2">

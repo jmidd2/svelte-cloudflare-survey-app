@@ -4,6 +4,7 @@ import {
   ChartColumnIcon,
   Eye,
   FileText,
+  MergeIcon,
   PencilIcon,
   Plus,
   ShareIcon,
@@ -352,7 +353,7 @@ const recentActivity = $derived([
               Create New Organization
             </Button>
             <Button variant="outline" class="w-full justify-start" href="/admin/{tenantSlug}/organization/join">
-              <Plus class="h-4 w-4 mr-2" />
+              <MergeIcon class="h-4 w-4 mr-2" />
               Join An Organization
             </Button>
           </CardContent>
