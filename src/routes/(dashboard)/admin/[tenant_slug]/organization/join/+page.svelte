@@ -8,29 +8,19 @@ import { Button } from '$lib/components/ui/button';
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from '$lib/components/ui/card';
 import { Input } from '$lib/components/ui/input';
-import { Label } from '$lib/components/ui/label';
 import { ScrollArea } from '$lib/components/ui/scroll-area';
 import { Separator } from '$lib/components/ui/separator';
 import { getInitials } from '$lib/utils';
 import {
-  ArrowLeft,
-  ArrowRight,
   Building2,
-  Check,
   CheckCircle,
   Clock,
-  Plus,
   Search,
-  User,
   Users,
 } from '@lucide/svelte';
 import type { SubmitFunction } from '@sveltejs/kit';
-import { onMount } from 'svelte';
 
 
 interface FormStatus {
@@ -47,18 +37,6 @@ interface SelectedOrg {
 }
 
 let { data } = $props();
-console.log(data)
-// User state from server
-const user = $derived(data.user);
-const userOrganizations = $derived(data.userOrganizations || []);
-let hasName = $state(data.hasName);
-const hasOrganization = $derived(data.hasOrganization);
-
-// Determine what steps are needed
-const needsProfile = $derived.by(() => !data.hasName);
-const needsOrganization = $derived.by(() => !hasOrganization);
-const isComplete = $derived.by(() => hasName && hasOrganization);
-
 // Calculate starting step and total steps needed
 
 
@@ -68,17 +46,6 @@ let searchQuery = $state('');
 let selectedOrganization = $state<SelectedOrg | null>(null);
 let status = $state<FormStatus | null>(null);
 
-// Form data
-let profileData = $state({
-  name: user?.name || '',
-});
-
-let organizationData = $state({
-  name: '',
-  description: '',
-});
-
-// Redirect if onboarding is complete
 
 // Filtered organizations based on search
 const filteredOrganizations = $derived.by(() => {
@@ -88,23 +55,15 @@ const filteredOrganizations = $derived.by(() => {
     );
 });
 
-$effect(() => console.log('selectedOrg: ', selectedOrganization))
-
-
-
 const handleJoinRequest: SubmitFunction = () => {
   loading = true;
 
   return async ({ result }) => {
-    console.log('result: ', result)
 
     if (result.type === 'redirect') {
       goto(result.location);
     } else if (result.type === 'success') {
       status = { type: 'success', message: 'Join request sent successfully!' };
-    //   setTimeout(() => {
-    //     goto('/');
-    //   }, 2000);
     } else {
       status = {
         type: 'error',
@@ -161,7 +120,6 @@ const handleJoinRequest: SubmitFunction = () => {
                                 if (selectedOrganization?.id === org.id)
                                     selectedOrganization = null;
                                 else{
-                                    console.log(org)
                                     selectedOrganization = org;
                                 }
                             }}>
@@ -212,7 +170,6 @@ const handleJoinRequest: SubmitFunction = () => {
                 use:enhance={handleJoinRequest}
             >
                 <input type="hidden" name="organizationId" value={selectedOrganization?.id} />
-                <p>{selectedOrganization?.id}</p>
 
                 <Alert class="mb-4">
                     <Clock class="h-4 w-4" />

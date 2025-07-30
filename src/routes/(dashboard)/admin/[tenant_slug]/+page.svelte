@@ -2,14 +2,28 @@
 import {
   Calendar,
   ChartColumnIcon,
+  CheckCircle,
+  Clock,
+  Crown,
   Eye,
   FileText,
   MergeIcon,
   PencilIcon,
   Plus,
   ShareIcon,
+  User,
   Users,
+  XCircle,
 } from '@lucide/svelte';
+
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '$lib/components/ui/table';
 import { toast } from 'svelte-sonner';
 import { superForm } from 'sveltekit-superforms';
 import { zod4Client } from 'sveltekit-superforms/adapters';
@@ -24,9 +38,10 @@ import { pageState } from '$stores/pageState.svelte';
 import { formDialogManager } from '$stores/SurveyDialog.svelte';
 
 const { data } = $props();
-
+$inspect(data)
 const tenantSlug = $derived(data.tenant.slug);
 const tenantName = $derived(data.tenant.name);
+const requests: Requests = $derived(data.requests);
 const forms = $derived(data.forms);
 const isOrgAdmin = $derived(data.isOrgOwner || data.isOrgAdmin);
 const responsesByFormId = $derived(data.responses);
@@ -82,6 +97,8 @@ function openAddDialog() {
   formDialogManager.openDialog('edit');
 }
 
+// TODO: this is a duplicate function, need to pull into utils
+
 function formatDate(date: string | Date): string {
   return new Date(date).toLocaleDateString('en-US', {
     year: 'numeric',
@@ -89,6 +106,40 @@ function formatDate(date: string | Date): string {
     day: 'numeric',
   });
 }
+
+// TODO: possibly pull this into utils as well, dupicted from members page
+function getStatusColor(status: string): string {
+  switch (status) {
+    case 'pending':
+      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300';
+    case 'accepted':
+    case 'approved':
+      return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300';
+    case 'expired':
+    case 'rejected':
+      return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300';
+    case 'canceled':
+      return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300';
+    default:
+      return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300';
+  }
+}
+
+// TODO: move this to a constants file?
+const InviteStatus = {
+  pending: 'Pending',
+  accepted: 'Accepted',
+  expired: 'Expired',
+  canceled: 'Cancelled',
+  rejected: 'Rejected',
+};
+
+type Requests = [{
+  organizationId: string,
+  organizationName: string,
+  status: string,
+  expiresAt: Date,
+}]
 
 // Mock stats - replace with real data
 const stats = $derived({
@@ -356,6 +407,52 @@ const recentActivity = $derived([
               <MergeIcon class="h-4 w-4 mr-2" />
               Join An Organization
             </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      <!-- Organization Join Requests -->
+      <div>
+        <h2 class="text-xl font-semibold text-foreground mb-4">Requests</h2>
+        <Card>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Organization</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Expires</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+              {#if requests.length > 0}
+                {#each requests as request}
+                <TableRow>
+                  <TableCell>{request.organizationName}</TableCell>
+                  <TableCell>
+                    <Badge class={getStatusColor(request.status)}>
+                        {#if request.status === 'pending'}
+                          <Clock class="h-3 w-3 mr-1"/>
+                        {:else if request.status === 'accepted'}
+                          <CheckCircle class="h-3 w-3 mr-1"/>
+                        {:else}
+                          <XCircle class="h-3 w-3 mr-1"/>
+                        {/if}
+                        {InviteStatus[request.status]}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{formatDate(request.expiresAt)}</TableCell>
+                  </TableRow>
+                {/each}
+                {:else}
+                <TableRow>
+                  <TableCell colspan={3} class="text-center text-gray-500 italic">
+                    No requests to show
+                  </TableCell>
+                </TableRow>
+                {/if}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       </div>

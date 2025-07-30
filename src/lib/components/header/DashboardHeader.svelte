@@ -151,13 +151,12 @@ onMount(() => {
 });
 
 function buildUrl(url: URL, slug: string): string {
-  console.log('tetst')
   const basePath = `/admin/${slug}`;
   const pathname = url.pathname;
 
   const split = pathname.split('/').slice(3);
 
-  if (split.length > 0 && split[1] !== "join"){
+  if (split.length > 0 && !split.includes("join")){
     return `${basePath}/${split.join('/')}`;
   } else {
     return basePath;
