@@ -54,69 +54,6 @@ export const load: PageServerLoad = async ({ locals, parent, request }) => {
 };
 
 export const actions: Actions = {
-  profile: withZodFormData(
-    profileSchema,
-    async ({ request, locals }, formData) => {
-      try {
-        // Update user name using Better Auth
-        await locals.auth.updateUser({
-          headers: request.headers,
-          body: {
-            name: formData.name,
-          },
-        });
-      } catch (error) {
-        console.error('Failed to update user name:', error);
-        return fail(500, { message: 'Failed to update user name.' });
-      }
-    }
-  ),
-  'create-organization': withZodFormData(
-    createOrganizationSchema,
-    async ({ locals, request }, formData) => {
-      const slug = formData.name.toLowerCase().replace(/\s/g, '-');
-      try {
-        /**
-         *
-         * Who made this api
-         * this will throw an APIError like:
-         *
-         * [APIError: slug is taken] {
-         *   status: 'BAD_REQUEST',
-         *   body: { code: 'SLUG_IS_TAKEN', message: 'slug is taken' },
-         *   headers: {},
-         *   statusCode: 400
-         * }
-         * when the slug is taken and { status: true } when it's available
-         * so now instead of handling this with a false status or something, it has to be done in the catch
-         */
-        await locals.auth.checkOrganizationSlug({
-          headers: request.headers,
-          body: {
-            slug,
-          },
-        });
-
-        await locals.auth.createOrganization({
-          headers: request.headers,
-          body: {
-            name: formData.name,
-            slug,
-          },
-        });
-      } catch (e) {
-        console.error('error creating organization', e);
-        if (e instanceof APIError) {
-          if (e.body?.code === 'SLUG_IS_TAKEN') {
-            return fail(400, {
-              error: 'SLUG_IS_TAKEN',
-              message: 'Slug is taken',
-            });
-          }
-        }
-      }
-    }
-  ),
   'request-join': withZodFormData(
     requestJoinSchema,
     async ({ locals, request, cookies }, formData) => {
@@ -154,31 +91,6 @@ export const actions: Actions = {
       cookies.set('flash_message', 'Request to join sent', {
         path: '/',
       });
-      //return redirect(303, '/');
     }
   ),
-  original: async ({ request, locals }) => {
-    const formData = await request.formData();
-    const name = formData.get('name') as string;
-
-    if (!name?.trim()) {
-      return fail(400, { name, missing: true });
-    }
-
-    try {
-      // Update user name using Better Auth
-      await locals.auth.updateUser({
-        headers: request.headers,
-        body: {
-          name: name.trim(),
-        },
-      });
-    } catch (error) {
-      console.error('Failed to update user name:', error);
-      return fail(500, { message: 'Failed to update user name.' });
-    }
-
-    // Redirect to home or intended destination
-    redirect(303, '/');
-  },
 };

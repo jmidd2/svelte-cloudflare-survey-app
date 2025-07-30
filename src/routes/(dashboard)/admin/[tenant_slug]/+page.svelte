@@ -42,6 +42,7 @@ $inspect(data)
 const tenantSlug = $derived(data.tenant.slug);
 const tenantName = $derived(data.tenant.name);
 const requests: Requests = $derived(data.requests);
+const user = $derived(data.user);
 const forms = $derived(data.forms);
 const isOrgAdmin = $derived(data.isOrgOwner || data.isOrgAdmin);
 const responsesByFormId = $derived(data.responses);
@@ -412,14 +413,15 @@ const recentActivity = $derived([
       </div>
 
       <!-- Organization Join Requests -->
+      {#if user.role === "owner" || user.role === "admin"}
       <div>
-        <h2 class="text-xl font-semibold text-foreground mb-4">Requests</h2>
+        <h2 class="text-xl font-semibold text-foreground mb-4">Member Requests</h2>
         <Card>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Organization</TableHead>
+                  <TableHead>Account</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Expires</TableHead>
                 </TableRow>
@@ -428,7 +430,14 @@ const recentActivity = $derived([
               {#if requests.length > 0}
                 {#each requests as request}
                 <TableRow>
-                  <TableCell>{request.organizationName}</TableCell>
+                  <TableCell>
+                    <p class="">
+                      {request.userName}
+                    </p>
+                    <p>
+                      {request.email}
+                    </p>
+                  </TableCell>
                   <TableCell>
                     <Badge class={getStatusColor(request.status)}>
                         {#if request.status === 'pending'}
@@ -456,6 +465,7 @@ const recentActivity = $derived([
           </CardContent>
         </Card>
       </div>
+      {/if}
 
 <!--      <div>-->
 <!--        <h2 class="text-xl font-semibold text-foreground mb-4">Recent Activity</h2>-->

@@ -1,6 +1,7 @@
 import { constants } from 'node:http2';
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
+import { getRequestByUser } from '$lib/server/db';
 
 export const load: PageServerLoad = async function ({
   locals,
@@ -23,8 +24,11 @@ export const load: PageServerLoad = async function ({
     );
   }
 
+  const requests = await getRequestByUser(locals.db, session.user.id)
+
   return {
     ...data,
+    requests,
   };
 };
 // TODO: Show an requests to join the user has made and show the status

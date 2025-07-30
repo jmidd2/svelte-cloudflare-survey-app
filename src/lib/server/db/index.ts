@@ -125,6 +125,22 @@ export async function getRequestByUser(db: DrizzleClient, userId: string){
     .orderBy(desc(schema.requests.expiresAt));
 }
 
+export async function getRequestByOrg(db: DrizzleClient, orgId: string){
+  return db
+    .select({
+      id: schema.requests.id,
+      userName: schema.users.name,
+      email: schema.users.email,
+      status: schema.requests.status,
+      expiresAt: schema.requests.expiresAt,
+      role: schema.requests.role,
+    })
+    .from(schema.requests)
+    .leftJoin(schema.users, eq(schema.requests.userId, schema.users.id))
+    .where(and(eq(schema.requests.organizationId , orgId), not(eq(schema.requests.status, "accepted"))))
+    .orderBy(desc(schema.requests.expiresAt));
+}
+
 /**
  * Create a new form
  */
