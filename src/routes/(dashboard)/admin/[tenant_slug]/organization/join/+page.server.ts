@@ -12,6 +12,7 @@ import { APIError } from 'better-call';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod/v4';
 import type { Actions, PageServerLoad } from '../../../organization/join/$types';
+import { createOrganizationSchema, profileSchema, requestJoinSchema } from '$lib/validation-schema';
 
 export const load: PageServerLoad = async ({ locals, parent, request }) => {
   const { user } = await parent();
@@ -21,7 +22,6 @@ export const load: PageServerLoad = async ({ locals, parent, request }) => {
     redirect(303, '/login');
   }
 
-  // Check if the user is already complete (has name AND is member of an organization)
   const memberOfOrganizations = await locals.auth.listOrganizations({
     headers: request.headers,
   });
@@ -29,11 +29,9 @@ export const load: PageServerLoad = async ({ locals, parent, request }) => {
   const hasName = !!user.name;
   const hasOrganization = memberOfOrganizations.length > 0;
 
-  // If user already has both name and organization membership, redirect away
   let organizations: Array<SelectOrganization & { memberCount?: number }> = [];
 
     organizations = await locals.db
-      // @ts-expect-error For some reason the SQLite | D1 adapter does not like partial select
       .select({
         ...organizationsTable,
         memberCount: locals.db.$count(
@@ -54,18 +52,6 @@ export const load: PageServerLoad = async ({ locals, parent, request }) => {
     hasOrganization,
   };
 };
-
-const profileSchema = z.object({
-  name: z.string().nonempty().max(255),
-});
-
-const createOrganizationSchema = z.object({
-  name: z.string().nonempty().max(255),
-});
-
-const requestJoinSchema = z.object({
-  organizationId: z.string().min(32).max(36),
-});
 
 export const actions: Actions = {
   profile: withZodFormData(

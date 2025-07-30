@@ -62,3 +62,11 @@ export const createOrganizationSchema = z.object({
     phone: z.string().max(255).optional(),
     address: z.string().max(255).optional(),
 })
+
+export const profileSchema = z.object({
+  name: z.string().nonempty().max(255),
+});
+
+export const requestJoinSchema = z.object({
+  organizationId: z.string().min(32).max(36),
+});
