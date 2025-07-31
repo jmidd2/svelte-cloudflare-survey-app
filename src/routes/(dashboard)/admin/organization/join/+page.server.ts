@@ -11,7 +11,7 @@ import { generateId } from 'better-auth';
 import { APIError } from 'better-call';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod/v4';
-import type { Actions, PageServerLoad } from '../../../organization/join/$types';
+import type { Actions, PageServerLoad } from './$types';
 import { createOrganizationSchema, profileSchema, requestJoinSchema } from '$lib/validation-schema';
 
 export const load: PageServerLoad = async ({ locals, parent, request }) => {

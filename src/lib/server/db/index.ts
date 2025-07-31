@@ -1,7 +1,7 @@
 import type { D1Database } from '@cloudflare/workers-types';
 import type { Client } from '@libsql/client';
 import { instrumentD1WithSentry } from '@sentry/cloudflare';
-import { and, asc, count, desc, eq, not, type SQL, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, not, or, type SQL, sql } from 'drizzle-orm';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 import type { LibSQLDatabase } from 'drizzle-orm/libsql';
 import * as schema from './schema';
@@ -137,7 +137,7 @@ export async function getRequestByOrg(db: DrizzleClient, orgId: string){
     })
     .from(schema.requests)
     .leftJoin(schema.users, eq(schema.requests.userId, schema.users.id))
-    .where(and(eq(schema.requests.organizationId , orgId), not(eq(schema.requests.status, "accepted"))))
+    .where(and(eq(schema.requests.organizationId , orgId), eq(schema.requests.status, "pending")))
     .orderBy(desc(schema.requests.expiresAt));
 }
 

@@ -404,7 +404,7 @@ const recentActivity = $derived([
               <Plus class="h-4 w-4 mr-2" />
               Create New Organization
             </Button>
-            <Button variant="outline" class="w-full justify-start" href="/admin/{tenantSlug}/organization/join">
+            <Button variant="outline" class="w-full justify-start" href="/admin/organization/join">
               <MergeIcon class="h-4 w-4 mr-2" />
               Join An Organization
             </Button>
@@ -428,7 +428,7 @@ const recentActivity = $derived([
               </TableHeader>
               <TableBody>
               {#if requests.length > 0}
-                {#each requests as request}
+                {#each requests.slice(0,5) as request}
                 <TableRow>
                   <TableCell>
                     <p class="">
@@ -462,6 +462,11 @@ const recentActivity = $derived([
                 {/if}
               </TableBody>
             </Table>
+            {#if requests.length > 5}
+              <Button variant="outline" class="w-full mt-4" href="{tenantSlug}/members/requests">
+                View All
+              </Button>
+            {/if}
           </CardContent>
         </Card>
       </div>

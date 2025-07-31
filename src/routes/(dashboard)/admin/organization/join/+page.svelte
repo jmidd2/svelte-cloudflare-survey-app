@@ -14,9 +14,11 @@ import { ScrollArea } from '$lib/components/ui/scroll-area';
 import { Separator } from '$lib/components/ui/separator';
 import { getInitials } from '$lib/utils';
 import {
+  ArrowLeft,
   Building2,
   CheckCircle,
   Clock,
+  MergeIcon,
   Search,
   Users,
 } from '@lucide/svelte';
@@ -79,18 +81,26 @@ const handleJoinRequest: SubmitFunction = () => {
     <title>Join An Organization</title>
 </svelte:head>
 
-<div class="flex flex-col w-full bg-background p-4">
+<div class="container mx-auto py-8 px-4 max-w-4xl">
     <!-- <Card> -->
-        <div class="flex flex-col gap-y-2 p-4">
-            <h4 class="text-3xl flex font-bold gap-2">
-                Join an Organization
-            </h4>
-            <p>
-                Search and request to join an existing organization
-            </p>
+        <div class="mb-8">
+            <div class="flex items-center gap-4 mb-4">
+                <Button variant="ghost" href="/admin">
+                    <ArrowLeft class="w-4 h-4"/>Back to Admin
+                </Button>
+            </div>
+            <div class="flex items-center gap-3 mb-2">
+                <div class="h-10 w-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                    <MergeIcon class="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold">Join An Organization</h1>
+                    <p class="text-muted-foreground">Search for an organization to join</p>
+                </div>
+            </div>
         </div>
 
-        <div class="p-6">
+        <Card class="p-6 max-h-[800px]">
             {#if status}
                 <Alert class={`mb-4 ${status.type === 'error' ? 'border-destructive/50 bg-destructive/5' : 'border-green-200 bg-green-50 dark:bg-green-950/20'}`}>
                     <AlertDescription class={status.type === 'error' ? 'text-destructive' : 'text-green-800 dark:text-green-200'}>
@@ -184,6 +194,5 @@ const handleJoinRequest: SubmitFunction = () => {
                     </Button>
                 </div>
             </form>
-        </div>
-    <!-- </Card> -->
+        </Card>
 </div>
