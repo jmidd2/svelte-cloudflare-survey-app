@@ -88,7 +88,7 @@ export const load: LayoutServerLoad = async function ({
     pendingRequests = await locals.db.$count(
       requestsTable,
       and(
-        eq(requestsTable.organizationId, userOrg.id),  //match users current org id for requests for that org
+        eq(requestsTable.organizationId, orgBeingViewed?.id),  //match current org id for requests for that org
         eq(requestsTable.status, 'pending')
       )
     );

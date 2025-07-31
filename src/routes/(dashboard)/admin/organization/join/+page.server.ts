@@ -87,10 +87,6 @@ export const actions: Actions = {
         console.error('error creating request to join', e);
         return fail(400, { error: 'error creating request to join' });
       }
-
-      cookies.set('flash_message', 'Request to join sent', {
-        path: '/',
-      });
     }
   ),
 };
