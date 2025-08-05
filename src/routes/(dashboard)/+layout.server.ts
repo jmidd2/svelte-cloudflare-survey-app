@@ -19,11 +19,10 @@ export const load: LayoutServerLoad = async function ({
   parent,
 }) {
   const { tenant_slug } = params;
-
   const { user } = await parent();
-
+  
   if (!user) redirect(constants.HTTP_STATUS_SEE_OTHER, '/login');
-
+  
   const dbResult = (await locals.db
     // @ts-expect-error Drizzle with SQLite or D1 does not like partial select
     .select({
@@ -37,27 +36,27 @@ export const load: LayoutServerLoad = async function ({
     .from(organizationsTable)
     .innerJoin(members, eq(members.organizationId, organizationsTable.id))
     .where(eq(members.userId, user.id))) as unknown as {
-    organization: SelectOrganization;
-    member: { role: string };
-    memberCount: number;
-  }[];
-
-  const organizations: Array<OrganizationListItem> = dbResult.map(r => {
-    return {
-      ...r.organization,
-      isAdmin: r.member.role.includes('admin'),
-      isOwner: r.member.role.includes('owner'),
-      memberCount: r.memberCount,
-    };
-  });
-
-  const hasOrgAdminRole = organizations.some(o => o.isAdmin || o.isOwner);
-
-  let userOrg;
-  let orgBeingViewed: OrganizationListItem | undefined;
-
-  if (tenant_slug) {
-    // const tenant = await getTenantBySlug(locals.db, tenant_slug);
+      organization: SelectOrganization;
+      member: { role: string };
+      memberCount: number;
+    }[];
+    
+    const organizations: Array<OrganizationListItem> = dbResult.map(r => {
+      return {
+        ...r.organization,
+        isAdmin: r.member.role.includes('admin'),
+        isOwner: r.member.role.includes('owner'),
+        memberCount: r.memberCount,
+      };
+    });
+    
+    const hasOrgAdminRole = organizations.some(o => o.isAdmin || o.isOwner);
+    
+    let userOrg;
+    let orgBeingViewed: OrganizationListItem | undefined;
+    
+    if (tenant_slug) {
+      // const tenant = await getTenantBySlug(locals.db, tenant_slug);
     userOrg = await locals.auth.getFullOrganization({
       headers: request.headers,
       query: { organizationSlug: tenant_slug },
@@ -71,11 +70,11 @@ export const load: LayoutServerLoad = async function ({
       query: { organizationId: organizations[0].id },
     });
   }
-
+  
   let pendingRequests = 0;
   let pendingInvites = 0;
   let currentMemberCount = 0;
-
+  
   if (userOrg) {
     await locals.auth.setActiveOrganization({
       headers: request.headers,
@@ -83,12 +82,12 @@ export const load: LayoutServerLoad = async function ({
         organizationId: userOrg.id,
       },
     });
-
+    
     // Cache these results in Cloudflare KV grouping by org/tenant id
     pendingRequests = await locals.db.$count(
       requestsTable,
       and(
-        eq(requestsTable.organizationId, orgBeingViewed?.id),  //match current org id for requests for that org
+        eq(requestsTable.organizationId, userOrg.id),  //match current org id for requests for that org
         eq(requestsTable.status, 'pending')
       )
     );

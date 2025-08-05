@@ -36,6 +36,7 @@ import type { SelectForm } from '$lib/server/db/schema';
 import { addFormSchema } from '$lib/validation-schema';
 import { pageState } from '$stores/pageState.svelte';
 import { formDialogManager } from '$stores/SurveyDialog.svelte';
+  import { formatDate, getStatusColor } from '$lib/utils/helpers.js';
 
 const { data } = $props();
 $inspect(data)
@@ -90,50 +91,13 @@ function openShareDialog(survey: SelectForm) {
   formDialogManager.openDialog('share');
 }
 
-function openInviteDialog() {
-  formDialogManager.openDialog('invite');
-}
+// function openInviteDialog() {
+//   formDialogManager.openDialog('invite');
+// }
 
 function openAddDialog() {
   formDialogManager.openDialog('edit');
 }
-
-// TODO: this is a duplicate function, need to pull into utils
-
-function formatDate(date: string | Date): string {
-  return new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
-
-// TODO: possibly pull this into utils as well, dupicted from members page
-function getStatusColor(status: string): string {
-  switch (status) {
-    case 'pending':
-      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300';
-    case 'accepted':
-    case 'approved':
-      return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300';
-    case 'expired':
-    case 'rejected':
-      return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300';
-    case 'canceled':
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300';
-    default:
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300';
-  }
-}
-
-// TODO: move this to a constants file?
-const InviteStatus = {
-  pending: 'Pending',
-  accepted: 'Accepted',
-  expired: 'Expired',
-  canceled: 'Cancelled',
-  rejected: 'Rejected',
-};
 
 type Requests = [{
   organizationId: string,
@@ -141,6 +105,14 @@ type Requests = [{
   status: string,
   expiresAt: Date,
 }]
+
+const InviteStatus = {
+    pending: 'Pending',
+    accepted: 'Accepted',
+    expired: 'Expired',
+    canceled: 'Cancelled',
+    rejected: 'Rejected',
+  };
 
 // Mock stats - replace with real data
 const stats = $derived({

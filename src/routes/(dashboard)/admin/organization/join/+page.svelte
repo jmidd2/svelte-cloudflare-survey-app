@@ -6,36 +6,36 @@ import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 import { Badge } from '$lib/components/ui/badge';
 import { Button } from '$lib/components/ui/button';
 import {
-  Card,
-  CardContent,
+    Card,
+    CardContent,
 } from '$lib/components/ui/card';
 import { Input } from '$lib/components/ui/input';
 import { ScrollArea } from '$lib/components/ui/scroll-area';
 import { Separator } from '$lib/components/ui/separator';
 import { getInitials } from '$lib/utils';
 import {
-  ArrowLeft,
-  Building2,
-  CheckCircle,
-  Clock,
-  MergeIcon,
-  Search,
-  Users,
+    ArrowLeft,
+    Building2,
+    CheckCircle,
+    Clock,
+    MergeIcon,
+    Search,
+    Users,
 } from '@lucide/svelte';
 import type { SubmitFunction } from '@sveltejs/kit';
 
 
 interface FormStatus {
-  type: 'success' | 'error';
-  message: string;
+    type: 'success' | 'error';
+    message: string;
 }
 
 interface SelectedOrg {
-  id: string;
-  name: string;
-  memberCount: number;
-  logo: string | null;
-  metadata: unknown;
+    id: string;
+    name: string;
+    memberCount: number;
+    logo: string | null;
+    metadata: unknown;
 }
 
 let { data } = $props();
@@ -58,23 +58,23 @@ const filteredOrganizations = $derived.by(() => {
 });
 
 const handleJoinRequest: SubmitFunction = () => {
-  loading = true;
+    loading = true;
 
-  return async ({ result }) => {
+    return async ({ result }) => {
 
     if (result.type === 'redirect') {
-      goto(result.location);
+        goto(result.location);
     } else if (result.type === 'success') {
-      status = { type: 'success', message: 'Join request sent successfully!' };
+        status = { type: 'success', message: 'Join request sent successfully!' };
     } else {
-      status = {
+        status = {
         type: 'error',
         message: 'There was an error sending your request. Please try again.',
-      };
+        };
     }
 
     loading = false;
-  };
+    };
 };
 </script>
 <svelte:head>
@@ -109,7 +109,7 @@ const handleJoinRequest: SubmitFunction = () => {
                 </Alert>
             {/if}
 
-          <!-- Search -->
+            <!-- Search -->
             <div class="space-y-4 mb-6">
                 <div class="relative">
                     <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -121,7 +121,7 @@ const handleJoinRequest: SubmitFunction = () => {
                 </div>
             </div>
 
-          <!-- Organizations List -->
+            <!-- Organizations List -->
             <ScrollArea class="space-y-3 overflow-y-auto">
                 <div class="space-y-3 p-3">
                     {#each filteredOrganizations as org}
