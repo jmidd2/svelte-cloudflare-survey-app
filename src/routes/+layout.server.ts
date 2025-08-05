@@ -8,7 +8,7 @@ export const load: LayoutServerLoad = async function ({
   const session = await locals.auth.getSession({
     headers: request.headers,
   });
-
+  
   const flashMessage = cookies.get('flash_message');
 
   if (flashMessage) cookies.delete('flash_message', { path: '/' });

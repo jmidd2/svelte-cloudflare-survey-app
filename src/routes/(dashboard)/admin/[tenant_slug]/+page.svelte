@@ -2,13 +2,28 @@
 import {
   Calendar,
   ChartColumnIcon,
+  CheckCircle,
+  Clock,
+  Crown,
   Eye,
   FileText,
+  MergeIcon,
   PencilIcon,
   Plus,
   ShareIcon,
+  User,
   Users,
+  XCircle,
 } from '@lucide/svelte';
+
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '$lib/components/ui/table';
 import { toast } from 'svelte-sonner';
 import { superForm } from 'sveltekit-superforms';
 import { zod4Client } from 'sveltekit-superforms/adapters';
@@ -21,11 +36,14 @@ import type { SelectForm } from '$lib/server/db/schema';
 import { addFormSchema } from '$lib/validation-schema';
 import { pageState } from '$stores/pageState.svelte';
 import { formDialogManager } from '$stores/SurveyDialog.svelte';
+  import { formatDate, getStatusColor } from '$lib/utils/helpers.js';
 
 const { data } = $props();
-
+$inspect(data)
 const tenantSlug = $derived(data.tenant.slug);
 const tenantName = $derived(data.tenant.name);
+const requests: Requests = $derived(data.requests);
+const user = $derived(data.user);
 const forms = $derived(data.forms);
 const isOrgAdmin = $derived(data.isOrgOwner || data.isOrgAdmin);
 const responsesByFormId = $derived(data.responses);
@@ -73,21 +91,28 @@ function openShareDialog(survey: SelectForm) {
   formDialogManager.openDialog('share');
 }
 
-function openInviteDialog() {
-  formDialogManager.openDialog('invite');
-}
+// function openInviteDialog() {
+//   formDialogManager.openDialog('invite');
+// }
 
 function openAddDialog() {
   formDialogManager.openDialog('edit');
 }
 
-function formatDate(date: string | Date): string {
-  return new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
+type Requests = [{
+  organizationId: string,
+  organizationName: string,
+  status: string,
+  expiresAt: Date,
+}]
+
+const InviteStatus = {
+    pending: 'Pending',
+    accepted: 'Accepted',
+    expired: 'Expired',
+    canceled: 'Cancelled',
+    rejected: 'Rejected',
+  };
 
 // Mock stats - replace with real data
 const stats = $derived({
@@ -351,9 +376,73 @@ const recentActivity = $derived([
               <Plus class="h-4 w-4 mr-2" />
               Create New Organization
             </Button>
+            <Button variant="outline" class="w-full justify-start" href="/admin/organization/join">
+              <MergeIcon class="h-4 w-4 mr-2" />
+              Join An Organization
+            </Button>
           </CardContent>
         </Card>
       </div>
+
+      <!-- Organization Join Requests -->
+      {#if user.role === "owner" || user.role === "admin"}
+      <div>
+        <h2 class="text-xl font-semibold text-foreground mb-4">Member Requests</h2>
+        <Card>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Account</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Expires</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+              {#if requests.length > 0}
+                {#each requests.slice(0,5) as request}
+                <TableRow>
+                  <TableCell>
+                    <p class="">
+                      {request.userName}
+                    </p>
+                    <p>
+                      {request.email}
+                    </p>
+                  </TableCell>
+                  <TableCell>
+                    <Badge class={getStatusColor(request.status)}>
+                        {#if request.status === 'pending'}
+                          <Clock class="h-3 w-3 mr-1"/>
+                        {:else if request.status === 'accepted'}
+                          <CheckCircle class="h-3 w-3 mr-1"/>
+                        {:else}
+                          <XCircle class="h-3 w-3 mr-1"/>
+                        {/if}
+                        {InviteStatus[request.status]}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{formatDate(request.expiresAt)}</TableCell>
+                  </TableRow>
+                {/each}
+                {:else}
+                <TableRow>
+                  <TableCell colspan={3} class="text-center text-gray-500 italic">
+                    No requests to show
+                  </TableCell>
+                </TableRow>
+                {/if}
+              </TableBody>
+            </Table>
+            {#if requests.length > 5}
+              <Button variant="outline" class="w-full mt-4" href="{tenantSlug}/members/requests">
+                View All
+              </Button>
+            {/if}
+          </CardContent>
+        </Card>
+      </div>
+      {/if}
 
 <!--      <div>-->
 <!--        <h2 class="text-xl font-semibold text-foreground mb-4">Recent Activity</h2>-->

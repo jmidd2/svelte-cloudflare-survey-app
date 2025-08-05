@@ -1,7 +1,7 @@
 import type { D1Database } from '@cloudflare/workers-types';
 import type { Client } from '@libsql/client';
 import { instrumentD1WithSentry } from '@sentry/cloudflare';
-import { and, asc, count, desc, eq, type SQL, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, not, or, type SQL, sql } from 'drizzle-orm';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 import type { LibSQLDatabase } from 'drizzle-orm/libsql';
 import * as schema from './schema';
@@ -101,6 +101,44 @@ export async function getFormsByTenant(
     .from(schema.forms)
     .where(eq(schema.forms.organizationId, organizationId))
     .orderBy(desc(schema.forms.createdAt));
+}
+
+/**
+ * Used to pull all requests of current user to show on their admin dashboard
+ * - only pulls statuses that aren't accepted
+ * - only needs to return necessary data
+ */
+export async function getRequestByUser(db: DrizzleClient, userId: string){
+  return db
+    .select({
+      id: schema.requests.id,
+      userId: schema.requests.userId,
+      organizationId: schema.requests.organizationId,
+      organizationName: schema.organizations.name,
+      status: schema.requests.status,
+      expiresAt: schema.requests.expiresAt,
+      role: schema.requests.role,
+    })
+    .from(schema.requests)
+    .leftJoin(schema.organizations, eq(schema.requests.organizationId, schema.organizations.id))
+    .where(and(eq(schema.requests.userId, userId), not(eq(schema.requests.status, "accepted"))))
+    .orderBy(desc(schema.requests.expiresAt));
+}
+
+export async function getRequestByOrg(db: DrizzleClient, orgId: string){
+  return db
+    .select({
+      id: schema.requests.id,
+      userName: schema.users.name,
+      email: schema.users.email,
+      status: schema.requests.status,
+      expiresAt: schema.requests.expiresAt,
+      role: schema.requests.role,
+    })
+    .from(schema.requests)
+    .leftJoin(schema.users, eq(schema.requests.userId, schema.users.id))
+    .where(and(eq(schema.requests.organizationId , orgId), eq(schema.requests.status, "pending")))
+    .orderBy(desc(schema.requests.expiresAt));
 }
 
 /**

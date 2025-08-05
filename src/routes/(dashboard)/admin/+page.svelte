@@ -11,9 +11,20 @@ import {
   CardTitle,
 } from '$lib/components/ui/card';
 import { getInitials } from '$lib/utils';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '$lib/components/ui/table';
+  import { formatDefaultLocale } from 'd3';
+  import { formatDate } from '$lib/utils/helpers.js';
 
 const { data } = $props();
-
+console.log(data)
+const requests = $derived(data.requests);
 const organizations = $derived(data.organizations);
 
 const isLoading = $state(false);
@@ -62,6 +73,31 @@ const isLoading = $state(false);
           </p>
         </CardContent>
       </Card>
+      {#if requests.length > 0}
+      <h3 class="text-xl font-bold my-4 text-center">Organization Join Request</h3>
+      <Card>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Organization</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Expiry Date</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+                {#each requests as request}
+                  <TableRow>
+                    <TableCell>{request.organizationName}</TableCell>
+                    <TableCell>{request.status}</TableCell>
+                    <TableCell>{formatDate(request.expiresAt)}</TableCell>
+                  </TableRow>
+                {/each}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+      {/if}
     {:else}
       <!-- Organizations List -->
       <div class="space-y-6">

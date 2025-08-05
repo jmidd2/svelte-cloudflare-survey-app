@@ -111,16 +111,16 @@ export const handle: Handle = sequence(
 
         const missingOrganization = memberOfOrganizations.length === 0;
         const requestsToJoin = await event.locals.db
-          .select()
-          .from(requests)
-          .where(eq(requests.userId, session.user.id));
-
+        .select()
+        .from(requests)
+        .where(eq(requests.userId, session.user.id));
+        
         // If a user is missing organization membership and has requests to join, don't require org
         let orgRequired = missingOrganization;
         if (requestsToJoin.length > 0 && missingOrganization) {
           orgRequired = false;
         }
-
+        
         // If user is missing name or organization membership
         if (missingName || orgRequired) {
           // Define routes that don't require profile completion
@@ -130,11 +130,11 @@ export const handle: Handle = sequence(
             '/accept-invitation',
             '/api/', // Allow API routes
           ];
-
+          
           const isAllowedRoute = allowedRoutes.some(route =>
             event.url.pathname.startsWith(route)
           );
-
+          
           // If not on an allowed route, redirect to profile completion
           if (!isAllowedRoute) {
             if (missingName) {
@@ -148,7 +148,7 @@ export const handle: Handle = sequence(
         }
       }
     }
-
+    
     return svelteKitHandler({
       event,
       resolve,

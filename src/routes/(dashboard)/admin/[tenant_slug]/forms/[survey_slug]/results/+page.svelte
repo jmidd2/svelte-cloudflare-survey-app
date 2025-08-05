@@ -37,7 +37,6 @@
   import DropdownMenuItem from "$lib/components/ui/dropdown-menu/dropdown-menu-item.svelte";
 
   const { data } = $props();
-  console.log(data.responses);
   const survey = $derived(data.survey);
   const fields = $derived(data.responses || []); // Assuming the array of fields is in data.responses
   // const metrics = $derived(data.metrics);
